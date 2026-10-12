@@ -9,6 +9,7 @@ Camera ke saamne haath hilakar science seekhne wale labs. Hindi aur English me, 
 | 🌗 चाँद की कलाएँ (Moon Phases) | `moon-phases/` | Science |
 | 📐 Finger Trigonometry | `finger-trig/` | Maths |
 | 💧 Molecule Builder | `molecule-ar/` | Chemistry |
+| 🫀 दिल की धड़कन (Heartbeat AR) | `heart-ar/` | Biology |
 | 🤖 Jarvis Hologram | `jarvis-hologram/` | Fun / AI |
 | ⌨️ Air Keyboard | `air-keyboard/` | Fun / Tech |
 
@@ -27,7 +28,7 @@ Sab sirf HTML files hain. Koi server, database ya install nahi chahiye.
    - **Create repository** dabao
 3. Naye repo me **"uploading an existing file"** link (ya **Add file → Upload files**) par click karo.
 4. Finder me `crazy-science` folder kholo, aur **andar ki saari cheezein** select karke browser me drag-drop karo:
-   `index.html`, `README.md` aur saare 7 folders.
+   `index.html`, `README.md` aur saare lab folders.
 5. Neeche **Commit changes** dabao.
 6. Repo me **Settings → Pages** par jao:
    - Source: **Deploy from a branch**

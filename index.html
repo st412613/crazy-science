@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Crazy Science · हाथ से विज्ञान</title>
-<meta name="description" content="Camera ke saamne haath hilao aur science samjho: atom, solar system, chaand ki kalayein, trigonometry, molecule aur bhi. Hindi aur English me, free, browser me.">
+<meta name="description" content="Camera ke saamne haath hilao aur science samjho: atom, solar system, chaand ki kalayein, trigonometry, molecule, dil ki dhadkan aur bhi. Hindi aur English me, free, browser me.">
 <meta property="og:title" content="Crazy Science · हाथ से विज्ञान 🖐️">
 <meta property="og:description" content="Haath se atom todo, grahon ko ghumao, ungliyon se trigonometry seekho. Free, Hindi aur English me, seedha browser me.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧪</text></svg>">
@@ -212,6 +212,7 @@
       <button class="on" data-f="all" data-i="fAll"></button>
       <button data-f="physics" data-i="fPhy"></button>
       <button data-f="chemistry" data-i="fChem"></button>
+      <button data-f="bio" data-i="fBio"></button>
       <button data-f="maths" data-i="fMath"></button>
       <button data-f="fun" data-i="fFun"></button>
     </div>
@@ -256,14 +257,14 @@
 // ---------------------------------------------------------------- text in both languages
 const T = {
   hi: {
-    online: 'चालू', labsCount: 'लैब 7/7', sound: '🔊 आवाज़', mute: '🔇 बंद', langBtn: 'EN',
+    online: 'चालू', labsCount: 'लैब 8/8', sound: '🔊 आवाज़', mute: '🔇 बंद', langBtn: 'EN',
     bootTag: 'सिस्टम तैयार · हैंड ट्रैकिंग चालू',
     tags: ['हाथ हिलाओ, विज्ञान समझो 🖐️', 'परमाणु तोड़ो, ग्रह घुमाओ 🪐', 'उंगलियों से त्रिकोणमिति 📐'],
     lead: 'कैमरे के सामने हाथ से परमाणु तोड़ो, ग्रहों को घुमाओ, चाँद की कलाएँ देखो और उंगलियों से त्रिकोणमिति सीखो। सब कुछ मुफ़्त, सीधे ब्राउज़र में। कुछ इंस्टॉल नहीं करना।',
     cta: '▶ लैब खोलो',
     chips: ['[CAM] सिर्फ़ वेबकैम', '[VOICE] हिंदी + English', '[COST] ₹0', '[DATA] डिवाइस पर ही'],
-    labsH: 'लैब मॉड्यूल', labsSub: '// 7 चालू',
-    fAll: 'सभी', fPhy: '⚛ भौतिकी', fChem: '⚗ रसायन', fMath: '📐 गणित', fFun: '🤖 मज़ा / AI',
+    labsH: 'लैब मॉड्यूल', labsSub: '// 8 चालू',
+    fAll: 'सभी', fPhy: '⚛ भौतिकी', fChem: '⚗ रसायन', fBio: '🫀 जीवविज्ञान', fMath: '📐 गणित', fFun: '🤖 मज़ा / AI',
     online2: '● चालू', launch: '▶ शुरू करो', allAges: 'सभी के लिए', cls: 'कक्षा',
     briefH: 'मिशन ब्रीफ़िंग', briefSub: '// कैसे चलाएँ',
     brief: [['Chrome खोलो', 'लैपटॉप या डेस्कटॉप पर सबसे अच्छा'], ['लैब चुनो, START दबाओ', 'कैमरा और माइक को "Allow" करो'], ['1–2 फ़ीट दूर बैठो', 'हाथ पूरे दिखें, रोशनी अच्छी हो'], ['हाथ हिलाओ!', 'नीचे के प्रोटोकॉल से सब कंट्रोल होता है']],
@@ -274,20 +275,20 @@ const T = {
     foot1: '<b>शिवम</b> ने ❤️ से बनाया // CRAZY SCIENCE LABS',
     foot2: 'टीचर्स और स्कूल: अपने नाम के साथ कस्टम लैब चाहिए? संपर्क करें।',
     bootHint: '[ शुरू हो रहा है… ]',
-    boot: [['CRAZY SCIENCE OS v1.0 बूट हो रहा है', 'OK'], ['हैंड ट्रैकिंग सेंसर कैलिब्रेट', 'OK'], ['7 लैब मॉड्यूल लोड', 'OK'], ['हिंदी + English वॉइस मॉड्यूल', 'ONLINE'], ['जेस्चर: पिंच · हथेली · मुट्ठी', 'READY']],
+    boot: [['CRAZY SCIENCE OS v1.0 बूट हो रहा है', 'OK'], ['हैंड ट्रैकिंग सेंसर कैलिब्रेट', 'OK'], ['8 लैब मॉड्यूल लोड', 'OK'], ['हिंदी + English वॉइस मॉड्यूल', 'ONLINE'], ['जेस्चर: पिंच · हथेली · मुट्ठी', 'READY']],
     granted: '> एक्सेस मिल गया। स्वागत है, खोजी!',
     welcome: 'सिस्टम ऑनलाइन। क्रेज़ी साइंस में आपका स्वागत है।', voiceLang: 'hi',
     warpT: (c, n) => `${c} खुल रही है · ${n}`, warpS: 'एक्सेस मिल गया',
   },
   en: {
-    online: 'ONLINE', labsCount: 'LABS 7/7', sound: '🔊 SOUND', mute: '🔇 MUTE', langBtn: 'हिं',
+    online: 'ONLINE', labsCount: 'LABS 8/8', sound: '🔊 SOUND', mute: '🔇 MUTE', langBtn: 'हिं',
     bootTag: 'SYSTEM READY · HAND TRACKING ACTIVE',
     tags: ['Move your hands, understand science 🖐️', 'Split atoms, spin planets 🪐', 'Trigonometry with your fingers 📐'],
     lead: 'In front of your webcam, split atoms with your bare hands, move planets, watch the phases of the Moon and learn trigonometry with your fingers. Free, right in the browser, nothing to install.',
     cta: '▶ ENTER LABS',
     chips: ['[CAM] webcam only', '[VOICE] Hindi + English', '[COST] free', '[DATA] stays on device'],
-    labsH: 'LAB MODULES', labsSub: '// 7 ONLINE',
-    fAll: 'ALL', fPhy: '⚛ PHYSICS', fChem: '⚗ CHEMISTRY', fMath: '📐 MATHS', fFun: '🤖 FUN / AI',
+    labsH: 'LAB MODULES', labsSub: '// 8 ONLINE',
+    fAll: 'ALL', fPhy: '⚛ PHYSICS', fChem: '⚗ CHEMISTRY', fBio: '🫀 BIOLOGY', fMath: '📐 MATHS', fFun: '🤖 FUN / AI',
     online2: '● ONLINE', launch: '▶ LAUNCH', allAges: 'ALL AGES', cls: 'CLASS',
     briefH: 'MISSION BRIEFING', briefSub: '// HOW TO START',
     brief: [['Open Chrome', 'works best on a laptop or desktop'], ['Pick a lab, press START', 'allow the camera and microphone'], ['Sit 1–2 feet away', 'keep your hands in view, in good light'], ['Move your hands!', 'the protocols below control everything']],
@@ -298,7 +299,7 @@ const T = {
     foot1: 'SYSTEM BUILT WITH ❤️ BY <b>SHIVAM</b> // CRAZY SCIENCE LABS',
     foot2: 'Teachers and schools: want a custom lab with your own name? Get in touch.',
     bootHint: '[ INITIALIZING… ]',
-    boot: [['BOOTING CRAZY SCIENCE OS v1.0', 'OK'], ['CALIBRATING HAND TRACKING SENSORS', 'OK'], ['LOADING 7 LAB MODULES', 'OK'], ['VOICE MODULE: HINDI + ENGLISH', 'ONLINE'], ['GESTURE PROTOCOLS: PINCH · PALM · FIST', 'READY']],
+    boot: [['BOOTING CRAZY SCIENCE OS v1.0', 'OK'], ['CALIBRATING HAND TRACKING SENSORS', 'OK'], ['LOADING 8 LAB MODULES', 'OK'], ['VOICE MODULE: HINDI + ENGLISH', 'ONLINE'], ['GESTURE PROTOCOLS: PINCH · PALM · FIST', 'READY']],
     granted: '> ACCESS GRANTED. WELCOME, EXPLORER.',
     welcome: 'System online. Welcome to Crazy Science.', voiceLang: 'en',
     warpT: (c, n) => `ACCESSING ${c} · ${n}`, warpS: 'ACCESS GRANTED',
@@ -316,6 +317,8 @@ const LABS = [
     ['अंगूठा और उंगली खोलकर कोण बनाओ। हाथ पर कर्ण, लंब, आधार और लाइव sin, cos, tan। क्विज़ भी है!', 'Open your thumb and finger to make an angle. See hypotenuse, opposite and adjacent on your hand, with live sin, cos and tan. Quiz included!'], '10–11', '👍✊🎯', 80],
   ['molecule-ar/', '#7dffb0', '💧', 'chemistry', ['रसायन', 'CHEMISTRY'], ['अणु बनाओ', 'Build molecules'], 'MOLECULE BUILDER',
     ['परमाणु जोड़कर पानी, CO₂, मीथेन, नमक बनाओ। हर परमाणु के "हाथ" उसकी संयोजकता हैं। गलत जोड़ो तो वह समझाता है क्यों।', 'Join atoms to make water, CO₂, methane and salt. Each atom\'s glowing "hands" are its valency. Join them wrong and it explains why.'], '9–11', '🤏🙌✊🎯', 88],
+  ['heart-ar/', '#ff5a78', '🫀', 'bio', ['जीवविज्ञान', 'BIOLOGY'], ['दिल की धड़कन', 'Heartbeat in your hand'], 'HEART AR',
+    ['मुट्ठी बंद करो और खोलो, दिल तुम्हारे साथ धड़केगा। नीला-लाल खून, खुलते-बंद होते वाल्व, लब-डब की आवाज़ और लाइव ECG। 🙌 दिखाओ तो खून की एक बूंद के साथ पूरा सफ़र!', 'Close and open your fist and the heart beats with you. Blue and red blood, valves opening and shutting, a lub-dub sound and a live ECG. Show 🙌 to ride along with a drop of blood!'], '7–11', '✊✋🤏✌️🙌', 92],
   ['jarvis-hologram/', '#29d3ff', '🤖', 'fun', ['AI', 'AI'], ['Jarvis होलोग्राम', 'Jarvis hologram'], 'JARVIS HOLOGRAM',
     ['ताली बजाओ या "Jarvis" बोलो, होलोग्राम आ जाएगा। हथेली दिखाओ तो कणों में बिखर जाएगा, और हिंदी में बात करेगा।', 'Clap or say "Jarvis" and the hologram appears. Show your palm and it bursts into particles. It talks in Hindi.'], '', '👏✋🙌🤏', 95],
   ['air-keyboard/', '#b46bff', '⌨️', 'fun', ['टेक', 'TECH'], ['हवा में कीबोर्ड', 'Air keyboard'], 'AIR KEYBOARD',

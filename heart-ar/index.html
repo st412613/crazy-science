@@ -1,0 +1,1384 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🫀</text></svg>">
+<title data-en="Heartbeat AR · Crazy Science">दिल की धड़कन · Crazy Science</title>
+<script src="../lang.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --c: #ff5a78;
+    --c-rgb: 255, 90, 120;
+    --text: #fff0f3;
+    --dim: rgba(255, 240, 243, .62);
+    --panel: rgba(20, 6, 10, .84);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #000; color: var(--text); font-family: 'Rajdhani', system-ui, sans-serif; overflow: hidden; }
+  #stage { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 100vw; height: 100vh; overflow: hidden; background: #000; }
+  body.reel #stage { width: min(100vw, calc(100vh * 9 / 16)); height: min(100vh, calc(100vw * 16 / 9)); }
+  #gl, #fx { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  #cam { position: fixed; width: 2px; height: 2px; opacity: 0; pointer-events: none; }
+
+  #ui { position: fixed; inset: 0; pointer-events: none; z-index: 5; }
+  #ui button, #ui select, #ui input { pointer-events: auto; }
+  .top { position: absolute; top: 16px; right: 16px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end; max-width: calc(100% - 32px); }
+  button.icon { height: 38px; min-width: 38px; padding: 0 12px; border-radius: 10px; border: 1px solid rgba(var(--c-rgb), .45); background: rgba(20, 6, 10, .65); color: var(--c); font: 700 13px 'Orbitron', sans-serif; letter-spacing: .08em; cursor: pointer; }
+  button.icon:hover { background: rgba(var(--c-rgb), .16); }
+  button.icon.on { background: var(--c); color: #1a0006; }
+  #btnRec.on { background: #ff2d4a; border-color: #ff2d4a; color: #fff; animation: blink 1s infinite; }
+  #hint { position: absolute; left: 50%; bottom: 20px; transform: translateX(-50%); background: var(--panel); border: 1px solid rgba(var(--c-rgb), .3); border-radius: 12px; padding: 9px 16px; font-size: 16px; color: var(--dim); text-align: center; width: max-content; max-width: calc(100% - 32px); line-height: 1.5; }
+  #hint b { color: var(--c); }
+  #toast { position: absolute; top: 66px; left: 50%; transform: translateX(-50%); background: var(--panel); border: 1px solid rgba(var(--c-rgb), .4); padding: 10px 16px; border-radius: 10px; font-size: 16px; opacity: 0; transition: opacity .3s; max-width: calc(100% - 32px); text-align: center; }
+  #toast.on { opacity: 1; }
+  #clap { position: absolute; bottom: 18px; left: 18px; font-size: 26px; opacity: 0; transition: opacity .35s; }
+  #clap.on { opacity: 1; transition: none; }
+  body.clean #hint, body.clean .top button:not(#btnRec), body.clean #clap { display: none; }
+
+  #settings { position: fixed; top: 0; right: 0; height: 100%; width: min(360px, 100%); background: rgba(16, 4, 8, .96); border-left: 1px solid rgba(var(--c-rgb), .3); z-index: 10; transform: translateX(100%); transition: transform .3s; overflow-y: auto; padding: 20px; }
+  #settings.open { transform: none; }
+  #settings h2 { font-family: 'Orbitron', sans-serif; font-size: 14px; letter-spacing: .25em; color: var(--c); margin: 4px 0 12px; display: flex; justify-content: space-between; align-items: center; }
+  .row { display: flex; flex-direction: column; gap: 5px; margin: 12px 0; font-size: 16px; }
+  .row.inline { flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; }
+  .row small, .keys { color: var(--dim); font-size: 13px; line-height: 1.5; }
+  .row output { color: var(--c); font-weight: 700; }
+  .row select { padding: 9px 10px; border-radius: 8px; border: 1px solid rgba(var(--c-rgb), .35); background: #1a070c; color: var(--text); font: 600 15px 'Rajdhani', sans-serif; }
+  input[type=range], input[type=checkbox] { accent-color: var(--c); }
+  input[type=checkbox] { width: 18px; height: 18px; flex: none; }
+
+  #start { position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; background: radial-gradient(ellipse at center, rgba(30, 4, 12, .72), #000); padding: 16px; transition: opacity .6s; }
+  #start.gone { opacity: 0; pointer-events: none; }
+  #start .card { max-width: 580px; text-align: center; }
+  #start h1 { font-family: 'Orbitron', sans-serif; font-weight: 900; letter-spacing: .25em; font-size: clamp(30px, 7vw, 52px); color: var(--c); text-shadow: 0 0 24px rgba(var(--c-rgb), .8); margin: 0 0 6px; padding-left: .25em; }
+  #start h2 { font-size: 22px; margin: 0 0 12px; font-weight: 700; }
+  #start p { font-size: 19px; line-height: 1.5; margin: 0 0 22px; }
+  #start .note { font-size: 14px; color: var(--dim); margin-top: 16px; }
+  .btn { padding: 14px 30px; border-radius: 12px; border: 1px solid rgba(var(--c-rgb), .6); background: rgba(var(--c-rgb), .14); color: var(--c); font: 700 16px 'Orbitron', sans-serif; letter-spacing: .14em; cursor: pointer; }
+  .btn:disabled { opacity: .5; cursor: wait; }
+  #loadList { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; margin-top: 18px; font-size: 15px; color: var(--dim); }
+  #loadList .ok { color: #3dff8b; } #loadList .fail { color: #ff5b6b; } #loadList .warn { color: #ffd23d; }
+  @keyframes blink { 50% { opacity: .55; } }
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="gl"></canvas>
+  <canvas id="fx"></canvas>
+</div>
+<video id="cam" playsinline muted></video>
+
+<div id="ui">
+  <div id="clap">👏</div>
+  <div class="top">
+    <button class="icon" id="btnHome" title="Crazy Science: saare labs" data-en-title="Crazy Science: all labs" onclick="location.href='../'">🏠</button>
+    <button class="icon" id="btnLang" data-lang-toggle>🌐 EN</button>
+    <button class="icon" id="btnRec" title="Video record (R)">⏺ REC</button>
+    <button class="icon" id="btnReel" title="Reel frame 9:16 (V)">9:16</button>
+    <button class="icon" id="btnTour" title="Khoon ka safar (T)" data-en-title="Blood journey (T)">🎓</button>
+    <button class="icon" id="btnFull" title="Fullscreen (F)">⛶</button>
+    <button class="icon" id="btnSettings" title="Settings">⚙</button>
+  </div>
+  <div id="hint"></div>
+  <div id="toast" role="status"></div>
+</div>
+
+<aside id="settings" aria-label="Settings">
+  <h2>SETTINGS <button class="icon" id="btnClose" title="Band karo (Esc)" data-en-title="Close (Esc)">✕</button></h2>
+  <label class="row inline"><span data-en="Part names + lub-dub tags">Hisson ke naam + lub-dub</span> <input type="checkbox" data-s="labels"></label>
+  <label class="row inline"><span data-en="Beat by itself when no hand is seen">Haath na dikhe to apne aap dhadke</span> <input type="checkbox" data-s="auto"></label>
+  <label class="row"><span><span data-en="Auto heart rate">Apne aap wali dhadkan</span> · <output id="bpmOut">72 BPM</output></span> <input type="range" min="40" max="180" step="2" data-s="bpm"></label>
+  <label class="row inline"><span data-en="Hand shows in front of the heart">Haath dil ke aage dikhe</span> <input type="checkbox" data-s="occlude"></label>
+  <label class="row inline"><span data-en="Glow dot on fingertip">Ungli par glow point</span> <input type="checkbox" data-s="dots"></label>
+  <label class="row inline"><span data-en="Voice (speaks the lines)">Aawaz (bolne wali lines)</span> <input type="checkbox" data-s="voice"></label>
+  <label class="row inline"><span data-en="Lub-dub and sound effects">Lub-dub aur sound effects</span> <input type="checkbox" data-s="sfx"></label>
+  <label class="row"><span data-en="Clap">Taali</span>
+    <select data-s="clapMode">
+      <option value="2" data-en="Double clap 👏👏 brings the heart">Do baar taali 👏👏 se dil aaye</option>
+      <option value="1" data-en="Single clap 👏">Ek baar taali 👏</option>
+      <option value="0" data-en="Off">Band</option>
+    </select>
+  </label>
+  <label class="row"><span data-en="Clap sensitivity">Taali sensitivity</span> <input type="range" min="1" max="10" step="1" data-s="clapSens"></label>
+  <label class="row">Smoothness
+    <select data-s="fps">
+      <option value="30" data-en="30 FPS (light, good for laptops)">30 FPS (Mac ke liye halka)</option>
+      <option value="60" data-en="60 FPS (smoother, more load)">60 FPS (smooth, zyada load)</option>
+    </select>
+  </label>
+  <div class="keys" data-en="Gestures: ✊✋ close and open your fist = heartbeat · 🤏 drag = rotate · 🤏🤏 = zoom · ✌️ = labels on/off · 🙌 = blood journey<br>Shortcuts: Space = call the heart / hold and release = heartbeat · A = auto beat on/off · ↑ ↓ = BPM · L = labels · T = blood journey · Z = reset view · R = record · V = 9:16 · H = clean screen · Esc = close">Gestures: ✊✋ mutthi band-kholo = dhadkan · 🤏 kheencho = ghumao · 🤏🤏 = zoom · ✌️ = naam on/off · 🙌 = khoon ka safar<br>Shortcuts: Space = dil bulao / dabakar chhodo = dhadkan · A = apne aap on/off · ↑ ↓ = BPM · L = naam · T = khoon ka safar · Z = view reset · R = record · V = 9:16 · H = clean screen · Esc = band</div>
+</aside>
+
+<div id="start">
+  <div class="card">
+    <h1>HEART·AR</h1>
+    <h2 data-en="🫀 your heartbeat, in your hand">🫀 दिल की धड़कन, आपके हाथ में</h2>
+    <p data-en="Close and open your fist and the heart beats with you. Watch blue and red blood flow through the heart, the valves open and shut with a lub-dub, and a live ECG 💓">Mutthi band karo aur kholo, dil tumhare saath dhadkega. Neela aur laal khoon dil me behta dikhega, valve lub-dub ke saath khulenge-band honge, aur live ECG bhi chalega 💓</p>
+    <button class="btn" id="btnStart">▶ START</button>
+    <div id="loadList"><div id="ldCam">◌ Camera + mic</div><div id="ldHand">◌ Hand tracking</div></div>
+    <p class="note" data-en="Works best in Chrome. Don't wear headphones while recording, so the voice and lub-dub also get into the video.">Chrome me best chalta hai. Recording ke liye headphone mat lagana, taaki aawaz aur lub-dub bhi video me aaye.</p>
+    <div class="cs-lang"><button data-setlang="hi">हिंदी</button><button data-setlang="en">English</button></div>
+    <p class="note"><a href="../" style="color:inherit" data-en="← Crazy Science: all labs">← Crazy Science: saare labs</a></p>
+  </div>
+</div>
+
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ---------------------------------------------------------------- config
+const MP_BASE = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14';
+const HAND_MODEL = 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
+// Jo lines bolega (hi = Hindi, en = English): yahan badal sakte ho.
+const LINES = {
+  hi: {
+    spawn: 'ये है आपका दिल! अपनी मुट्ठी बंद कीजिए और खोलिए, दिल आपके साथ धड़केगा।',
+    colors: 'नीले खून में ऑक्सीजन कम है, और लाल खून में ऑक्सीजन भरी है। दिल का दायाँ हिस्सा, जो स्क्रीन पर बाईं ओर दिखता है, नीला खून फेफड़ों में भेजता है। और बायाँ हिस्सा लाल खून पूरे शरीर में।',
+    lubdub: 'सुनिए, लब-डब! ये आवाज़ दिल के वाल्व बंद होने की है। वाल्व खून को उल्टा बहने नहीं देते।',
+    fast: 'वाह! दिल कितना तेज़ धड़क रहा है, जैसे दौड़ने के बाद। तब मांसपेशियों को ज़्यादा ऑक्सीजन चाहिए होती है।',
+    slow: 'दिल धीमा हो गया, जैसे सोते समय। तब शरीर को कम ऑक्सीजन चाहिए।',
+    stopped: 'दिल रुका, तो खून भी रुक गया! दिल असल में एक पंप है।',
+    tourEnd: 'तो एक चक्कर में खून दिल से दो बार गुज़रता है: एक बार फेफड़ों के लिए, और एक बार शरीर के लिए। इसे दोहरा परिसंचरण कहते हैं।',
+  },
+  en: {
+    spawn: 'This is your heart! Close and open your fist, and the heart will beat with you.',
+    colors: "Blue blood is low in oxygen, and red blood is full of oxygen. The heart's right side, which shows on the left of the screen, sends blue blood to the lungs. The left side sends red blood to the whole body.",
+    lubdub: 'Listen, lub-dub! That sound is the heart valves snapping shut. Valves stop blood from flowing backwards.',
+    fast: 'Wow, the heart is beating so fast, like after running! Then your muscles need more oxygen.',
+    slow: 'The heart has slowed down, like when you sleep. Then the body needs less oxygen.',
+    stopped: 'When the heart stops, the blood stops too! The heart is really a pump.',
+    tourEnd: 'So in one round, blood passes through the heart twice: once for the lungs and once for the body. This is called double circulation.',
+  },
+};
+const ln = (k) => LINES[CS.lang][k];
+// 🙌 Blood journey: a drop of blood stops at each part while its line is spoken.
+const TOUR = [
+  { at: 'RA', part: 'RA',
+    hi: 'चलिए, खून की एक बूंद के साथ सफ़र करते हैं। शरीर से लौटा नीला खून वीना केवा से होकर दाएँ आलिंद में आता है।',
+    en: "Let's travel with one drop of blood. Blue blood coming back from the body enters the right atrium through the vena cava." },
+  { at: 'RV', part: 'RV',
+    hi: 'ट्राइकस्पिड वाल्व खुलता है, और खून नीचे दाएँ निलय में जाता है।',
+    en: 'The tricuspid valve opens, and the blood goes down into the right ventricle.' },
+  { at: 'PA', part: 'PA',
+    hi: 'दायाँ निलय सिकुड़ता है, और खून पल्मोनरी आर्टरी से फेफड़ों की ओर जाता है। ये अकेली आर्टरी है जिसमें नीला खून बहता है!',
+    en: 'The right ventricle squeezes and pushes the blood up the pulmonary artery to the lungs. It is the only artery that carries blue blood!' },
+  { at: 'LUNG', part: 'LUNGS',
+    hi: 'फेफड़ों में खून कार्बन डाइऑक्साइड छोड़ता है और ऑक्सीजन लेता है। देखिए, अब ये लाल हो गया!',
+    en: 'In the lungs, the blood drops off carbon dioxide and picks up oxygen. Look, now it has turned red!' },
+  { at: 'LA', part: 'LA',
+    hi: 'ऑक्सीजन वाला खून पल्मोनरी वेन से होकर बाएँ आलिंद में आता है।',
+    en: 'Oxygen-rich blood comes back through the pulmonary veins into the left atrium.' },
+  { at: 'LV', part: 'LV',
+    hi: 'माइट्रल वाल्व से होकर खून बाएँ निलय में जाता है। इसकी दीवार सबसे मोटी है, क्योंकि इसे पूरे शरीर तक खून भेजना है।',
+    en: 'Through the mitral valve, the blood enters the left ventricle. Its wall is the thickest, because it has to pump blood to the whole body.' },
+  { at: 'AO', part: 'AO',
+    hi: 'बायाँ निलय पूरी ताक़त से खून को एओर्टा में धकेलता है। ये शरीर की सबसे बड़ी आर्टरी है।',
+    en: 'The left ventricle pushes the blood hard into the aorta, the biggest artery in the body.' },
+  { at: 'BODY', part: 'BODY',
+    hi: 'शरीर की कोशिकाएँ ऑक्सीजन ले लेती हैं। खून फिर नीला होकर दिल की ओर लौट चलता है।',
+    en: "The body's cells take the oxygen. The blood turns blue again and heads back to the heart." },
+];
+// Labels: `at` = point on the heart the line points to, `lab` = where the label sits (heart frame, x → screen right).
+const PARTS = {
+  RA: { at: [-0.24, 0.2, 0.02], lab: [-0.98, 0.16, 0], c: '#7da6ff', hi: ['RIGHT ATRIUM', 'दायाँ आलिंद'], en: ['RIGHT ATRIUM', 'blue blood comes in'] },
+  RV: { at: [-0.08, -0.22, 0.06], lab: [-0.92, -0.42, 0], c: '#7da6ff', hi: ['RIGHT VENTRICLE', 'दायाँ निलय'], en: ['RIGHT VENTRICLE', 'pumps to the lungs'] },
+  LA: { at: [0.22, 0.25, -0.08], lab: [0.98, 0.2, 0], c: '#ff7a8c', hi: ['LEFT ATRIUM', 'बायाँ आलिंद'], en: ['LEFT ATRIUM', 'red blood comes in'] },
+  LV: { at: [0.2, -0.24, -0.02], lab: [0.95, -0.42, 0], c: '#ff7a8c', hi: ['LEFT VENTRICLE', 'बायाँ निलय'], en: ['LEFT VENTRICLE', 'pumps to the body'] },
+  AO: { at: [0.14, 0.79, -0.08], lab: [0.4, 1.08, 0], c: '#ff7a8c', hi: ['AORTA', 'महाधमनी: शरीर की ओर'], en: ['AORTA', 'to the whole body'] },
+  PA: { at: [0.02, 0.5, 0.12], lab: [-0.2, 1.22, 0], c: '#7da6ff', hi: ['PULMONARY ARTERY', 'फेफड़ों की ओर'], en: ['PULMONARY ARTERY', 'to the lungs'] },
+  VC: { at: [-0.44, -0.4, -0.04], lab: [-0.98, -0.88, 0], c: '#7da6ff', hi: ['VENA CAVA', 'शरीर से वापस'], en: ['VENA CAVA', 'back from the body'] },
+  LUNGS: { lab: [-0.75, 0.82, 0], c: '#ffb3c2', hi: ['LUNGS', 'फेफड़े: ऑक्सीजन लो'], en: ['LUNGS', 'pick up oxygen'] },
+  LUNGS2: { part: 'LUNGS', lab: [0.75, 0.82, 0], c: '#ffb3c2', hi: ['LUNGS', 'फेफड़े'], en: ['LUNGS', 'pick up oxygen'] },
+  BODY: { lab: [0, -1.36, 0], c: '#ffc58f', hi: ['BODY', 'शरीर: कोशिकाएँ ऑक्सीजन लेती हैं'], en: ['BODY', 'cells use the oxygen'] },
+};
+const AUDIO_CONSTRAINTS = { echoCancellation: false, noiseSuppression: false, autoGainControl: false };
+const MIMES = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4;codecs=avc1,opus', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
+
+// ---------------------------------------------------------------- settings
+const DEFAULTS = { labels: true, auto: true, bpm: 72, occlude: true, dots: true, voice: true, sfx: true, clapMode: '2', clapSens: 6, fps: '30' };
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+};
+const S = { ...DEFAULTS, ...(() => { try { return JSON.parse(store.get('heart.settings')) || {}; } catch { return {}; } })() };
+const saveSettings = () => store.set('heart.settings', JSON.stringify(S));
+
+// ---------------------------------------------------------------- utils
+const $ = (s) => document.querySelector(s);
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const follow = (rate, dt) => 1 - Math.pow(rate, dt);
+const easeOutBack = (p) => 1 + 2.4 * Math.pow(p - 1, 3) + 1.4 * Math.pow(p - 1, 2);
+const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+const gauss = (x, w) => Math.exp(-(x * x) / (2 * w * w));
+const V3 = THREE.Vector3;
+const randUnit = (v = new V3()) => { const u = Math.random() * 2 - 1, a = Math.random() * Math.PI * 2, r = Math.sqrt(1 - u * u); return v.set(r * Math.cos(a), r * Math.sin(a), u); };
+let toastTimer;
+function toast(msg, ms = 3200) {
+  const el = $('#toast'); el.textContent = msg; el.classList.add('on');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('on'), ms);
+}
+
+// ---------------------------------------------------------------- renderer + camera feed layers
+const stage = $('#stage'), glc = $('#gl'), fxc = $('#fx'), fx = fxc.getContext('2d');
+const cam = $('#cam');
+const renderer = new THREE.WebGLRenderer({ canvas: glc, antialias: true, powerPreference: 'high-performance' });
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x000000);
+const camera = new THREE.PerspectiveCamera(50, 1, 0.05, 100);
+camera.position.set(0, 0, 3);
+scene.add(camera);
+scene.add(new THREE.HemisphereLight(0xfff0f3, 0x201018, 1.3));
+const keyLight = new THREE.DirectionalLight(0xffffff, 2);
+keyLight.position.set(1.2, 2, 3);
+scene.add(keyLight);
+
+const camTex = new THREE.VideoTexture(cam);
+camTex.colorSpace = THREE.SRGBColorSpace;
+// Hand mask: hand shapes drawn in video space; the video is drawn again through it on top of the heart,
+// so your hand appears in front of it. The feed is dimmed a little so the glowing heart stands out.
+const maskCanvas = document.createElement('canvas');
+maskCanvas.width = 320; maskCanvas.height = 180;
+const mctx = maskCanvas.getContext('2d');
+const maskTex = new THREE.CanvasTexture(maskCanvas);
+const bgPlane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: camTex, color: 0xc4c4c4, depthTest: false, depthWrite: false, toneMapped: false }));
+bgPlane.renderOrder = -10; bgPlane.frustumCulled = false; bgPlane.position.z = -40; bgPlane.visible = false;
+camera.add(bgPlane);
+const handLayer = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: camTex, color: 0xc4c4c4, alphaMap: maskTex, transparent: true, depthTest: false, depthWrite: false, toneMapped: false }));
+handLayer.renderOrder = 50; handLayer.frustumCulled = false; handLayer.position.z = -0.5; handLayer.visible = false;
+camera.add(handLayer);
+function layoutPlanes() {
+  for (const [m, d] of [[bgPlane, 40], [handLayer, 0.5]]) {
+    const h = 2 * d * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+    m.scale.set(-h * camera.aspect, h, 1);
+  }
+  const vw = cam.videoWidth || 1280, vh = cam.videoHeight || 720, va = vw / vh, sa = camera.aspect;
+  for (const t of [camTex, maskTex]) {
+    if (sa > va) { t.repeat.set(1, va / sa); t.offset.set(0, (1 - va / sa) / 2); }
+    else { t.repeat.set(sa / va, 1); t.offset.set((1 - sa / va) / 2, 0); }
+  }
+  maskCanvas.width = 320; maskCanvas.height = Math.round(320 * vh / vw);
+}
+cam.addEventListener('loadedmetadata', layoutPlanes);
+
+// ---------------------------------------------------------------- shared textures + point material
+function radialTex(stops) {
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const g = c.getContext('2d'), gr = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+  stops.forEach(([p, a]) => gr.addColorStop(p, `rgba(255,255,255,${a})`));
+  g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+const GLOW = radialTex([[0, 1], [0.22, 0.55], [0.5, 0.15], [1, 0]]);
+const RING = radialTex([[0, 0], [0.72, 0], [0.86, 1], [0.93, 0.35], [1, 0]]);
+function sprite(tex, color, scale, opacity = 1) {
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, color, transparent: true, opacity, depthWrite: false, blending: THREE.AdditiveBlending }));
+  s.scale.setScalar(scale);
+  return s;
+}
+const pointsMat = new THREE.ShaderMaterial({
+  uniforms: { uPx: { value: 1 }, uScale: { value: 1 } },
+  vertexShader: `
+    attribute float aAlpha; attribute float aSize; attribute vec3 aCol;
+    uniform float uPx; uniform float uScale; varying float vA; varying vec3 vC;
+    void main() {
+      vA = aAlpha; vC = aCol;
+      vec4 mv = modelViewMatrix * vec4(position, 1.0);
+      gl_PointSize = min(aSize * uPx * uScale * (3.0 / -mv.z), 48.0);
+      gl_Position = projectionMatrix * mv;
+    }`,
+  fragmentShader: `
+    varying float vA; varying vec3 vC;
+    void main() {
+      float d = length(gl_PointCoord - 0.5);
+      float core = 1.0 - smoothstep(0.0, 0.2, d);
+      gl_FragColor = vec4(vC * (1.0 + core), (1.0 - smoothstep(0.05, 0.5, d)) * vA);
+      #include <colorspace_fragment>
+    }`,
+  transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+});
+function makePoints(n) {
+  const g = new THREE.BufferGeometry();
+  const a = { pos: new Float32Array(n * 3), al: new Float32Array(n), size: new Float32Array(n), col: new Float32Array(n * 3) };
+  g.setAttribute('position', new THREE.BufferAttribute(a.pos, 3).setUsage(THREE.DynamicDrawUsage));
+  g.setAttribute('aAlpha', new THREE.BufferAttribute(a.al, 1).setUsage(THREE.DynamicDrawUsage));
+  g.setAttribute('aSize', new THREE.BufferAttribute(a.size, 1));
+  g.setAttribute('aCol', new THREE.BufferAttribute(a.col, 3).setUsage(THREE.DynamicDrawUsage));
+  const p = new THREE.Points(g, pointsMat);
+  p.frustumCulled = false;
+  return { p, ...a, dirty() { g.attributes.position.needsUpdate = true; g.attributes.aAlpha.needsUpdate = true; g.attributes.aCol.needsUpdate = true; }, sizes() { g.attributes.aSize.needsUpdate = true; } };
+}
+
+// ---------------------------------------------------------------- the squeeze: ventricles shrink and shorten, atria swell
+// Same maths in GLSL (for the heart meshes) and JS (for blood, valves and labels), so everything moves together.
+const U = { uVen: { value: 1 }, uAtr: { value: 1 } };
+const DEFORM_GLSL = `
+uniform float uVen; uniform float uAtr; uniform float uDef;
+vec3 heartDeform(vec3 p) {
+  float g = (1.0 - smoothstep(0.62, 0.9, length(vec2(p.x - 0.05, p.y + 0.02)))) * uDef;
+  float k = 1.0 - smoothstep(-0.12, 0.12, p.y);
+  float sc = mix(uAtr, uVen, k), cx = 0.08 * k;
+  vec3 q = vec3(cx + (p.x - cx) * sc, mix(p.y, 0.1 + (p.y - 0.1) * (0.55 + 0.45 * uVen), k), p.z * sc);
+  return mix(p, q, g);
+}
+`;
+function deform(v) {
+  const g = 1 - smooth(0.62, 0.9, Math.hypot(v.x - 0.05, v.y + 0.02));
+  if (g <= 0) return v;
+  const ven = U.uVen.value, atr = U.uAtr.value, k = 1 - smooth(-0.12, 0.12, v.y), sc = atr + (ven - atr) * k, cx = 0.08 * k;
+  const qx = cx + (v.x - cx) * sc, qy = v.y + k * (0.1 + (v.y - 0.1) * (0.55 + 0.45 * ven) - v.y), qz = v.z * sc;
+  v.x += (qx - v.x) * g; v.y += (qy - v.y) * g; v.z += (qz - v.z) * g;
+  return v;
+}
+// Glowing see-through surface (fresnel rim + faint fill); uHi makes it pulse while the tour talks about it.
+function glowMat(color, fill, rim, def = 1) {
+  return new THREE.ShaderMaterial({
+    uniforms: { uVen: U.uVen, uAtr: U.uAtr, uDef: { value: def }, uColor: { value: new THREE.Color(color) }, uFill: { value: fill }, uRim: { value: rim }, uHi: { value: 0 } },
+    vertexShader: DEFORM_GLSL + `
+      varying vec3 vN; varying vec3 vV;
+      void main() {
+        vec4 mv = modelViewMatrix * vec4(heartDeform(position), 1.0);
+        vN = normalize(normalMatrix * normal); vV = normalize(-mv.xyz);
+        gl_Position = projectionMatrix * mv;
+      }`,
+    fragmentShader: `
+      uniform vec3 uColor; uniform float uFill; uniform float uRim; uniform float uHi;
+      varying vec3 vN; varying vec3 vV;
+      void main() {
+        float f = pow(1.0 - abs(dot(normalize(vN), normalize(vV))), 2.0);
+        gl_FragColor = vec4(uColor * (1.0 + uHi * 0.8), (uFill + uRim * f) * (1.0 + uHi));
+        #include <colorspace_fragment>
+      }`,
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+  });
+}
+
+// ---------------------------------------------------------------- heart, vessels, lungs, body
+// Heart frame: seen from the front like a doctor sees it, so the heart's RIGHT side is on the screen's LEFT.
+const rig = new THREE.Group();
+rig.visible = false;
+scene.add(rig);
+const hiMats = {}; // part → materials that light up while the tour talks about that part
+const addHi = (part, m) => (hiMats[part] ||= []).push(m);
+
+const shellGeo = new THREE.SphereGeometry(1, 72, 54);
+{
+  // a rounded cone: wide base on top (atria), apex pointing down to the screen's right
+  const p = shellGeo.attributes.position;
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i), y = p.getY(i), z = p.getZ(i);
+    const t = (1 - y) / 2, w = 1 - 0.6 * Math.pow(t, 1.8), yy = y - 0.35 * Math.max(0, y - 0.4) ** 2;
+    p.setXYZ(i, x * 0.5 * w + 0.22 * t * t, yy * 0.52 - 0.05, z * 0.36 * w);
+  }
+  shellGeo.computeVertexNormals();
+}
+const muscleMat = new THREE.MeshStandardMaterial({ color: 0xb02a3c, roughness: 0.5, metalness: 0, transparent: true, opacity: 0.2, depthWrite: false });
+muscleMat.onBeforeCompile = (sh) => {
+  Object.assign(sh.uniforms, { uVen: U.uVen, uAtr: U.uAtr, uDef: { value: 1 } });
+  sh.vertexShader = sh.vertexShader
+    .replace('#include <common>', '#include <common>\n' + DEFORM_GLSL)
+    .replace('#include <begin_vertex>', 'vec3 transformed = heartDeform(vec3(position));');
+};
+const muscle = new THREE.Mesh(shellGeo, muscleMat);
+muscle.renderOrder = 0.5;
+const rim = new THREE.Mesh(shellGeo, glowMat(0xff6b81, 0.02, 0.8));
+rim.renderOrder = 3;
+rig.add(muscle, rim);
+
+const CHAMBERS = {
+  RA: { c: [-0.22, 0.18, 0.02], r: [0.15, 0.14, 0.13], col: 0x3f7bff },
+  RV: { c: [-0.06, -0.17, 0.05], r: [0.17, 0.2, 0.13], col: 0x3f7bff },
+  LA: { c: [0.2, 0.24, -0.08], r: [0.15, 0.12, 0.12], col: 0xff3048 },
+  LV: { c: [0.17, -0.2, -0.02], r: [0.17, 0.26, 0.15], col: 0xff3048 },
+};
+for (const [k, ch] of Object.entries(CHAMBERS)) {
+  const g = new THREE.SphereGeometry(1, 32, 24);
+  g.scale(...ch.r); g.translate(...ch.c);
+  const m = glowMat(ch.col, 0.1, 0.75), mesh = new THREE.Mesh(g, m);
+  mesh.renderOrder = 1; rig.add(mesh); addHi(k, m);
+}
+
+// Blood path waypoints: position, oxygen (0 blue → 1 red), stream radius, tag.
+const wp = (x, y, z, ox, rad, tag) => ({ p: new V3(x, y, z), ox, rad, tag });
+const HEART_IN = [ // body → vena cava → right heart → pulmonary trunk
+  wp(-0.72, -1.08, 0, 0, 0.05),
+  wp(-0.56, -0.72, -0.04, 0, 0.026),
+  wp(-0.42, -0.32, -0.04, 0, 0.026, 'IVC'),
+  wp(-0.3, 0.0, 0.0, 0, 0.04),
+  wp(-0.22, 0.18, 0.02, 0, 0.075, 'RA'),
+  wp(-0.13, 0.03, 0.04, 0, 0.03, 'TV'),
+  wp(-0.08, -0.2, 0.06, 0, 0.085, 'RV'),
+  wp(-0.02, -0.3, 0.07, 0, 0.06),
+  wp(0.0, -0.06, 0.13, 0, 0.04),
+  wp(0.0, 0.2, 0.14, 0, 0.026, 'PV'),
+  wp(0.02, 0.45, 0.12, 0, 0.028, 'PA'),
+  wp(0.02, 0.6, 0.08, 0, 0.026),
+];
+const lungPath = (sx) => [ // sx = -1: right lung (screen left), +1: left lung
+  wp(0.3 * sx, 0.72, 0.04, 0, 0.022),
+  wp(0.55 * sx, 0.82, 0, 0, 0.03, 'LUNG_IN'),
+  wp(0.72 * sx, 1.0, 0.02, 0.25, 0.07, 'LUNG'),
+  wp(0.88 * sx, 0.84, 0, 0.6, 0.07),
+  wp(0.78 * sx, 0.62, 0.02, 0.9, 0.06),
+  wp(0.6 * sx, 0.54, -0.02, 1, 0.03, 'LUNG_OUT'),
+  ...(sx < 0 ? [wp(-0.35, 0.44, -0.18, 1, 0.022, 'PVN'), wp(-0.05, 0.33, -0.22, 1, 0.022)] : [wp(0.42, 0.42, -0.15, 1, 0.022, 'PVN')]),
+];
+const HEART_OUT = [ // left heart → aorta → body capillaries
+  wp(0.2, 0.24, -0.08, 1, 0.07, 'LA'),
+  wp(0.17, 0.04, -0.02, 1, 0.03, 'MV'),
+  wp(0.18, -0.2, -0.02, 1, 0.09, 'LV'),
+  wp(0.22, -0.4, 0.0, 1, 0.06),
+  wp(0.08, -0.16, 0.0, 1, 0.05),
+  wp(0.06, 0.12, -0.01, 1, 0.028, 'AV'),
+  wp(0.04, 0.45, -0.03, 1, 0.032, 'AO'),
+  wp(0.14, 0.78, -0.08, 1, 0.032),
+  wp(0.32, 0.72, -0.16, 1, 0.032),
+  wp(0.38, 0.4, -0.28, 1, 0.03),
+  wp(0.42, -0.2, -0.3, 1, 0.03),
+  wp(0.5, -0.7, -0.2, 1, 0.03),
+  wp(0.62, -1.0, -0.05, 1, 0.04, 'BODY_IN'),
+  wp(0.42, -1.2, 0, 0.8, 0.07, 'BODY'),
+  wp(0.14, -1.08, 0.02, 0.5, 0.07),
+  wp(-0.16, -1.22, 0, 0.25, 0.07),
+  wp(-0.46, -1.1, 0.02, 0.05, 0.06),
+];
+const SVC = [wp(-0.3, 1.1, 0, 0, 0.022), wp(-0.28, 0.75, 0, 0, 0.024), wp(-0.25, 0.42, 0.02, 0, 0.03), wp(-0.22, 0.2, 0.02, 0, 0.06)];
+
+// Each path becomes a lookup table so a thousand blood cells can move along it cheaply.
+// zone 1 = ventricle → artery (rushes in systole), zone 2 = atrium → ventricle (rushes in diastole).
+function buildPath(points, closed) {
+  const n = points.length, curve = new THREE.CatmullRomCurve3(points.map((w) => w.p), closed, 'centripetal');
+  const N = closed ? 1400 : 200, segs = closed ? n : n - 1;
+  const L = { closed, N, pos: new Float32Array(N * 3), ox: new Float32Array(N), rad: new Float32Array(N), zone: closed ? new Uint8Array(N) : null, tagU: {}, len: curve.getLength(), valves: [] };
+  const [iRA, iRV, iPA, iLA, iLV, iAO] = ['RA', 'RV', 'PA', 'LA', 'LV', 'AO'].map((tag) => points.findIndex((w) => w.tag === tag));
+  const tmp = new V3();
+  for (let j = 0; j < N; j++) {
+    const u = closed ? j / N : j / (N - 1), t = curve.getUtoTmapping(u), x = Math.min(t * segs, segs - 1e-6), i = Math.floor(x), f = x - i, i2 = (i + 1) % n;
+    curve.getPoint(t, tmp); L.pos.set([tmp.x, tmp.y, tmp.z], j * 3);
+    L.ox[j] = points[i].ox + (points[i2].ox - points[i].ox) * f;
+    L.rad[j] = points[i].rad + (points[i2].rad - points[i].rad) * f;
+    if (L.zone) L.zone[j] = (i >= iRA && i < iRV) || (i >= iLA && i < iLV) ? 2 : (i >= iRV && i < iPA) || (i >= iLV && i <= iAO) ? 1 : 0;
+    const tag = points[i].tag;
+    if (tag && !(tag in L.tagU)) L.tagU[tag] = u;
+  }
+  for (const k of ['TV', 'PV', 'MV', 'AV']) if (k in L.tagU) L.valves.push({ key: k, u: L.tagU[k] });
+  return L;
+}
+// Interpolated table lookup at u (0..1).
+function sampleAt(L, u) {
+  const x = u * (L.closed ? L.N : L.N - 1), j0 = Math.floor(x) % L.N, j1 = L.closed ? (j0 + 1) % L.N : Math.min(L.N - 1, j0 + 1);
+  return { j0, j1, f: x - Math.floor(x) };
+}
+function samplePos(L, u, out = new V3()) {
+  const { j0, j1, f } = sampleAt(L, u), P = L.pos;
+  return out.set(P[j0 * 3] + (P[j1 * 3] - P[j0 * 3]) * f, P[j0 * 3 + 1] + (P[j1 * 3 + 1] - P[j0 * 3 + 1]) * f, P[j0 * 3 + 2] + (P[j1 * 3 + 2] - P[j0 * 3 + 2]) * f);
+}
+const sampleOx = (L, u) => { const { j0, j1, f } = sampleAt(L, u); return L.ox[j0] + (L.ox[j1] - L.ox[j0]) * f; };
+const LUNG_R = lungPath(-1), LUNG_L = lungPath(1);
+const PATHS = [buildPath([...HEART_IN, ...LUNG_R, ...HEART_OUT], true), buildPath([...HEART_IN, ...LUNG_L, ...HEART_OUT], true), buildPath(SVC, false)];
+
+// Vessels: veins and the pulmonary artery carry blue blood, the aorta and pulmonary veins red.
+const BLUE_V = 0x2f66ff, RED_V = 0xff2f48;
+function vessel(pts, r, hex, part) {
+  const m = new THREE.MeshStandardMaterial({ color: hex, emissive: hex, emissiveIntensity: 0.35, roughness: 0.45, transparent: true, opacity: 0.5, depthWrite: false });
+  const curve = new THREE.CatmullRomCurve3(pts.map((w) => w.p || w), false, 'centripetal');
+  const mesh = new THREE.Mesh(new THREE.TubeGeometry(curve, 48, r, 10, false), m);
+  mesh.renderOrder = 0; rig.add(mesh); addHi(part, m);
+}
+const lungOut = (L) => L.slice(L.findIndex((w) => w.tag === 'LUNG_OUT'));
+vessel(HEART_IN.slice(0, 5), 0.034, BLUE_V, 'VC');
+vessel(SVC, 0.03, BLUE_V, 'VC');
+vessel([...HEART_IN.slice(9), LUNG_R[0], LUNG_R[1]], 0.03, BLUE_V, 'PA');
+vessel([...HEART_IN.slice(10), LUNG_L[0], LUNG_L[1]], 0.026, BLUE_V, 'PA');
+vessel([...lungOut(LUNG_R), HEART_OUT[0]], 0.022, RED_V, 'PVN');
+vessel([...lungOut(LUNG_L), HEART_OUT[0]], 0.022, RED_V, 'PVN');
+vessel(HEART_OUT.slice(5, 13), 0.036, RED_V, 'AO');
+vessel([new V3(0.1, 0.77, -0.06), new V3(0.08, 0.95, -0.04), new V3(0.06, 1.12, -0.02)], 0.016, RED_V, 'AO');
+vessel([new V3(0.22, 0.76, -0.11), new V3(0.25, 0.95, -0.1), new V3(0.27, 1.1, -0.1)], 0.016, RED_V, 'AO');
+for (const sx of [-1, 1]) {
+  const g = new THREE.SphereGeometry(1, 32, 24);
+  g.scale(0.3, 0.4, 0.18); g.translate(0.75 * sx, 0.82, -0.05);
+  const m = glowMat(0xff9fb4, 0.05, 0.5, 0), mesh = new THREE.Mesh(g, m);
+  mesh.renderOrder = 1; rig.add(mesh); addHi('LUNGS', m);
+}
+{
+  const g = new THREE.SphereGeometry(1, 40, 16);
+  g.scale(0.86, 0.15, 0.1); g.translate(0, -1.12, 0);
+  const m = glowMat(0xffb27a, 0.05, 0.42, 0), mesh = new THREE.Mesh(g, m);
+  mesh.renderOrder = 1; rig.add(mesh); addHi('BODY', m);
+}
+
+// Valves: leaflets hinged on a ring, swinging open downstream. AV valves (tricuspid, mitral) open while the
+// heart relaxes; the pulmonary and aortic valves open while it squeezes.
+const leafMat = new THREE.MeshBasicMaterial({ color: 0xffe3ea, transparent: true, opacity: 0.8, side: THREE.DoubleSide, depthWrite: false });
+function makeValve(n, r) {
+  const g = new THREE.Group(), leaves = [];
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(r, 0.005, 6, 32), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5, depthWrite: false }));
+  ring.renderOrder = 4; g.add(ring);
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2, er = new V3(Math.cos(a), Math.sin(a), 0), et = new V3(-Math.sin(a), Math.cos(a), 0);
+    const pivot = new THREE.Group(); pivot.position.copy(er).multiplyScalar(r);
+    const pos = [], tip = er.clone().multiplyScalar(-r * 0.97);
+    for (let k = 0; k < 6; k++) {
+      const b0 = a - Math.PI / n + (k / 6) * (Math.PI * 2 / n), b1 = a - Math.PI / n + ((k + 1) / 6) * (Math.PI * 2 / n);
+      pos.push(tip.x, tip.y, 0, Math.cos(b0) * r - er.x * r, Math.sin(b0) * r - er.y * r, 0, Math.cos(b1) * r - er.x * r, Math.sin(b1) * r - er.y * r, 0);
+    }
+    const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    const m = new THREE.Mesh(geo, leafMat); m.renderOrder = 4;
+    pivot.add(m); g.add(pivot);
+    leaves.push({ pivot, axis: et });
+  }
+  return { g, ring, leaves };
+}
+const VALVES = { TV: { n: 3, r: 0.05, av: true }, MV: { n: 2, r: 0.05, av: true }, PV: { n: 3, r: 0.034, av: false }, AV: { n: 3, r: 0.036, av: false } };
+const valves = [], valveMap = {};
+for (const [k, d] of Object.entries(VALVES)) {
+  const L = PATHS[0], u = L.tagU[k], a = samplePos(L, u), b = samplePos(L, (u + 0.006) % 1);
+  const v = Object.assign(makeValve(d.n, d.r), { key: k, av: d.av, base: a.clone(), angle: d.av ? 1.25 : 0.04, flash: 0 });
+  v.g.quaternion.setFromUnitVectors(new V3(0, 0, 1), b.sub(a).normalize());
+  rig.add(v.g); valves.push(v); valveMap[k] = v;
+}
+
+// Blood cells: two loops (one through each lung) and a short stream down the superior vena cava.
+const PN_LOOP = 560, PN_SVC = 90, PN = PN_LOOP * 2 + PN_SVC;
+const blood = makePoints(PN);
+Object.assign(blood, { u: new Float32Array(PN), loop: new Uint8Array(PN), off: new Float32Array(PN * 3), mul: new Float32Array(PN), jit: new Float32Array(PN) });
+{
+  const t = new V3();
+  for (let i = 0; i < PN; i++) {
+    blood.loop[i] = i < PN_LOOP ? 0 : i < PN_LOOP * 2 ? 1 : 2;
+    blood.u[i] = Math.random();
+    randUnit(t).multiplyScalar(Math.cbrt(Math.random()));
+    blood.off.set([t.x, t.y, t.z], i * 3);
+    blood.mul[i] = 0.8 + Math.random() * 0.4; blood.jit[i] = Math.random();
+    blood.size[i] = 5 + Math.random() * 4;
+  }
+  blood.sizes();
+}
+blood.p.renderOrder = 5;
+rig.add(blood.p);
+const drop = sprite(GLOW, 0xffffff, 0.2), dropRing = sprite(RING, 0xffffff, 0.3, 0.8);
+drop.renderOrder = dropRing.renderOrder = 6; drop.visible = dropRing.visible = false;
+rig.add(drop, dropRing);
+const BLUE = new THREE.Color(0x3d6dff), RED = new THREE.Color(0xff2440);
+
+// ---------------------------------------------------------------- state
+const heart = { alive: false, form: 0, bornT: 0, spawned: 0 };
+const beat = {
+  s: 0, vel: 0, pump: 0, phase: 'dia', sMin: 0, sMax: 0, mode: 'auto',
+  target: 0, handId: 0, lastHand: -1e9, hPhase: 'open', hMin: 0, hMax: 0, lastHandSqueeze: -1e9,
+  key: false, lastKey: -1e9, autoT: 0, autoP: false, kickT: -1e9, diaAt: -1e9, pDone: true,
+  beats: [], count: 0, manual: 0, lastBeatT: -1e9, thump: 0,
+};
+const view = { yaw: 0, pitch: 0, yawT: 0, pitchT: 0, zoom: 1, zoomT: 1 };
+const tour = { active: false, i: -1, u: 0, from: 0, to: 0, t: 0, step: 0, deadline: Infinity };
+const pops = [], said = {};
+let labelsA = 0, T = 0, lastRender = 0, started = false;
+
+// ---------------------------------------------------------------- heartbeat
+function spawn() {
+  if (heart.alive) return;
+  Object.assign(heart, { alive: true, form: 0, bornT: T });
+  rig.visible = true;
+  Object.assign(beat, { s: 0, phase: 'dia', sMin: 0, autoT: 0.5 * 60 / S.bpm });
+  sfx('spawn');
+  if (heart.spawned++ === 0) setTimeout(() => say(ln('spawn')), 1000);
+  updateHint();
+}
+function onSystole() {
+  beat.phase = 'sys'; beat.sMax = beat.s;
+  beat.beats.push(T); beat.count++; beat.lastBeatT = T; beat.thump = 1;
+  if (beat.mode !== 'auto') beat.manual++;
+  ecgEvent('QRS'); sfx('lub');
+  for (const v of valves) if (v.av) v.flash = 1;
+  pops.push({ t: 0, text: 'LUB', sub: CS.t('ट्राइकस्पिड + माइट्रल वाल्व बंद', 'tricuspid + mitral valves shut'), col: '#ff7a8c' });
+}
+function onDiastole() {
+  beat.phase = 'dia'; beat.sMin = beat.s; beat.diaAt = T; beat.pDone = false;
+  ecgEvent('T'); sfx('dub');
+  for (const v of valves) if (!v.av) v.flash = 1;
+  pops.push({ t: 0, text: 'DUB', sub: CS.t('पल्मोनरी + एओर्टिक वाल्व बंद', 'pulmonary + aortic valves shut'), col: '#7da6ff' });
+}
+// Atria give a last small push just before the ventricles squeeze (the P wave).
+function onP() { beat.pDone = true; beat.kickT = T; ecgEvent('P'); }
+function bpm() {
+  const b = beat.beats;
+  if (b.length < 2 || T - b[b.length - 1] > 3) return 0;
+  const k = b.slice(-5);
+  return 60 * (k.length - 1) / (k[k.length - 1] - k[0]);
+}
+function bpmStatus(b) {
+  if (!b) return beat.mode === 'auto' ? ['', '#ffffff'] : [CS.t('दिल रुका है', 'the heart is still'), '#9fb4ff'];
+  if (b < 55) return [CS.t('धीमा · जैसे सोते समय', 'slow · like when sleeping'), '#7fb2ff'];
+  if (b <= 100) return [CS.t('सामान्य · आराम के समय', 'normal · at rest'), '#3dff8b'];
+  if (b <= 140) return [CS.t('तेज़ · जैसे खेलते समय', 'fast · like when playing'), '#ffb340'];
+  return [CS.t('बहुत तेज़ · जैसे दौड़ते समय', 'very fast · like when running'), '#ff5a5a'];
+}
+// Auto beat: one cycle per period, P wave just before the squeeze.
+function autoBeat(dt) {
+  const per = 60 / S.bpm;
+  beat.autoT += dt;
+  if (beat.autoT >= per) { beat.autoT %= per; beat.autoP = false; }
+  const tau = beat.autoT;
+  if (!beat.autoP && tau > 0.86 * per) { beat.autoP = true; onP(); }
+  const rise = Math.min(0.12, 0.13 * per), hold = 0.3 * per, fall = 0.2 * per;
+  return tau < hold ? smooth(0, rise, tau) : 1 - smooth(hold, hold + fall, tau);
+}
+function squeezeHand() {
+  const c = hands.filter((h) => !h.pinch && !h.peace);
+  return c.find((h) => h.id === beat.handId) || c[0] || null;
+}
+function updateBeat(dt) {
+  if (!heart.alive) { beat.s = 0; beat.pump = 0; return; }
+  // Your fist drives the heart once it has actually opened or closed in the last few seconds.
+  const sq = squeezeHand();
+  if (sq) {
+    const tg = smooth(0.15, 0.85, sq.closure);
+    beat.lastHand = T; beat.handId = sq.id; beat.target = tg;
+    if (beat.hPhase === 'open') { beat.hMin = Math.min(beat.hMin, tg); if (tg - beat.hMin > 0.35) { beat.hPhase = 'closed'; beat.hMax = tg; beat.lastHandSqueeze = T; } }
+    else { beat.hMax = Math.max(beat.hMax, tg); if (beat.hMax - tg > 0.35) { beat.hPhase = 'open'; beat.hMin = tg; beat.lastHandSqueeze = T; } }
+  }
+  const handMode = !tour.active && T - beat.lastHand < 1.2 && T - beat.lastHandSqueeze < 7;
+  const keyMode = !tour.active && (beat.key || T - beat.lastKey < 2.5);
+  beat.mode = handMode ? 'hand' : keyMode ? 'key' : S.auto || tour.active ? 'auto' : 'still';
+  const prev = beat.s;
+  if (beat.mode === 'auto') beat.s = autoBeat(dt);
+  else {
+    const target = beat.mode === 'hand' ? beat.target : beat.mode === 'key' && beat.key ? 1 : 0;
+    beat.s += (target - beat.s) * follow(beat.mode === 'hand' ? 0.0004 : 0.00005, dt);
+    beat.autoT = 0.55 * 60 / S.bpm; // auto resumes from a relaxed heart
+  }
+  beat.vel = (beat.s - prev) / Math.max(dt, 1e-3);
+  beat.pump += (Math.min(8, Math.abs(beat.vel)) - beat.pump) * follow(0.02, dt);
+  // systole / diastole: a real squeeze or release of at least 0.3
+  if (beat.phase === 'dia') { beat.sMin = Math.min(beat.sMin, beat.s); if (beat.s - beat.sMin > 0.3 && beat.vel > 0) onSystole(); }
+  else { beat.sMax = Math.max(beat.sMax, beat.s); if (beat.sMax - beat.s > 0.3 && beat.vel < 0) onDiastole(); }
+  if (beat.mode !== 'auto' && beat.phase === 'dia' && !beat.pDone && T - beat.diaAt > 0.15 && beat.s < 0.3) onP();
+  if (beat.beats.length && T - beat.beats[0] > 10) beat.beats.shift();
+}
+
+// ---------------------------------------------------------------- heart + valves + blood each frame
+const lay = { fit: 1, x: 0, y: 0, monY: 64, hintTop: 1e9 };
+function updateHeart(dt) {
+  if (!heart.alive) return;
+  heart.form = Math.min(1, heart.form + dt / 1.2);
+  const s = beat.s;
+  U.uVen.value = 1 - 0.2 * s;
+  U.uAtr.value = 0.95 + 0.1 * s - 0.08 * gauss(T - beat.kickT - 0.07, 0.05);
+  beat.thump *= Math.pow(0.02, dt);
+  view.yaw += (view.yawT - view.yaw) * follow(0.01, dt);
+  view.pitch += (view.pitchT - view.pitch) * follow(0.01, dt);
+  view.zoom += (view.zoomT - view.zoom) * follow(0.01, dt);
+  rig.rotation.set(view.pitch, view.yaw + Math.sin(T * 0.5) * 0.12, 0);
+  rig.position.set(lay.x, lay.y, 0);
+  rig.scale.setScalar(Math.max(0.0001, lay.fit * view.zoom * easeOutBack(heart.form) * (1 + 0.03 * beat.thump)));
+  pointsMat.uniforms.uScale.value = rig.scale.x;
+  for (const v of valves) {
+    const open = v.av ? beat.phase === 'dia' : beat.phase === 'sys';
+    v.angle += ((open ? 1.25 : 0.04) - v.angle) * follow(0.0002, dt);
+    v.g.position.copy(deform(v.base.clone()));
+    for (const l of v.leaves) l.pivot.quaternion.setFromAxisAngle(l.axis, v.angle);
+    v.flash *= Math.pow(0.02, dt);
+    v.ring.material.opacity = 0.45 + 0.55 * v.flash;
+  }
+  // tour highlight
+  const cur = tour.active ? TOUR[tour.i]?.part : null;
+  for (const [k, list] of Object.entries(hiMats)) {
+    for (const m of list) {
+      const h = (m.userData.hi || 0) + ((k === cur ? 1 : 0) - (m.userData.hi || 0)) * follow(0.01, dt);
+      m.userData.hi = h;
+      if (m.uniforms) m.uniforms.uHi.value = h * (0.7 + 0.3 * Math.sin(T * 6));
+      else m.emissiveIntensity = 0.35 + 1.2 * h;
+    }
+  }
+  drop.visible = dropRing.visible = tour.active;
+  if (tour.active) {
+    const p = deform(samplePos(PATHS[0], tour.u)), ox = sampleOx(PATHS[0], tour.u);
+    drop.position.copy(p); dropRing.position.copy(p);
+    drop.material.color.copy(BLUE).lerp(RED, ox).multiplyScalar(1.6);
+    drop.scale.setScalar(0.16 + 0.03 * Math.sin(T * 8));
+    dropRing.scale.setScalar(0.2 + 0.12 * ((T * 1.5) % 1));
+    dropRing.material.opacity = 0.9 * (1 - ((T * 1.5) % 1));
+  }
+}
+function updateBlood(dt) {
+  if (!heart.alive) return;
+  const vW = 0.05 + 0.32 * beat.pump, sys = beat.phase === 'sys', fade = Math.min(1, heart.form * 1.5), v = new V3();
+  for (let i = 0; i < PN; i++) {
+    const L = PATHS[blood.loop[i]];
+    let u = blood.u[i], du = vW * blood.mul[i] * dt / L.len;
+    if (L.zone) { const z = L.zone[Math.floor(u * L.N) % L.N]; if ((z === 1 && sys) || (z === 2 && !sys)) du *= 1.9; }
+    // a shut valve holds the blood back; cells queue up in the chamber behind it
+    for (const vv of L.valves) {
+      if (valveMap[vv.key].angle > 0.5) continue;
+      const gap = (vv.u - u + 1) % 1;
+      if (gap < 0.06) du = Math.min(du, Math.max(0, gap - 0.003 - blood.jit[i] * 0.03));
+    }
+    u += du;
+    if (u >= 1) u -= 1;
+    blood.u[i] = u;
+    const { j0, j1, f } = sampleAt(L, u), P = L.pos, r = L.rad[j0] + (L.rad[j1] - L.rad[j0]) * f, o3 = i * 3;
+    v.set(
+      P[j0 * 3] + (P[j1 * 3] - P[j0 * 3]) * f + blood.off[o3] * r,
+      P[j0 * 3 + 1] + (P[j1 * 3 + 1] - P[j0 * 3 + 1]) * f + blood.off[o3 + 1] * r,
+      P[j0 * 3 + 2] + (P[j1 * 3 + 2] - P[j0 * 3 + 2]) * f + blood.off[o3 + 2] * r,
+    );
+    deform(v);
+    blood.pos[o3] = v.x; blood.pos[o3 + 1] = v.y; blood.pos[o3 + 2] = v.z;
+    const ox = L.ox[j0] + (L.ox[j1] - L.ox[j0]) * f;
+    blood.col[o3] = BLUE.r + (RED.r - BLUE.r) * ox; blood.col[o3 + 1] = BLUE.g + (RED.g - BLUE.g) * ox; blood.col[o3 + 2] = BLUE.b + (RED.b - BLUE.b) * ox;
+    blood.al[i] = fade * 0.85 * (L.closed ? 1 : smooth(0, 0.08, u) * (1 - smooth(0.9, 1, u)));
+  }
+  blood.dirty();
+}
+
+// ---------------------------------------------------------------- ECG (P, QRS and T waves from the beat events)
+const ecg = { buf: new Float32Array(360), head: 0, acc: 0, events: [] };
+const ecgEvent = (type) => ecg.events.push({ type, t: T });
+function ecgValue(t) {
+  let v = 0;
+  for (const e of ecg.events) {
+    const x = t - e.t;
+    if (x < -0.05 || x > 0.6) continue;
+    if (e.type === 'P') v += 0.13 * gauss(x - 0.04, 0.03);
+    else if (e.type === 'QRS') v += -0.12 * gauss(x, 0.01) + gauss(x - 0.025, 0.011) - 0.28 * gauss(x - 0.05, 0.012);
+    else v += 0.3 * gauss(x - 0.09, 0.05);
+  }
+  return v + (Math.random() - 0.5) * 0.015;
+}
+function updateEcg(dt) {
+  ecg.acc += dt;
+  while (ecg.acc >= 0.0125) {
+    ecg.acc -= 0.0125;
+    ecg.buf[ecg.head] = ecgValue(T - ecg.acc);
+    ecg.head = (ecg.head + 1) % ecg.buf.length;
+  }
+  if (ecg.events.length && T - ecg.events[0].t > 1) ecg.events.shift();
+}
+
+// ---------------------------------------------------------------- blood journey (tour) + narration
+function toggleTour() { if (tour.active) stopTour(); else startTour(); }
+function startTour() {
+  if (!heart.alive) return;
+  tour.active = true; tour.i = -1; tour.u = (PATHS[0].tagU.RA - 0.05 + 1) % 1;
+  $('#btnTour').classList.add('on');
+  updateHint();
+  tourNext();
+}
+function stopTour() {
+  tour.active = false; tour.step++;
+  $('#btnTour').classList.remove('on');
+  window.speechSynthesis?.cancel(); sub.text = '';
+  updateHint();
+}
+function tourNext() {
+  if (!tour.active) return;
+  tour.i++;
+  if (tour.i >= TOUR.length) { stopTour(); say(ln('tourEnd')); return; }
+  const st = TOUR[tour.i], text = st[CS.lang], id = ++tour.step;
+  tour.from = tour.u; tour.to = PATHS[0].tagU[st.at]; tour.t = 0;
+  tour.deadline = T + 4 + text.length * 0.1; // in case the voice never reports that it finished
+  sfx('blip');
+  say(text, () => setTimeout(() => { if (tour.active && tour.step === id) tourNext(); }, 700));
+}
+function updateTour(dt) {
+  if (!tour.active) return;
+  tour.t += dt;
+  const span = (tour.to - tour.from + 1) % 1;
+  tour.u = (tour.from + span * smooth(0, 2.2, tour.t)) % 1;
+  if (T > tour.deadline) { tour.deadline = Infinity; tourNext(); }
+}
+// Explain things as they happen, one line at a time.
+function updateNarration() {
+  if (!heart.alive || speaking || tour.active || T - lastSpeechEnd < 2.5 || T - heart.bornT < 2) return;
+  const manual = beat.mode === 'hand' || beat.mode === 'key', b = bpm();
+  const once = (k) => { if (said[k]) return false; said[k] = true; say(ln(k)); return true; };
+  if (beat.count >= 4 && once('colors')) return;
+  if (beat.count >= 10 && once('lubdub')) return;
+  if (manual && b > 115 && once('fast')) return;
+  if (manual && b > 0 && b < 50 && beat.manual > 5 && once('slow')) return;
+  if (beat.mode === 'hand' && beat.manual >= 3 && T - beat.lastBeatT > 4) once('stopped');
+}
+function toggleLabels() {
+  S.labels = !S.labels; saveSettings();
+  const el = document.querySelector('[data-s="labels"]'); if (el) el.checked = S.labels;
+  sfx('blip');
+}
+
+// ---------------------------------------------------------------- hands
+let handLM = null, hands = [], lastVT = -1, lastDetect = 0, nextHandId = 1;
+async function initHands() {
+  setLoad('ldHand', 'wait');
+  const { FilesetResolver, HandLandmarker } = await import(`${MP_BASE}/vision_bundle.mjs`);
+  const fileset = await FilesetResolver.forVisionTasks(`${MP_BASE}/wasm`);
+  const opts = (delegate) => ({
+    baseOptions: { modelAssetPath: HAND_MODEL, delegate },
+    runningMode: 'VIDEO', numHands: 2,
+    minHandDetectionConfidence: 0.6, minHandPresenceConfidence: 0.5, minTrackingConfidence: 0.5,
+  });
+  try { handLM = await HandLandmarker.createFromOptions(fileset, opts('GPU')); }
+  catch { handLM = await HandLandmarker.createFromOptions(fileset, opts('CPU')); }
+  setLoad('ldHand', 'ok');
+  toast('Hand tracking ready ✓');
+}
+function stageSize() { return { W: stage.clientWidth || innerWidth, H: stage.clientHeight || innerHeight }; }
+// Video landmark (0..1) → stage position (0..1), mirrored and cover-fitted like the background.
+function toStage(p) {
+  const { W, H } = stageSize(), vw = cam.videoWidth || 1280, vh = cam.videoHeight || 720;
+  const s = Math.max(W / vw, H / vh), dw = vw * s, dh = vh * s;
+  return { x: ((1 - p.x) * dw + (W - dw) / 2) / W, y: (p.y * dh + (H - dh) / 2) / H };
+}
+function trackHands(now) {
+  if (!handLM || cam.readyState < 2 || cam.currentTime === lastVT || now - lastDetect < 30) return;
+  lastVT = cam.currentTime; lastDetect = now;
+  let res;
+  try { res = handLM.detectForVideo(cam, now); } catch { return; }
+  ingestHands(res.landmarks || [], now);
+}
+function ingestHands(list, now = performance.now()) {
+  const vw = cam.videoWidth || 1280, vh = cam.videoHeight || 720, asp = vw / vh;
+  const next = list.map((lm) => {
+    const d = (a, b) => Math.hypot((lm[a].x - lm[b].x) * asp, lm[a].y - lm[b].y, ((lm[a].z || 0) - (lm[b].z || 0)) * asp * 0.5);
+    const size = Math.max(1e-4, d(0, 9));
+    const ext = (t, p) => d(0, t) > d(0, p) * 1.15;
+    // how closed the fist is: fingertip-to-wrist vs knuckle-to-wrist, about 1.9 open and 1.0 closed
+    const curl = [[8, 5], [12, 9], [16, 13], [20, 17]].map(([t, m]) => d(0, t) / Math.max(1e-4, d(0, m)));
+    const closure = clamp((1.75 - (curl[0] + curl[1] + curl[2] + curl[3]) / 4) / 0.65, 0, 1);
+    const open = ext(8, 6) && ext(12, 10) && ext(16, 14) && ext(20, 18) && d(4, 5) > size * 0.55 && d(8, 20) > size * 0.9;
+    const peace = ext(8, 6) && ext(12, 10) && curl[2] < 1.3 && curl[3] < 1.35 && d(8, 12) > size * 0.3;
+    return {
+      lm, open, peace, closure, indexOut: d(0, 8) > d(0, 5) * 1.25, ratio: d(4, 8) / size, wrist: lm[0], t: now, pinch: false, id: 0,
+      tip: toStage(lm[8]), pt: toStage({ x: (lm[4].x + lm[8].x) / 2, y: (lm[4].y + lm[8].y) / 2 }), palm: toStage(lm[9]),
+    };
+  });
+  for (const h of next) {
+    let prev = null, best = 0.25;
+    for (const p of hands) { const dd = Math.hypot(p.wrist.x - h.wrist.x, p.wrist.y - h.wrist.y); if (dd < best) { best = dd; prev = p; } }
+    h.id = prev ? prev.id : nextHandId++;
+    h.pinch = (prev?.pinch ? h.ratio < 0.45 : h.ratio < 0.3) && h.indexOut && h.closure < 0.6 && !h.peace;
+    if (h.pinch) h.open = false;
+    if (prev) for (const k of ['tip', 'pt', 'palm']) { h[k].x = prev[k].x + (h[k].x - prev[k].x) * 0.65; h[k].y = prev[k].y + (h[k].y - prev[k].y) * 0.65; }
+  }
+  hands = next;
+}
+function drawMask() {
+  const w = maskCanvas.width, h = maskCanvas.height;
+  mctx.clearRect(0, 0, w, h);
+  if (S.occlude && hands.length) {
+    mctx.fillStyle = mctx.strokeStyle = '#fff';
+    mctx.lineCap = mctx.lineJoin = 'round';
+    mctx.filter = 'blur(1.5px)';
+    for (const hd of hands) {
+      const L = hd.lm, P = (i) => [L[i].x * w, L[i].y * h];
+      const size = Math.hypot((L[0].x - L[9].x) * w, (L[0].y - L[9].y) * h);
+      mctx.lineWidth = size * 0.32;
+      for (const chain of [[0, 1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16], [17, 18, 19, 20]]) {
+        mctx.beginPath(); chain.forEach((i, j) => (j ? mctx.lineTo(...P(i)) : mctx.moveTo(...P(i)))); mctx.stroke();
+      }
+      mctx.beginPath(); [0, 1, 2, 5, 9, 13, 17].forEach((i, j) => (j ? mctx.lineTo(...P(i)) : mctx.moveTo(...P(i)))); mctx.closePath(); mctx.fill(); mctx.stroke();
+      const [wx, wy] = P(0), [mx, my] = P(9), len = Math.hypot(wx - mx, wy - my) || 1;
+      mctx.lineWidth = size * 0.85;
+      mctx.beginPath(); mctx.moveTo(wx, wy); mctx.lineTo(wx + (wx - mx) / len * size * 3.5, wy + (wy - my) / len * size * 3.5); mctx.stroke();
+    }
+    mctx.filter = 'none';
+  }
+  maskTex.needsUpdate = true;
+}
+
+// ---------------------------------------------------------------- gestures: 🙌 summon / tour, ✌️ labels, 🤏 rotate, 🤏🤏 zoom
+const palms = { count: 0, hold: 0, fired: false }, peace = { hold: 0, fired: false };
+const grab = { mode: 'none', id: 0, x: 0, y: 0, d0: 1, z0: 1 };
+function updateGestures(dt) {
+  const c = hands.filter((h) => h.open).length >= 2 ? 2 : 0;
+  if (c !== palms.count) { palms.count = c; palms.hold = 0; palms.fired = false; }
+  if (c === 2 && !palms.fired && started) {
+    palms.hold += dt;
+    if (palms.hold >= 1) { palms.fired = true; if (!heart.alive) spawn(); else toggleTour(); }
+  }
+  if (heart.alive && hands.some((h) => h.peace)) {
+    if (!peace.fired) { peace.hold += dt; if (peace.hold >= 0.6) { peace.fired = true; toggleLabels(); } }
+  } else { peace.hold = 0; peace.fired = false; }
+  const pin = hands.filter((h) => h.pinch);
+  if (!heart.alive) { grab.mode = 'none'; return; }
+  if (pin.length >= 2) {
+    const d = Math.hypot(pin[0].pt.x - pin[1].pt.x, pin[0].pt.y - pin[1].pt.y);
+    if (grab.mode !== 'zoom') { grab.mode = 'zoom'; grab.d0 = Math.max(0.02, d); grab.z0 = view.zoomT; }
+    view.zoomT = clamp(grab.z0 * d / grab.d0, 0.6, 1.8);
+  } else if (pin.length === 1) {
+    const h = pin[0];
+    if (grab.mode !== 'rot' || grab.id !== h.id) { grab.mode = 'rot'; grab.id = h.id; grab.x = h.pt.x; grab.y = h.pt.y; sfx('grab'); }
+    view.yawT = clamp(view.yawT + (h.pt.x - grab.x) * 5, -1.4, 1.4);
+    view.pitchT = clamp(view.pitchT + (h.pt.y - grab.y) * 3, -0.7, 0.7);
+    grab.x = h.pt.x; grab.y = h.pt.y;
+  } else grab.mode = 'none';
+}
+
+// ---------------------------------------------------------------- audio: clap, lub-dub, effects
+const audio = { ctx: null, bus: null, mic: null, analyser: null, buf: null, bg: 0.01, lastSpike: 0, lastClap: 0, lastTrigger: 0, busyUntil: 0, noise: null };
+function ensureAudio() {
+  if (!audio.ctx) {
+    audio.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    audio.bus = audio.ctx.createGain(); audio.bus.gain.value = 0.9; audio.bus.connect(audio.ctx.destination);
+  }
+  audio.ctx.resume?.();
+}
+function initMic(stream) {
+  ensureAudio();
+  audio.mic = audio.ctx.createMediaStreamSource(stream);
+  const an = audio.ctx.createAnalyser(); an.fftSize = 2048; an.smoothingTimeConstant = 0;
+  audio.mic.connect(an);
+  audio.analyser = an; audio.buf = new Float32Array(an.fftSize);
+}
+function updateMic(now) {
+  if (!audio.analyser) return;
+  audio.analyser.getFloatTimeDomainData(audio.buf);
+  let peak = 0, sum = 0;
+  for (const v of audio.buf) { const a = Math.abs(v); if (a > peak) peak = a; sum += v * v; }
+  const rms = Math.sqrt(sum / audio.buf.length);
+  const thr = 0.62 - S.clapSens * 0.052;
+  const busy = now < audio.busyUntil || speaking;
+  if (!busy && peak > thr && rms > audio.bg * 3.5 && now - audio.lastSpike > 110) {
+    audio.lastSpike = now;
+    const f = $('#clap'); f.classList.add('on'); setTimeout(() => f.classList.remove('on'), 60);
+    if (S.clapMode === '0' || !started) return;
+    const gap = now - audio.lastClap;
+    if (S.clapMode === '1' || (gap > 140 && gap < 900)) {
+      audio.lastClap = 0;
+      if (now - audio.lastTrigger > 1500 && !heart.alive) { audio.lastTrigger = now; spawn(); }
+    } else audio.lastClap = now;
+  } else audio.bg = audio.bg * 0.95 + rms * 0.05;
+}
+function noiseBuffer() {
+  if (audio.noise) return audio.noise;
+  const ctx = audio.ctx, b = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate), d = b.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  return (audio.noise = b);
+}
+function sfx(type) {
+  if (!S.sfx || !audio.ctx) return;
+  const ctx = audio.ctx, t = ctx.currentTime, out = audio.bus;
+  audio.busyUntil = performance.now() + ({ spawn: 1300 }[type] || 300);
+  const tone = (f0, f1, len, wave, peak, at = 0) => {
+    const o = ctx.createOscillator(), g = ctx.createGain(), s = t + at;
+    o.type = wave; o.frequency.setValueAtTime(f0, s); o.frequency.exponentialRampToValueAtTime(f1, s + len);
+    g.gain.setValueAtTime(0.0001, s); g.gain.exponentialRampToValueAtTime(peak, s + Math.min(0.03, len * 0.2)); g.gain.exponentialRampToValueAtTime(0.0001, s + len);
+    o.connect(g).connect(out); o.start(s); o.stop(s + len + 0.05);
+  };
+  const noise = (f0, f1, len, peak, type = 'bandpass', at = 0) => {
+    const n = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain(), s = t + at;
+    n.buffer = noiseBuffer(); f.type = type; f.Q.value = 1;
+    f.frequency.setValueAtTime(f0, s); f.frequency.exponentialRampToValueAtTime(f1, s + len);
+    g.gain.setValueAtTime(0.0001, s); g.gain.exponentialRampToValueAtTime(peak, s + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, s + len);
+    n.connect(f).connect(g).connect(out); n.start(s); n.stop(s + len);
+  };
+  // lub: the AV valves closing (lower, longer) · dub: the pulmonary and aortic valves closing (higher, shorter)
+  if (type === 'lub') { tone(120, 58, 0.2, 'sine', 0.7); tone(240, 110, 0.12, 'triangle', 0.18); noise(320, 120, 0.14, 0.22, 'lowpass'); }
+  else if (type === 'dub') { tone(165, 80, 0.13, 'sine', 0.5); tone(330, 160, 0.08, 'triangle', 0.13); noise(450, 180, 0.1, 0.16, 'lowpass'); }
+  else if (type === 'spawn') { noise(7000, 400, 0.9, 0.22); tone(200, 600, 0.9, 'sine', 0.16); tone(120, 58, 0.2, 'sine', 0.6, 0.95); tone(165, 80, 0.13, 'sine', 0.45, 1.25); }
+  else if (type === 'grab') tone(500, 900, 0.1, 'triangle', 0.15);
+  else if (type === 'blip') tone(1100, 1500, 0.12, 'sine', 0.15);
+}
+
+// ---------------------------------------------------------------- voice + subtitles
+let speaking = false, lastSpeechEnd = -1e9;
+const sub = { text: '', last: '', a: 0 };
+function say(text, done) {
+  sub.text = text;
+  clearTimeout(say.timer);
+  const finish = () => {
+    speaking = false; lastSpeechEnd = T; audio.busyUntil = performance.now() + 400;
+    setTimeout(() => { if (sub.text === text) sub.text = ''; }, 1200);
+    done?.();
+  };
+  speaking = true;
+  if (!S.voice || !('speechSynthesis' in window)) { say.timer = setTimeout(finish, 900 + text.length * 55); return; }
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  const v = CS.voice(); if (v) { u.voice = v; u.lang = v.lang; } else u.lang = CS.speechLang;
+  u.onend = u.onerror = () => { if (say.u === u) finish(); };
+  say.u = u; // keep a reference so Chrome fires onend
+  speechSynthesis.speak(u);
+}
+
+// ---------------------------------------------------------------- 2D overlay (recorded together with the 3D view)
+let pr = 1;
+const MON_H = 140;
+const monitorW = (W, H) => (W < H ? W - 32 : Math.min(340, W * 0.42));
+function project(v) { const p = v.clone().project(camera), { W, H } = stageSize(); return { x: (p.x + 1) / 2 * W, y: (1 - p.y) / 2 * H }; }
+const toScreen = (x, y, z, bend = false) => { const v = new V3(x, y, z); if (bend) deform(v); return project(rig.localToWorld(v)); };
+function pill(x, y, lines, color, alpha, fs) {
+  fx.font = `700 ${fs}px Rajdhani, sans-serif`;
+  const w = Math.max(...lines.map((l) => fx.measureText(l).width)) + fs * 1.1, h = fs * 1.25 * lines.length + fs * 0.5;
+  const { W, H } = stageSize();
+  const bx = clamp(x - w / 2, 8, W - w - 8), by = clamp(y - h / 2, 8, H - h - 8);
+  fx.globalAlpha = alpha;
+  fx.fillStyle = 'rgba(16,4,8,.78)'; fx.strokeStyle = color; fx.lineWidth = 1.5;
+  fx.beginPath(); fx.roundRect(bx, by, w, h, 8); fx.fill(); fx.stroke();
+  fx.textAlign = 'center'; fx.textBaseline = 'middle';
+  lines.forEach((l, i) => {
+    fx.font = `${i ? 600 : 700} ${i ? fs * 0.9 : fs}px Rajdhani, sans-serif`;
+    fx.fillStyle = i ? 'rgba(255,240,243,.85)' : color;
+    fx.fillText(l, bx + w / 2, by + fs * 0.25 + fs * 1.25 * (i + 0.5));
+  });
+  fx.globalAlpha = 1;
+}
+function ring(x, y, r, k, color, width = 3) {
+  fx.strokeStyle = color; fx.lineWidth = width;
+  fx.beginPath(); fx.arc(x, y, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * clamp(k, 0, 1)); fx.stroke();
+}
+function drawLabels(fs) {
+  const cur = tour.active ? TOUR[tour.i]?.part : null;
+  for (const [key, pt] of Object.entries(PARTS)) {
+    const on = cur && (pt.part || key) === cur, a = labelsA * (cur && !on ? 0.4 : 1);
+    if (a < 0.02) continue;
+    const lab = toScreen(...pt.lab);
+    if (pt.at) {
+      const p = toScreen(...pt.at, true);
+      fx.globalAlpha = a; fx.strokeStyle = pt.c; fx.lineWidth = 1.5;
+      fx.beginPath(); fx.moveTo(p.x, p.y); fx.lineTo(lab.x, lab.y); fx.stroke();
+      fx.beginPath(); fx.arc(p.x, p.y, 3.5, 0, Math.PI * 2); fx.fillStyle = pt.c; fx.fill();
+    }
+    pill(lab.x, lab.y, pt[CS.lang], pt.c, a, fs * (on ? 1.2 : 1));
+  }
+  fx.globalAlpha = 1;
+}
+function drawPops(dt, fs) {
+  for (let i = pops.length - 1; i >= 0; i--) { pops[i].t += dt; if (pops[i].t > 0.7) pops.splice(i, 1); }
+  const p = pops[pops.length - 1];
+  if (!p || !S.labels) return;
+  const c = toScreen(0.1, -0.68, 0), a = 1 - smooth(0.35, 0.7, p.t), sc = 1 + 0.25 * (1 - smooth(0, 0.15, p.t));
+  fx.globalAlpha = a; fx.textAlign = 'center'; fx.textBaseline = 'middle';
+  fx.font = `900 ${fs * 1.6 * sc}px Orbitron, sans-serif`; fx.shadowColor = p.col; fx.shadowBlur = 16; fx.fillStyle = '#ffffff';
+  fx.fillText(p.text, c.x, c.y);
+  fx.shadowBlur = 0; fx.font = `700 ${fs * 0.9}px Rajdhani, sans-serif`; fx.fillStyle = p.col;
+  fx.fillText(p.sub, c.x, c.y + fs * 1.5);
+  fx.globalAlpha = 1;
+}
+// Hospital-style monitor: BPM, status, live ECG and the current phase.
+function drawMonitor(W, H) {
+  const w = monitorW(W, H), h = MON_H, x = 16, y = W < H ? lay.monY : 16;
+  fx.save();
+  fx.globalAlpha = 0.95; fx.fillStyle = 'rgba(14,4,8,.8)'; fx.strokeStyle = 'rgba(255,90,120,.5)'; fx.lineWidth = 1.5;
+  fx.beginPath(); fx.roundRect(x, y, w, h, 12); fx.fill(); fx.stroke();
+  const b = Math.round(bpm()), [stTxt, stCol] = bpmStatus(b);
+  fx.textBaseline = 'middle'; fx.textAlign = 'left';
+  fx.font = `${20 + beat.thump * 8}px sans-serif`; fx.fillText('❤️', x + 12, y + 26);
+  const bt = heart.alive && b ? String(b) : '--';
+  fx.font = '900 28px Orbitron, sans-serif'; fx.fillStyle = '#ffffff'; fx.fillText(bt, x + 48, y + 27);
+  const bw = fx.measureText(bt).width;
+  fx.font = '700 13px Rajdhani, sans-serif'; fx.fillStyle = 'rgba(255,240,243,.7)'; fx.fillText('BPM', x + 54 + bw, y + 32);
+  if (heart.alive) {
+    const chip = { hand: '✊ HAND', key: '⌨ SPACE', auto: '⟳ AUTO', still: '⏸ STILL' }[beat.mode];
+    fx.font = '700 11px Orbitron, sans-serif';
+    const cw = fx.measureText(chip).width + 16;
+    fx.fillStyle = 'rgba(255,90,120,.18)'; fx.beginPath(); fx.roundRect(x + w - cw - 10, y + 15, cw, 22, 11); fx.fill();
+    fx.fillStyle = '#ff9aac'; fx.fillText(chip, x + w - cw - 2, y + 26);
+    fx.font = '700 14px Rajdhani, sans-serif'; fx.fillStyle = stCol; fx.fillText(stTxt, x + 14, y + 52);
+  }
+  // ECG strip
+  const ex = x + 10, ew = w - 20, ey = y + 62, eh = 48;
+  fx.strokeStyle = 'rgba(61,255,139,.12)'; fx.lineWidth = 1;
+  for (let gx = ex; gx <= ex + ew; gx += 16) { fx.beginPath(); fx.moveTo(gx, ey); fx.lineTo(gx, ey + eh); fx.stroke(); }
+  for (let gy = ey; gy <= ey + eh; gy += 16) { fx.beginPath(); fx.moveTo(ex, gy); fx.lineTo(ex + ew, gy); fx.stroke(); }
+  const n = ecg.buf.length;
+  fx.strokeStyle = '#3dff8b'; fx.lineWidth = 2; fx.shadowColor = '#3dff8b'; fx.shadowBlur = 8;
+  fx.beginPath();
+  for (let i = 0; i < n; i++) {
+    const v = ecg.buf[(ecg.head + i) % n], px = ex + (i / (n - 1)) * ew, py = ey + eh * 0.68 - v * eh * 0.6;
+    if (i) fx.lineTo(px, py); else fx.moveTo(px, py);
+  }
+  fx.stroke(); fx.shadowBlur = 0;
+  fx.font = '700 10px Orbitron, sans-serif'; fx.fillStyle = 'rgba(61,255,139,.7)'; fx.fillText('ECG', ex + 4, ey + 8);
+  // phase / tour progress
+  const sys = beat.phase === 'sys';
+  fx.font = '700 13px Rajdhani, sans-serif';
+  fx.fillStyle = tour.active ? '#ffe08a' : !heart.alive ? 'rgba(255,240,243,.6)' : sys ? '#ff7a8c' : '#7da6ff';
+  fx.fillText(
+    tour.active ? `🎓 ${CS.t('खून का सफ़र', 'Blood journey')} ${tour.i + 1}/${TOUR.length}`
+      : !heart.alive ? CS.t('दिल का इंतज़ार…', 'waiting for the heart…')
+        : sys ? CS.t('SYSTOLE · निलय सिकुड़े, खून बाहर', 'SYSTOLE · ventricles squeeze, blood out')
+          : CS.t('DIASTOLE · दिल फैला, खून अंदर', 'DIASTOLE · heart relaxes, blood fills in'),
+    x + 14, y + h - 14);
+  fx.restore();
+}
+function drawHands(W, H) {
+  for (const h of hands) {
+    if (S.dots) {
+      const p = h.pinch ? h.pt : h.tip;
+      fx.shadowColor = '#ff5a78'; fx.shadowBlur = 10; fx.strokeStyle = h.pinch ? '#ffffff' : '#ff8fa3'; fx.lineWidth = 2;
+      fx.beginPath(); fx.arc(p.x * W, p.y * H, 8, 0, Math.PI * 2); fx.stroke(); fx.shadowBlur = 0;
+    }
+    const px = h.palm.x * W, py = h.palm.y * H;
+    if (heart.alive && beat.mode === 'hand' && h.id === beat.handId) { // squeeze meter on the fist
+      ring(px, py, 34, 1, 'rgba(255,255,255,.22)', 5);
+      fx.shadowColor = '#ff5a78'; fx.shadowBlur = 12; ring(px, py, 34, beat.s, '#ff5a78', 5); fx.shadowBlur = 0;
+    }
+    if (h.open && palms.count === 2 && !palms.fired && palms.hold > 0) ring(px, py, 44, palms.hold, '#ffffff');
+    if (h.peace && !peace.fired && peace.hold > 0) ring(h.tip.x * W, h.tip.y * H, 22, peace.hold / 0.6, '#ffffff');
+  }
+}
+function wrap(text, maxW) {
+  const words = text.split(/\s+/), lines = [];
+  let cur = '';
+  for (const w of words) { const t = cur ? cur + ' ' + w : w; if (fx.measureText(t).width > maxW && cur) { lines.push(cur); cur = w; } else cur = t; }
+  if (cur) lines.push(cur);
+  return lines;
+}
+function drawFx(dt) {
+  const { W, H } = stageSize();
+  fx.setTransform(pr, 0, 0, pr, 0, 0);
+  fx.clearRect(0, 0, W, H);
+  const fs = Math.max(12, Math.min(W * 0.028, H * 0.021));
+  if (heart.alive) {
+    labelsA += ((S.labels || tour.active ? 1 : 0) - labelsA) * follow(0.01, dt);
+    if (labelsA > 0.01) drawLabels(fs);
+    const prompt = beat.manual === 0 && T - heart.bornT > 2.5 && T - heart.bornT < 40 && !tour.active;
+    if (prompt) {
+      const p = toScreen(0.05, -0.8, 0);
+      const txt = handLM
+        ? `${Math.floor(T * 1.4) % 2 ? '✊' : '✋'} ${CS.t('मुट्ठी बंद करो, खोलो: दिल आपके साथ धड़केगा', 'close and open your fist: the heart beats with you')}`
+        : CS.t('⌨️ Space दबाकर छोड़ो = एक धड़कन', '⌨️ press and release Space = one heartbeat');
+      pill(p.x, p.y, [txt], '#ffffff', 0.92, fs * 1.05);
+    } else drawPops(dt, fs);
+  }
+  if (started) drawMonitor(W, H);
+  drawHands(W, H);
+  sub.a += ((sub.text ? 1 : 0) - sub.a) * follow(0.001, dt);
+  if (sub.a > 0.01 && (sub.text || sub.last)) {
+    if (sub.text) sub.last = sub.text;
+    const sfs = Math.max(18, Math.min(W * 0.045, H * 0.032));
+    fx.font = `700 ${sfs}px Rajdhani, sans-serif`;
+    const lines = wrap(sub.last, W * 0.86);
+    fx.globalAlpha = sub.a; fx.textAlign = 'center'; fx.textBaseline = 'middle';
+    lines.forEach((l, i) => {
+      const y = Math.min(H * 0.86, lay.hintTop - sfs * 0.9) - (lines.length - 1 - i) * sfs * 1.25;
+      fx.lineWidth = 5; fx.strokeStyle = 'rgba(0,0,0,.85)'; fx.strokeText(l, W / 2, y);
+      fx.fillStyle = '#ffffff'; fx.fillText(l, W / 2, y);
+    });
+    fx.globalAlpha = 1;
+  }
+}
+
+// ---------------------------------------------------------------- recording (3D view + overlay + mic + effects)
+const recState = { mr: null, c: null, ctx: null, chunks: [], t0: 0, dest: null, ext: 'webm', mime: '' };
+function startRecord() {
+  if (!window.MediaRecorder) { toast(CS.t('Is browser me recording nahi chalegi. Chrome use karo.', 'Recording does not work in this browser. Please use Chrome.')); return; }
+  ensureAudio();
+  const c = document.createElement('canvas'); c.width = glc.width; c.height = glc.height;
+  recState.c = c; recState.ctx = c.getContext('2d');
+  recordFrame();
+  const tracks = [...c.captureStream(30).getVideoTracks()];
+  recState.dest = audio.ctx.createMediaStreamDestination();
+  audio.bus.connect(recState.dest);
+  audio.mic?.connect(recState.dest);
+  tracks.push(...recState.dest.stream.getAudioTracks());
+  recState.mime = MIMES.find((m) => MediaRecorder.isTypeSupported(m)) || '';
+  recState.ext = recState.mime.startsWith('video/mp4') ? 'mp4' : 'webm';
+  const mr = new MediaRecorder(new MediaStream(tracks), recState.mime ? { mimeType: recState.mime, videoBitsPerSecond: 8_000_000 } : undefined);
+  recState.chunks = [];
+  mr.ondataavailable = (e) => { if (e.data.size) recState.chunks.push(e.data); };
+  mr.onstop = saveRecording;
+  mr.start(1000);
+  recState.mr = mr; recState.t0 = performance.now();
+  $('#btnRec').classList.add('on');
+}
+function stopRecord() { recState.mr?.stop(); recState.mr = null; $('#btnRec').classList.remove('on'); $('#btnRec').textContent = '⏺ REC'; }
+function saveRecording() {
+  try { audio.bus.disconnect(recState.dest); } catch {}
+  try { audio.mic?.disconnect(recState.dest); } catch {}
+  const blob = new Blob(recState.chunks, { type: recState.mime || 'video/webm' });
+  const a = document.createElement('a');
+  const d = new Date(), stamp = `${d.getHours()}${String(d.getMinutes()).padStart(2, '0')}${String(d.getSeconds()).padStart(2, '0')}`;
+  a.href = URL.createObjectURL(blob); a.download = `heart-reel-${stamp}.${recState.ext}`;
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+  toast(CS.t(`Video save ho gaya: Downloads me ${a.download}`, `Video saved to Downloads: ${a.download}`), 5000);
+}
+function recordFrame() {
+  if (!recState.c) return;
+  const c = recState.c;
+  if (c.width !== glc.width || c.height !== glc.height) { c.width = glc.width; c.height = glc.height; }
+  recState.ctx.drawImage(glc, 0, 0);
+  recState.ctx.drawImage(fxc, 0, 0, c.width, c.height);
+  if (recState.mr) {
+    const s = Math.floor((performance.now() - recState.t0) / 1000);
+    $('#btnRec').textContent = `■ ${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+  }
+}
+
+// ---------------------------------------------------------------- main loop + layout
+function tick(dt, now) {
+  T += dt;
+  updateMic(now);
+  trackHands(now);
+  updateGestures(dt);
+  updateBeat(dt);
+  updateHeart(dt);
+  updateBlood(dt);
+  updateTour(dt);
+  updateNarration();
+  updateEcg(dt);
+  drawMask();
+}
+function render(dt) {
+  renderer.render(scene, camera);
+  drawFx(dt);
+  recordFrame();
+}
+function frame(now) {
+  requestAnimationFrame(frame);
+  if (now - lastRender < 1000 / Number(S.fps) - 2) return;
+  const dt = Math.min(0.06, (now - lastRender) / 1000);
+  lastRender = now;
+  if (glc.width === 0 || Math.abs(camera.aspect - stage.clientWidth / Math.max(1, stage.clientHeight)) > 1e-3) onResize();
+  tick(dt, now);
+  render(dt);
+}
+// Fit the diagram (±1.15 wide, ±1.4 tall) between the button bar, the monitor panel, the hint and the screen edges.
+// The bar and hint wrap on phones, so their real size is measured.
+function computeLayout() {
+  const { W, H } = stageSize();
+  const hh = camera.position.z * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)), unit = H / (2 * hh);
+  const st = stage.getBoundingClientRect(), bar = $('.top').getBoundingClientRect(), hint = $('#hint').getBoundingClientRect();
+  const barBottom = bar.bottom - st.top, hintTop = hint.height ? hint.top - st.top : H;
+  const portrait = W < H;
+  lay.monY = Math.max(64, barBottom + 8); lay.hintTop = hintTop;
+  const top = portrait ? lay.monY + MON_H + 8 : Math.max(62, barBottom + 8), bottom = Math.min(H - 72, hintTop - 8);
+  const left = portrait ? 8 : 16 + monitorW(W, H) + 10, right = W - 8;
+  let fit = Math.min(hh * camera.aspect / 1.15, (bottom - top) / (2.8 * unit));
+  let halfW = 1.15 * unit * fit, cx = W / 2;
+  if (cx - halfW < left) {
+    cx = left + halfW;
+    if (cx + halfW > right) { halfW = (right - left) / 2; fit = halfW / (1.15 * unit); cx = left + halfW; }
+  }
+  lay.fit = Math.max(0.15, fit); lay.x = (cx - W / 2) / unit; lay.y = -((top + bottom) / 2 - H / 2) / unit;
+}
+function onResize() {
+  const { W, H } = stageSize();
+  if (!W || !H) return;
+  pr = Math.min(devicePixelRatio || 1, 1.5);
+  renderer.setPixelRatio(pr); renderer.setSize(W, H, false);
+  fxc.width = Math.round(W * pr); fxc.height = Math.round(H * pr);
+  camera.aspect = W / H; camera.updateProjectionMatrix();
+  pointsMat.uniforms.uPx.value = pr;
+  layoutPlanes();
+  computeLayout();
+}
+addEventListener('resize', onResize);
+
+// ---------------------------------------------------------------- UI
+function setLoad(id, st) {
+  const el = document.getElementById(id), icon = { wait: '◌', ok: '✓', fail: '✕', warn: '!' }[st];
+  el.className = st; el.textContent = `${icon} ${el.textContent.replace(/^\S+\s/, '')}`;
+}
+function updateHint() {
+  $('#hint').innerHTML = !heart.alive
+    ? CS.t('<b>👏👏</b> taali · <b>🙌</b> dono hatheliyan · <b>Space</b> → dil bulao', '<b>👏👏</b> clap · <b>🙌</b> both palms · <b>Space</b> → call the heart')
+    : tour.active
+      ? CS.t('<b>🎓</b> khoon ka safar chal raha hai · <b>🙌</b> ya <b>T</b> = roko', '<b>🎓</b> blood journey running · <b>🙌</b> or <b>T</b> = stop')
+      : CS.t('<b>✊✋</b> mutthi band-kholo = dhadkan · <b>🤏</b> ghumao · <b>🤏🤏</b> zoom · <b>✌️</b> naam · <b>🙌</b> khoon ka safar',
+        '<b>✊✋</b> close-open fist = heartbeat · <b>🤏</b> rotate · <b>🤏🤏</b> zoom · <b>✌️</b> labels · <b>🙌</b> blood journey');
+  computeLayout();
+}
+function toggleReel() {
+  document.body.classList.toggle('reel');
+  $('#btnReel').classList.toggle('on', document.body.classList.contains('reel'));
+  onResize();
+}
+const showBpm = () => { $('#bpmOut').textContent = `${S.bpm} BPM`; };
+function setBpm(v) {
+  S.bpm = clamp(Math.round(v), 40, 180); saveSettings();
+  $('[data-s="bpm"]').value = S.bpm; showBpm();
+  toast(`⟳ AUTO: ${S.bpm} BPM`, 1500);
+}
+for (const el of document.querySelectorAll('[data-s]')) {
+  const k = el.dataset.s;
+  if (el.type === 'checkbox') el.checked = !!S[k]; else el.value = S[k];
+  el.addEventListener(el.type === 'range' ? 'input' : 'change', () => {
+    S[k] = el.type === 'checkbox' ? el.checked : el.type === 'range' ? parseFloat(el.value) : el.value;
+    saveSettings();
+    if (k === 'bpm') showBpm();
+  });
+}
+showBpm();
+$('#btnSettings').addEventListener('click', () => $('#settings').classList.toggle('open'));
+$('#btnClose').addEventListener('click', () => $('#settings').classList.remove('open'));
+$('#btnReel').addEventListener('click', toggleReel);
+$('#btnRec').addEventListener('click', () => (recState.mr ? stopRecord() : startRecord()));
+$('#btnTour').addEventListener('click', () => { if (started) { if (!heart.alive) spawn(); else toggleTour(); } });
+const toggleFull = () => (document.fullscreenElement ? document.exitFullscreen?.() : document.documentElement.requestFullscreen?.().catch(() => {}));
+$('#btnFull').addEventListener('click', toggleFull);
+addEventListener('keydown', (e) => {
+  if (e.target.matches('input, select')) return;
+  const k = e.key.toLowerCase();
+  if (e.code === 'Space') {
+    e.preventDefault();
+    if (!started || e.repeat) return;
+    if (!heart.alive) spawn(); else { beat.key = true; beat.lastKey = T; }
+  }
+  else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); setBpm(S.bpm + (e.key === 'ArrowUp' ? 6 : -6)); }
+  else if (k === 'a') {
+    S.auto = !S.auto; saveSettings(); $('[data-s="auto"]').checked = S.auto;
+    toast(CS.t(`Apne aap dhadkan: ${S.auto ? 'ON' : 'OFF'}`, `Auto beat: ${S.auto ? 'ON' : 'OFF'}`), 1500);
+  }
+  else if (k === 'l') toggleLabels();
+  else if (k === 't' && started) { if (!heart.alive) spawn(); else toggleTour(); }
+  else if (k === 'z') { view.yawT = view.pitchT = 0; view.zoomT = 1; }
+  else if (k === 'r' && started) (recState.mr ? stopRecord() : startRecord());
+  else if (k === 'v') toggleReel();
+  else if (k === 'h') { document.body.classList.toggle('clean'); computeLayout(); }
+  else if (k === 'f') toggleFull();
+  else if (e.key === 'Escape') $('#settings').classList.remove('open');
+});
+addEventListener('keyup', (e) => { if (e.code === 'Space' && beat.key) { beat.key = false; beat.lastKey = T; } });
+
+async function start() {
+  const btn = $('#btnStart');
+  btn.disabled = true; btn.textContent = 'STARTING…';
+  ensureAudio();
+  setLoad('ldCam', 'wait');
+  const md = navigator.mediaDevices;
+  const noMedia = new URLSearchParams(location.search).has('nomedia');
+  let vStream = null, aStream = null;
+  if (md?.getUserMedia && !noMedia) {
+    try {
+      const s = await md.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' }, audio: AUDIO_CONSTRAINTS });
+      vStream = aStream = s;
+    } catch {
+      try { vStream = await md.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 } } }); } catch {}
+      try { aStream = await md.getUserMedia({ audio: AUDIO_CONSTRAINTS }); } catch {}
+    }
+  }
+  if (aStream) initMic(new MediaStream(aStream.getAudioTracks()));
+  if (vStream) {
+    cam.srcObject = new MediaStream(vStream.getVideoTracks());
+    try { await cam.play(); } catch {}
+    bgPlane.visible = handLayer.visible = true;
+    layoutPlanes();
+  }
+  setLoad('ldCam', vStream && aStream ? 'ok' : vStream || aStream ? 'warn' : 'fail');
+  if (!vStream) toast(CS.t('Camera nahi mila. Dil apne aap dhadkega; Space dabakar chhodo to aap dhadkaoge.', 'No camera found. The heart beats by itself; press and release Space to beat it yourself.'), 5000);
+  started = true;
+  updateHint();
+  $('#start').classList.add('gone');
+  if (vStream) initHands().catch((e) => { console.error(e); setLoad('ldHand', 'fail'); toast(CS.t('Hand tracking load nahi hua.', 'Hand tracking failed to load.')); });
+}
+$('#btnStart').addEventListener('click', start);
+
+CS.onChange(() => { updateHint(); if (tour.active) stopTour(); else if (sub.text) { window.speechSynthesis?.cancel(); sub.text = ''; } });
+updateHint();
+onResize();
+requestAnimationFrame(frame);
+// Console hooks for testing without a camera.
+window.__heart = {
+  step(sec) { for (let i = 0; i < Math.max(1, Math.round(sec * 30)); i++) tick(1 / 30, performance.now()); render(sec); },
+  ingestHands, spawn, toggleTour, toggleLabels, setBpm, beat, heart, tour, view, valveMap, PATHS, get hands() { return hands; },
+  key(on) { if (on) { beat.key = true; beat.lastKey = T; } else { beat.key = false; beat.lastKey = T; } },
+};
+</script>
+</body>
+</html>
