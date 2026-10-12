@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💧</text></svg>">
 <title>Molecule Builder · Crazy Science</title>
+<script src="../lang.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
@@ -68,13 +69,14 @@
 
 <div id="ui">
   <div class="top">
-    <button class="icon" id="btnHome" title="Crazy Science: saare labs" onclick="location.href='../'">🏠</button>
+    <button class="icon" id="btnHome" title="Crazy Science: saare labs" data-en-title="Crazy Science: all labs" onclick="location.href='../'">🏠</button>
+    <button class="icon" id="btnLang" data-lang-toggle>🌐 EN</button>
     <button class="icon" id="btnSettings" title="Settings">⚙</button>
     <button class="icon" id="btnRec" title="Video record (R)">⏺ REC</button>
     <button class="icon" id="btnReel" title="Reel frame 9:16 (V)">9:16</button>
-    <button class="icon" id="btnChallenge" title="Challenge (Q)">🎯 चैलेंज</button>
-    <button class="icon" id="btnBond" title="Double/triple bond poore karo (B)">＝ BOND</button>
-    <button class="icon" id="btnClear" title="Sab saaf (C)">🧹</button>
+    <button class="icon" id="btnChallenge" title="Challenge (Q)" data-en="🎯 CHALLENGE">🎯 चैलेंज</button>
+    <button class="icon" id="btnBond" title="Double/triple bond poore karo (B)" data-en-title="Complete double/triple bonds (B)">＝ BOND</button>
+    <button class="icon" id="btnClear" title="Sab saaf (C)" data-en-title="Clear all (C)">🧹</button>
     <button class="icon" id="btnFull" title="Fullscreen (F)">⛶</button>
   </div>
   <div id="hint"></div>
@@ -82,30 +84,31 @@
 </div>
 
 <aside id="settings" aria-label="Settings">
-  <h2>SETTINGS <button class="icon" id="btnClose" title="Band karo (Esc)">✕</button></h2>
-  <label class="row inline">Khaali haath (valency) dikhao <input type="checkbox" data-s="slots"></label>
-  <label class="row inline">Lone pair (अकेले इलेक्ट्रॉन जोड़े) dikhao <input type="checkbox" data-s="lone"></label>
-  <label class="row inline">Hindi aawaz <input type="checkbox" data-s="voice"></label>
+  <h2>SETTINGS <button class="icon" id="btnClose" title="Band karo (Esc)" data-en-title="Close (Esc)">✕</button></h2>
+  <label class="row inline"><span data-en="Show free hands (valency)">Khaali haath (valency) dikhao</span> <input type="checkbox" data-s="slots"></label>
+  <label class="row inline"><span data-en="Show lone pairs (unbonded electron pairs)">Lone pair (अकेले इलेक्ट्रॉन जोड़े) dikhao</span> <input type="checkbox" data-s="lone"></label>
+  <label class="row inline"><span data-en="Voice (speaks the lines)">Aawaz (bolne wali lines)</span> <input type="checkbox" data-s="voice"></label>
   <label class="row inline">Sound effects <input type="checkbox" data-s="sfx"></label>
-  <label class="row inline">Haath atoms ke aage dikhe <input type="checkbox" data-s="occlude"></label>
+  <label class="row inline"><span data-en="Hand shows in front of atoms">Haath atoms ke aage dikhe</span> <input type="checkbox" data-s="occlude"></label>
   <label class="row">Smoothness
     <select data-s="fps">
-      <option value="30">30 FPS (Mac ke liye halka)</option>
-      <option value="60">60 FPS (smooth, zyada load)</option>
+      <option value="30" data-en="30 FPS (light, good for laptops)">30 FPS (Mac ke liye halka)</option>
+      <option value="60" data-en="60 FPS (smoother, more load)">60 FPS (smooth, zyada load)</option>
     </select>
   </label>
-  <div class="keys">Gestures: 🤏 neeche tray se atom uthao · dusre atom ke paas chhodo = bond · jude atom ko dobara chhuao = double bond · tez kheencho = bond toot · 🗑 par chhodo = hatao · 🤏 khaali jagah = ghumao · 🙌 = bond poore + samjhao · ✊ = sab saaf<br>Shortcuts: 1–6 = H O N C Cl Na · B = bond · C = saaf · Q = challenge · R = record · V = 9:16 · H = clean · Esc = band</div>
+  <div class="keys" data-en="Gestures: 🤏 pick an atom from the tray below · drop it near another atom = bond · touch a joined atom again = double bond · pull hard = bond breaks · drop on 🗑 = remove · 🤏 empty space = rotate · 🙌 = complete bonds + explain · ✊ = clear all<br>Shortcuts: 1–6 = H O N C Cl Na · B = bond · C = clear · Q = challenge · R = record · V = 9:16 · H = clean · Esc = close">Gestures: 🤏 neeche tray se atom uthao · dusre atom ke paas chhodo = bond · jude atom ko dobara chhuao = double bond · tez kheencho = bond toot · 🗑 par chhodo = hatao · 🤏 khaali jagah = ghumao · 🙌 = bond poore + samjhao · ✊ = sab saaf<br>Shortcuts: 1–6 = H O N C Cl Na · B = bond · C = saaf · Q = challenge · R = record · V = 9:16 · H = clean · Esc = band</div>
 </aside>
 
 <div id="start">
   <div class="card">
     <h1>MOLECULE·AR</h1>
-    <h2>⚗️ अणु बनाओ, संयोजकता समझो</h2>
-    <p>Har atom ke chamakte "haath" uski valency hain. Haath se atom uthao, jodo, aur paani, CO₂, methane jaise molecule banao 💧</p>
+    <h2 data-en="⚗️ build molecules, understand valency">⚗️ अणु बनाओ, संयोजकता समझो</h2>
+    <p data-en="Each atom's glowing &quot;hands&quot; are its valency. Pick atoms up with your hand, join them, and build molecules like water, CO₂ and methane 💧">Har atom ke chamakte "haath" uski valency hain. Haath se atom uthao, jodo, aur paani, CO₂, methane jaise molecule banao 💧</p>
     <button class="btn" id="btnStart">▶ START</button>
     <div id="loadList"><div id="ldCam">◌ Camera + mic</div><div id="ldHand">◌ Hand tracking</div></div>
-    <p class="note">Chrome me best chalta hai. Recording ke liye headphone mat lagana, taaki Hindi aawaz bhi video me aaye.</p>
-    <p class="note"><a href="../" style="color:inherit">← Crazy Science: saare labs</a></p>
+    <p class="note" data-en="Works best in Chrome. Don't wear headphones while recording, so the voice also gets into the video.">Chrome me best chalta hai. Recording ke liye headphone mat lagana, taaki aawaz bhi video me aaye.</p>
+    <div class="cs-lang"><button data-setlang="hi">हिंदी</button><button data-setlang="en">English</button></div>
+    <p class="note"><a href="../" style="color:inherit" data-en="← Crazy Science: all labs">← Crazy Science: saare labs</a></p>
   </div>
 </div>
 
@@ -127,33 +130,46 @@ const ELEM = {
 const TRAY = ['H', 'O', 'N', 'C', 'Cl', 'Na'];
 const HANDS_WORD = { 1: 'एक', 2: 'दो', 3: 'तीन', 4: 'चार' };
 const ALL_WORD = { 1: 'इकलौता', 2: 'दोनों', 3: 'तीनों', 4: 'चारों' };
+const NUM_EN = { 1: 'one', 2: 'two', 3: 'three', 4: 'four' };
+const elName = (E) => (CS.en ? E.en : E.hi);
+const molLine = (m) => (CS.en ? m.lineEn : m.line);
 const MOLS = {
-  H2: { f: 'H₂', hi: 'हाइड्रोजन गैस', en: 'Hydrogen', icon: '🎈', line: 'हाइड्रोजन गैस! दोनों हाइड्रोजन का एक-एक हाथ आपस में जुड़ गया। ये सबसे हल्की गैस है।' },
-  O2: { f: 'O₂', hi: 'ऑक्सीजन गैस', en: 'Oxygen', icon: '🫁', line: 'ऑक्सीजन गैस! दोनों ऑक्सीजन के बीच डबल बॉन्ड। यही हम साँस में लेते हैं।' },
-  N2: { f: 'N₂', hi: 'नाइट्रोजन गैस', en: 'Nitrogen', icon: '🌬️', line: 'नाइट्रोजन गैस! ट्रिपल बॉन्ड, यानी तीन बंधन। हवा का सबसे बड़ा हिस्सा यही है।' },
-  Cl2: { f: 'Cl₂', hi: 'क्लोरीन गैस', en: 'Chlorine', icon: '🧪', line: 'क्लोरीन गैस! इससे पानी साफ़ किया जाता है।' },
-  H2O: { f: 'H₂O', hi: 'पानी', en: 'Water', icon: '💧', line: 'पानी बन गया! ऑक्सीजन के दोनों हाथों में एक-एक हाइड्रोजन। ये मुड़ा हुआ इसलिए है, क्योंकि ऑक्सीजन के पास दो अकेले इलेक्ट्रॉन जोड़े भी हैं।' },
-  CO2: { f: 'CO₂', hi: 'कार्बन डाइऑक्साइड', en: 'Carbon dioxide', icon: '🌫️', line: 'कार्बन डाइऑक्साइड! कार्बन के चार हाथ, हर ऑक्सीजन से दो-दो, यानी डबल बॉन्ड। इसलिए ये बिल्कुल सीधा होता है।' },
-  CH4: { f: 'CH₄', hi: 'मीथेन', en: 'Methane', icon: '🔥', line: 'मीथेन! कार्बन के चारों हाथों में हाइड्रोजन। चारों एक-दूसरे से दूर भागते हैं, इसलिए ये पिरामिड जैसा आकार बनता है।' },
-  NH3: { f: 'NH₃', hi: 'अमोनिया', en: 'Ammonia', icon: '🧴', line: 'अमोनिया! नाइट्रोजन के तीनों हाथों में हाइड्रोजन, और ऊपर एक अकेला इलेक्ट्रॉन जोड़ा।' },
-  HCl: { f: 'HCl', hi: 'हाइड्रोजन क्लोराइड', en: 'Hydrogen chloride', icon: '⚗️', line: 'हाइड्रोजन क्लोराइड! पानी में घुलकर ये हाइड्रोक्लोरिक एसिड बनता है, जो हमारे पेट में भी होता है।' },
-  NaCl: { f: 'NaCl', hi: 'नमक', en: 'Salt', icon: '🧂', line: 'सोडियम क्लोराइड, यानी हमारा खाने का नमक!' },
-  H2O2: { f: 'H₂O₂', hi: 'हाइड्रोजन पेरोक्साइड', en: 'Hydrogen peroxide', icon: '🩹', line: 'हाइड्रोजन पेरोक्साइड! घाव साफ़ करने वाली दवा।' },
-  C2H6: { f: 'C₂H₆', hi: 'ईथेन', en: 'Ethane', icon: '🔥', line: 'ईथेन! दो कार्बन, और छह हाइड्रोजन।' },
-  C2H4: { f: 'C₂H₄', hi: 'एथिलीन', en: 'Ethylene', icon: '🍌', line: 'एथिलीन! दो कार्बन के बीच डबल बॉन्ड। यही गैस फलों को पकाती है।' },
-  C2H2: { f: 'C₂H₂', hi: 'एसिटिलीन', en: 'Acetylene', icon: '🔧', line: 'एसिटिलीन! दो कार्बन के बीच ट्रिपल बॉन्ड। वेल्डिंग में काम आती है।' },
-  CH4O: { f: 'CH₃OH', hi: 'मेथनॉल', en: 'Methanol', icon: '🧪', line: 'मेथनॉल! एक तरह का अल्कोहल।' },
-  HNaO: { f: 'NaOH', hi: 'सोडियम हाइड्रॉक्साइड', en: 'Sodium hydroxide', icon: '🧼', line: 'सोडियम हाइड्रॉक्साइड! इससे साबुन बनता है।' },
-  CCl4: { f: 'CCl₄', hi: 'कार्बन टेट्राक्लोराइड', en: 'Carbon tetrachloride', icon: '🧪', line: 'कार्बन टेट्राक्लोराइड! कार्बन के चारों हाथों में क्लोरीन।' },
+  H2: { f: 'H₂', hi: 'हाइड्रोजन गैस', en: 'Hydrogen', icon: '🎈', line: 'हाइड्रोजन गैस! दोनों हाइड्रोजन का एक-एक हाथ आपस में जुड़ गया। ये सबसे हल्की गैस है।', lineEn: "Hydrogen gas! One hand of each hydrogen joined together. It is the lightest gas." },
+  O2: { f: 'O₂', hi: 'ऑक्सीजन गैस', en: 'Oxygen', icon: '🫁', line: 'ऑक्सीजन गैस! दोनों ऑक्सीजन के बीच डबल बॉन्ड। यही हम साँस में लेते हैं।', lineEn: "Oxygen gas! A double bond between the two oxygens. This is what we breathe in." },
+  N2: { f: 'N₂', hi: 'नाइट्रोजन गैस', en: 'Nitrogen', icon: '🌬️', line: 'नाइट्रोजन गैस! ट्रिपल बॉन्ड, यानी तीन बंधन। हवा का सबसे बड़ा हिस्सा यही है।', lineEn: "Nitrogen gas! A triple bond, that means three bonds. Most of the air is nitrogen." },
+  Cl2: { f: 'Cl₂', hi: 'क्लोरीन गैस', en: 'Chlorine', icon: '🧪', line: 'क्लोरीन गैस! इससे पानी साफ़ किया जाता है।', lineEn: "Chlorine gas! It is used to clean water." },
+  H2O: { f: 'H₂O', hi: 'पानी', en: 'Water', icon: '💧', line: 'पानी बन गया! ऑक्सीजन के दोनों हाथों में एक-एक हाइड्रोजन। ये मुड़ा हुआ इसलिए है, क्योंकि ऑक्सीजन के पास दो अकेले इलेक्ट्रॉन जोड़े भी हैं।', lineEn: "You made water! One hydrogen in each of oxygen's two hands. It is bent because oxygen also has two lone pairs of electrons." },
+  CO2: { f: 'CO₂', hi: 'कार्बन डाइऑक्साइड', en: 'Carbon dioxide', icon: '🌫️', line: 'कार्बन डाइऑक्साइड! कार्बन के चार हाथ, हर ऑक्सीजन से दो-दो, यानी डबल बॉन्ड। इसलिए ये बिल्कुल सीधा होता है।', lineEn: "Carbon dioxide! Carbon has four hands, two for each oxygen, so these are double bonds. That is why it is perfectly straight." },
+  CH4: { f: 'CH₄', hi: 'मीथेन', en: 'Methane', icon: '🔥', line: 'मीथेन! कार्बन के चारों हाथों में हाइड्रोजन। चारों एक-दूसरे से दूर भागते हैं, इसलिए ये पिरामिड जैसा आकार बनता है।', lineEn: "Methane! Hydrogen in all four of carbon's hands. They push away from each other, which makes a pyramid shape." },
+  NH3: { f: 'NH₃', hi: 'अमोनिया', en: 'Ammonia', icon: '🧴', line: 'अमोनिया! नाइट्रोजन के तीनों हाथों में हाइड्रोजन, और ऊपर एक अकेला इलेक्ट्रॉन जोड़ा।', lineEn: "Ammonia! Hydrogen in all three of nitrogen's hands, and one lone pair of electrons on top." },
+  HCl: { f: 'HCl', hi: 'हाइड्रोजन क्लोराइड', en: 'Hydrogen chloride', icon: '⚗️', line: 'हाइड्रोजन क्लोराइड! पानी में घुलकर ये हाइड्रोक्लोरिक एसिड बनता है, जो हमारे पेट में भी होता है।', lineEn: "Hydrogen chloride! Dissolved in water it becomes hydrochloric acid, which is also in our stomach." },
+  NaCl: { f: 'NaCl', hi: 'नमक', en: 'Salt', icon: '🧂', line: 'सोडियम क्लोराइड, यानी हमारा खाने का नमक!', lineEn: "Sodium chloride, that is our everyday table salt!" },
+  H2O2: { f: 'H₂O₂', hi: 'हाइड्रोजन पेरोक्साइड', en: 'Hydrogen peroxide', icon: '🩹', line: 'हाइड्रोजन पेरोक्साइड! घाव साफ़ करने वाली दवा।', lineEn: "Hydrogen peroxide! A medicine used to clean wounds." },
+  C2H6: { f: 'C₂H₆', hi: 'ईथेन', en: 'Ethane', icon: '🔥', line: 'ईथेन! दो कार्बन, और छह हाइड्रोजन।', lineEn: "Ethane! Two carbons and six hydrogens." },
+  C2H4: { f: 'C₂H₄', hi: 'एथिलीन', en: 'Ethylene', icon: '🍌', line: 'एथिलीन! दो कार्बन के बीच डबल बॉन्ड। यही गैस फलों को पकाती है।', lineEn: "Ethylene! A double bond between two carbons. This gas helps fruits ripen." },
+  C2H2: { f: 'C₂H₂', hi: 'एसिटिलीन', en: 'Acetylene', icon: '🔧', line: 'एसिटिलीन! दो कार्बन के बीच ट्रिपल बॉन्ड। वेल्डिंग में काम आती है।', lineEn: "Acetylene! A triple bond between two carbons. It is used in welding." },
+  CH4O: { f: 'CH₃OH', hi: 'मेथनॉल', en: 'Methanol', icon: '🧪', line: 'मेथनॉल! एक तरह का अल्कोहल।', lineEn: "Methanol! A kind of alcohol." },
+  HNaO: { f: 'NaOH', hi: 'सोडियम हाइड्रॉक्साइड', en: 'Sodium hydroxide', icon: '🧼', line: 'सोडियम हाइड्रॉक्साइड! इससे साबुन बनता है।', lineEn: "Sodium hydroxide! It is used to make soap." },
+  CCl4: { f: 'CCl₄', hi: 'कार्बन टेट्राक्लोराइड', en: 'Carbon tetrachloride', icon: '🧪', line: 'कार्बन टेट्राक्लोराइड! कार्बन के चारों हाथों में क्लोरीन।', lineEn: "Carbon tetrachloride! Chlorine in all four of carbon's hands." },
 };
 const CHALLENGES = ['H2O', 'CO2', 'CH4', 'NH3', 'O2', 'NaCl', 'HCl', 'N2', 'C2H4'];
 const LINES = {
-  intro: 'नीचे से कोई भी परमाणु उठाइए। उसके चमकते हाथ उसकी संयोजकता हैं।',
-  bonds: 'बॉन्ड पूरे कर दिए!',
-  cleared: 'सब साफ़!',
-  challengeStart: 'चैलेंज शुरू!',
-  win: ['शाबाश!', 'बिल्कुल सही!', 'कमाल कर दिया!'],
+  hi: {
+    intro: 'नीचे से कोई भी परमाणु उठाइए। उसके चमकते हाथ उसकी संयोजकता हैं।',
+    bonds: 'बॉन्ड पूरे कर दिए!',
+    cleared: 'सब साफ़!',
+    challengeStart: 'चैलेंज शुरू!',
+    win: ['शाबाश!', 'बिल्कुल सही!', 'कमाल कर दिया!'],
+  },
+  en: {
+    intro: 'Pick up any atom from the bottom. Its glowing hands are its valency.',
+    bonds: 'Bonds completed!',
+    cleared: 'All clear!',
+    challengeStart: 'Challenge time!',
+    win: ['Well done!', 'Exactly right!', 'Amazing!'],
+  },
 };
+const ln = (k) => LINES[CS.lang][k];
 
 // ---------------------------------------------------------------- config + settings
 const MP_BASE = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14';
@@ -270,7 +286,8 @@ function addAtom(el, pos) {
   const a = { id: nextId++, el, E, pos: pos.clone(), vel: new V3(), f: new V3(), bonds: new Map(), virt: [], mesh, label, halo, grabbed: false, born: T, glow: 0 };
   syncVirt(a);
   atoms.push(a);
-  if (!spokenEl.has(el)) { spokenEl.add(el); say(`${E.hi}! इसके ${HANDS_WORD[E.val]} हाथ ${E.val === 1 ? 'है' : 'हैं'}, यानी संयोजकता ${HANDS_WORD[E.val]}।`); }
+  if (!spokenEl.has(el)) { spokenEl.add(el); say(CS.t(`${E.hi}! इसके ${HANDS_WORD[E.val]} हाथ ${E.val === 1 ? 'है' : 'हैं'}, यानी संयोजकता ${HANDS_WORD[E.val]}।`,
+    `${E.en}! It has ${NUM_EN[E.val]} ${E.val === 1 ? 'hand' : 'hands'}, so its valency is ${NUM_EN[E.val]}.`)); }
   sfx('pop');
   return a;
 }
@@ -443,10 +460,10 @@ function updateMolecules() {
       const ch = challenge;
       if (ch.on && ch.target === k) {
         ch.score++; ch.cele = 2;
-        say(`${pick(LINES.win)} ${info.line}`);
+        say(`${pick(ln('win'))} ${molLine(info)}`);
         setTimeout(nextChallenge, 4500);
-      } else say(info ? info.line : `शाबाश! सारे हाथ भर गए। ये है ${pretty(k)}।`);
-      banner = { t: 0, text: info ? `${info.icon} ${info.hi} · ${info.f}` : `✨ ${pretty(k)}` };
+      } else say(info ? molLine(info) : CS.t(`शाबाश! सारे हाथ भर गए। ये है ${pretty(k)}।`, `Well done! All hands are full. This is ${pretty(k)}.`));
+      banner = { t: 0, text: info ? `${info.icon} ${elName(info)} · ${info.f}` : `✨ ${pretty(k)}` };
     }
   }
   for (const s of [...announced]) if (!live.has(s)) announced.delete(s);
@@ -461,20 +478,21 @@ function completeBonds() {
       if (order < 3 && free(a) > 0 && free(b) > 0) { setBond(a, b, order + 1); changed = again = true; sfx('snap'); break; }
     }
   }
-  if (changed) banner = { t: 0, text: '＝ डबल / ट्रिपल बॉन्ड!' };
+  if (changed) banner = { t: 0, text: CS.t('＝ डबल / ट्रिपल बॉन्ड!', '＝ Double / triple bond!') };
   return changed;
 }
 function explainCurrent() {
   const m = mols.find((x) => x.done && x.info) || mols[0];
-  if (!m) { say(LINES.intro); return; }
-  if (m.done) { say(m.info ? m.info.line : `ये है ${pretty(m.key)}।`); return; }
-  const need = m.comp.filter((a) => free(a) > 0).map((a) => `${a.E.hi} के ${HANDS_WORD[free(a)]}`).join(', ');
-  say(`अभी ${need} हाथ खाली हैं। इनमें और परमाणु जोड़िए।`);
+  if (!m) { say(ln('intro')); return; }
+  if (m.done) { say(m.info ? molLine(m.info) : CS.t(`ये है ${pretty(m.key)}।`, `This is ${pretty(m.key)}.`)); return; }
+  const open = m.comp.filter((a) => free(a) > 0);
+  if (CS.en) say(`Free hands right now: ${open.map((a) => `${NUM_EN[free(a)]} on ${a.E.en}`).join(', ')}. Add more atoms to them.`);
+  else say(`अभी ${open.map((a) => `${a.E.hi} के ${HANDS_WORD[free(a)]}`).join(', ')} हाथ खाली हैं। इनमें और परमाणु जोड़िए।`);
 }
 function clearAll() {
   if (!atoms.length) return;
   for (const a of [...atoms]) { burst(world.localToWorld(a.pos.clone()), a.E.color, 30); removeAtom(a); }
-  announced.clear(); mols = []; banner = { t: 0, text: '🧹 ' + LINES.cleared }; sfx('clear');
+  announced.clear(); mols = []; banner = { t: 0, text: '🧹 ' + ln('cleared') }; sfx('clear');
 }
 
 // ---------------------------------------------------------------- challenge
@@ -483,13 +501,14 @@ function nextChallenge() {
   if (!challenge.on) return;
   challenge.target = CHALLENGES[challenge.i++ % CHALLENGES.length];
   const info = MOLS[challenge.target];
-  say(`${info.hi} बनाइए! यानी ${info.f.replace(/[₀-₉]/g, (d) => ' ' + '₀₁₂₃₄₅₆₇₈₉'.indexOf(d))}।`);
+  const spelled = info.f.replace(/[₀-₉]/g, (d) => ' ' + '₀₁₂₃₄₅₆₇₈₉'.indexOf(d));
+  say(CS.t(`${info.hi} बनाइए! यानी ${spelled}।`, `Make ${info.en}! That is ${spelled}.`));
 }
 function toggleChallenge() {
   challenge.on = !challenge.on;
   $('#btnChallenge').classList.toggle('on', challenge.on);
-  if (challenge.on) { challenge.i = 0; challenge.score = 0; clearAll(); say(LINES.challengeStart); setTimeout(nextChallenge, 1600); }
-  else banner = { t: 0, text: `🎯 ${challenge.score} सही!` };
+  if (challenge.on) { challenge.i = 0; challenge.score = 0; clearAll(); say(ln('challengeStart')); setTimeout(nextChallenge, 1600); }
+  else banner = { t: 0, text: CS.t(`🎯 ${challenge.score} सही!`, `🎯 ${challenge.score} correct!`) };
 }
 
 // ---------------------------------------------------------------- sparkles
@@ -663,8 +682,9 @@ function reject(a, b) {
   a.vel.copy(away.multiplyScalar(2.5));
   a.glow = 1; full.glow = 1;
   sfx('nope');
-  banner = { t: 0, text: `❌ ${full.el} के हाथ भरे हैं!` };
-  say(full.E.val === 1 ? `${full.E.hi} का सिर्फ़ एक ही हाथ है, और वो पहले से जुड़ा है!` : `${full.E.hi} के ${ALL_WORD[full.E.val]} हाथ भर चुके हैं। संयोजकता पूरी हो गई!`);
+  banner = { t: 0, text: CS.t(`❌ ${full.el} के हाथ भरे हैं!`, `❌ ${full.el}'s hands are full!`) };
+  if (CS.en) say(full.E.val === 1 ? `${full.E.en} has only one hand, and it is already joined!` : `All ${NUM_EN[full.E.val]} hands of ${full.E.en} are full. Its valency is complete!`);
+  else say(full.E.val === 1 ? `${full.E.hi} का सिर्फ़ एक ही हाथ है, और वो पहले से जुड़ा है!` : `${full.E.hi} के ${ALL_WORD[full.E.val]} हाथ भर चुके हैं। संयोजकता पूरी हो गई!`);
 }
 function release(a, pt) {
   a.grabbed = false;
@@ -672,7 +692,7 @@ function release(a, pt) {
   if (t?.el === 'trash') { burst(world.localToWorld(a.pos.clone()), a.E.color, 60); removeAtom(a); sfx('clear'); dirtyMolecules = true; return; }
   const p = partnerFor(a);
   if (!p) return;
-  if (p.ok) { setBond(a, p.b, (a.bonds.get(p.b.id) || 0) + 1); a.glow = p.b.glow = 1; sfx('snap'); if (p.upgrade) banner = { t: 0, text: a.bonds.get(p.b.id) === 2 ? '＝ डबल बॉन्ड!' : '≡ ट्रिपल बॉन्ड!' }; }
+  if (p.ok) { setBond(a, p.b, (a.bonds.get(p.b.id) || 0) + 1); a.glow = p.b.glow = 1; sfx('snap'); if (p.upgrade) banner = { t: 0, text: a.bonds.get(p.b.id) === 2 ? CS.t('＝ डबल बॉन्ड!', '＝ Double bond!') : CS.t('≡ ट्रिपल बॉन्ड!', '≡ Triple bond!') }; }
   else if (!p.upgrade) reject(a, p.b);
 }
 function updateInput(dt) {
@@ -695,7 +715,7 @@ function updateInput(dt) {
       // pulled hard away from a partner → the bond breaks
       for (const [id, order] of [...a.bonds]) {
         const b = byId(id);
-        if (b && a.pos.distanceTo(b.pos) > bondLen(a, b, order) * 2.8) { setBond(a, b, 0); sfx('break'); burst(world.localToWorld(a.pos.clone()), 0xffffff, 40); banner = { t: 0, text: '💥 बॉन्ड टूटा' }; }
+        if (b && a.pos.distanceTo(b.pos) > bondLen(a, b, order) * 2.8) { setBond(a, b, 0); sfx('break'); burst(world.localToWorld(a.pos.clone()), 0xffffff, 40); banner = { t: 0, text: CS.t('💥 बॉन्ड टूटा', '💥 Bond broken') }; }
       }
     }
     if (h.pinch && st.rot) {
@@ -752,16 +772,12 @@ function sfx(type) {
 }
 let speaking = false;
 const sub = { text: '', last: '', a: 0 };
-function pickVoice() {
-  const vs = speechSynthesis.getVoices();
-  return vs.find((v) => /hi[-_]IN/i.test(v.lang) && /google/i.test(v.name)) || vs.find((v) => /hi[-_]IN/i.test(v.lang)) || vs.find((v) => /^hi/i.test(v.lang)) || null;
-}
 function say(text) {
   sub.text = text;
   if (!S.voice || !('speechSynthesis' in window)) { setTimeout(() => { if (sub.text === text) sub.text = ''; }, 1000 + text.length * 55); return; }
   speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
-  const v = pickVoice(); if (v) { u.voice = v; u.lang = v.lang; } else u.lang = 'hi-IN';
+  const v = CS.voice(); if (v) { u.voice = v; u.lang = v.lang; } else u.lang = CS.speechLang;
   speaking = true;
   u.onend = u.onerror = () => { if (say.u !== u) return; speaking = false; setTimeout(() => { if (sub.text === text) sub.text = ''; }, 1200); };
   say.u = u; // keep a reference so Chrome fires onend
@@ -800,14 +816,17 @@ function drawFx(dt) {
     fx.font = `900 ${r * (t.el.length > 1 ? 0.62 : 0.78)}px Orbitron, sans-serif`; fx.fillStyle = t.el === 'H' ? '#111' : '#fff'; fx.textAlign = 'center'; fx.textBaseline = 'middle';
     fx.fillText(t.el, t.x, t.y + 1);
     fx.font = `700 ${r * 0.42}px Rajdhani, sans-serif`; fx.fillStyle = 'rgba(239,255,245,.85)';
-    fx.fillText(`${E.hi} · ${E.val}`, t.x, t.y - r * 1.38);
+    fx.fillText(`${elName(E)} · ${E.val}`, t.x, t.y - r * 1.38);
   }
   // molecule names / what is still missing
   for (const m of mols) {
     const top = m.comp.reduce((best, a) => { const p = project(world.localToWorld(a.pos.clone())); return p.y < best.y ? p : best; }, { x: 0, y: Infinity });
     const cx = m.comp.reduce((s, a) => s + project(world.localToWorld(a.pos.clone())).x, 0) / m.comp.length;
-    if (m.done) pill(cx, top.y - fs * 2.6, m.info ? `${m.info.icon} ${m.info.hi} · ${m.info.f}` : `✨ ${pretty(m.key)}`, fs * 1.35, '#7dffb0', 0.97, 'rgba(4,20,12,.85)');
-    else pill(cx, top.y - fs * 2.2, `${pretty(m.key)} · ${m.comp.reduce((s, a) => s + Math.max(0, free(a)), 0)} हाथ खाली`, fs, '#ffe08a');
+    if (m.done) pill(cx, top.y - fs * 2.6, m.info ? `${m.info.icon} ${elName(m.info)} · ${m.info.f}` : `✨ ${pretty(m.key)}`, fs * 1.35, '#7dffb0', 0.97, 'rgba(4,20,12,.85)');
+    else {
+      const nf = m.comp.reduce((s, a) => s + Math.max(0, free(a)), 0);
+      pill(cx, top.y - fs * 2.2, `${pretty(m.key)} · ${CS.t(`${nf} हाथ खाली`, `${nf} ${nf === 1 ? 'hand' : 'hands'} free`)}`, fs, '#ffe08a');
+    }
   }
   // dragging: show whether the bond is allowed
   for (const st of per.values()) {
@@ -818,7 +837,7 @@ function drawFx(dt) {
     const pa = project(world.localToWorld(a.pos.clone())), pb = project(world.localToWorld(p.b.pos.clone()));
     fx.strokeStyle = p.ok ? '#7dffb0' : '#ff5a6e'; fx.lineWidth = 3; fx.setLineDash([6, 6]);
     fx.beginPath(); fx.moveTo(pa.x, pa.y); fx.lineTo(pb.x, pb.y); fx.stroke(); fx.setLineDash([]);
-    pill((pa.x + pb.x) / 2, (pa.y + pb.y) / 2 - fs * 1.2, p.ok ? (p.upgrade ? '＝ और बॉन्ड' : '✓ जुड़ेगा') : '✗ हाथ भरे', fs * 0.9, p.ok ? '#7dffb0' : '#ff5a6e');
+    pill((pa.x + pb.x) / 2, (pa.y + pb.y) / 2 - fs * 1.2, p.ok ? (p.upgrade ? CS.t('＝ और बॉन्ड', '＝ one more bond') : CS.t('✓ जुड़ेगा', '✓ will bond')) : CS.t('✗ हाथ भरे', '✗ hands full'), fs * 0.9, p.ok ? '#7dffb0' : '#ff5a6e');
   }
   // pinch pointers
   for (const h of hands) {
@@ -835,7 +854,7 @@ function drawFx(dt) {
   if (challenge.on && challenge.target) {
     const info = MOLS[challenge.target];
     challenge.cele = Math.max(0, challenge.cele - dt);
-    pill(W / 2, 112, challenge.cele > 0 ? `✅ ${info.hi} बन गया!  स्कोर ${challenge.score}` : `🎯 ${info.icon} ${info.hi} (${info.f}) बनाइए!  स्कोर ${challenge.score}`, fs * 1.4, challenge.cele > 0 ? '#7dffb0' : '#ffe08a', 0.97, 'rgba(4,14,10,.88)');
+    pill(W / 2, 112, challenge.cele > 0 ? CS.t(`✅ ${info.hi} बन गया!  स्कोर ${challenge.score}`, `✅ ${info.en} made!  Score ${challenge.score}`) : CS.t(`🎯 ${info.icon} ${info.hi} (${info.f}) बनाइए!  स्कोर ${challenge.score}`, `🎯 Make ${info.icon} ${info.en} (${info.f})!  Score ${challenge.score}`), fs * 1.4, challenge.cele > 0 ? '#7dffb0' : '#ffe08a', 0.97, 'rgba(4,14,10,.88)');
   }
   if (banner) {
     banner.t += dt;
@@ -846,7 +865,7 @@ function drawFx(dt) {
     fx.shadowBlur = 0; fx.globalAlpha = 1;
     if (banner.t > 1.8) banner = null;
   }
-  if (!atoms.length && started) pill(W / 2, H * 0.45, '👇 नीचे से कोई परमाणु पिंच करके उठाइए', fs * 1.25, '#ffffff');
+  if (!atoms.length && started) pill(W / 2, H * 0.45, CS.t('👇 नीचे से कोई परमाणु पिंच करके उठाइए', '👇 Pinch an atom at the bottom to pick it up'), fs * 1.25, '#ffffff');
   sub.a += ((sub.text ? 1 : 0) - sub.a) * Math.min(1, dt * 6);
   if (sub.text) sub.last = sub.text;
   if (sub.a > 0.01 && sub.last) {
@@ -869,7 +888,7 @@ function drawFx(dt) {
 // ---------------------------------------------------------------- recording
 const recState = { mr: null, c: null, ctx: null, chunks: [], t0: 0, dest: null, ext: 'webm', mime: '' };
 function startRecord() {
-  if (!window.MediaRecorder) { toast('Is browser me recording nahi chalegi. Chrome use karo.'); return; }
+  if (!window.MediaRecorder) { toast(CS.t('Is browser me recording nahi chalegi. Chrome use karo.', 'Recording does not work in this browser. Please use Chrome.')); return; }
   ensureAudio();
   const c = document.createElement('canvas'); c.width = glc.width; c.height = glc.height;
   recState.c = c; recState.ctx = c.getContext('2d');
@@ -900,7 +919,7 @@ function saveRecording() {
   a.href = URL.createObjectURL(blob); a.download = `molecule-${stamp}.${recState.ext}`;
   document.body.append(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 10000);
-  toast(`Video save ho gaya: Downloads me ${a.download}`, 5000);
+  toast(CS.t(`Video save ho gaya: Downloads me ${a.download}`, `Video saved to Downloads: ${a.download}`), 5000);
 }
 function recordFrame() {
   if (!recState.c) return;
@@ -961,7 +980,8 @@ function setLoad(id, s) {
   el.className = s; el.textContent = `${icon} ${el.textContent.replace(/^\S+\s/, '')}`;
 }
 function updateHint() {
-  $('#hint').innerHTML = '<b>🤏</b> tray se atom uthao · paas chhodo = <b>bond</b> · dobara chhuao = <b>double</b> · tez kheencho = <b>todo</b> · <b>🙌</b> bond poore · <b>✊</b> saaf';
+  $('#hint').innerHTML = CS.t('<b>🤏</b> tray se atom uthao · paas chhodo = <b>bond</b> · dobara chhuao = <b>double</b> · tez kheencho = <b>todo</b> · <b>🙌</b> bond poore · <b>✊</b> saaf',
+    '<b>🤏</b> pick an atom from the tray · drop it close = <b>bond</b> · touch again = <b>double</b> · pull fast = <b>break</b> · <b>🙌</b> complete bonds · <b>✊</b> clear');
 }
 function toggleReel() {
   document.body.classList.toggle('reel');
@@ -1030,14 +1050,15 @@ async function start() {
     layoutPlanes();
   }
   setLoad('ldCam', vStream && aStream ? 'ok' : vStream || aStream ? 'warn' : 'fail');
-  if (!vStream) toast('Camera nahi mila. Keyboard 1–6 se atom daalo, B se bond poore karo.', 5000);
+  if (!vStream) toast(CS.t('Camera nahi mila. Keyboard 1–6 se atom daalo, B se bond poore karo.', 'No camera found. Use keys 1–6 to add atoms, and B to complete bonds.'), 5000);
   started = true;
   $('#start').classList.add('gone');
-  setTimeout(() => say(LINES.intro), 600);
-  if (vStream) initHands().catch((e) => { console.error(e); setLoad('ldHand', 'fail'); toast('Hand tracking load nahi hua.'); });
+  setTimeout(() => say(ln('intro')), 600);
+  if (vStream) initHands().catch((e) => { console.error(e); setLoad('ldHand', 'fail'); toast(CS.t('Hand tracking load nahi hua.', 'Hand tracking failed to load.')); });
 }
 $('#btnStart').addEventListener('click', start);
 
+CS.onChange(() => { updateHint(); if (sub.text) { window.speechSynthesis?.cancel(); sub.text = ''; } });
 updateHint();
 onResize();
 requestAnimationFrame(frame);

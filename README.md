@@ -1,6 +1,6 @@
 # 🧪 Crazy Science · हाथ हिलाओ, विज्ञान समझो
 
-Camera ke saamne haath hilakar science seekhne wale labs. Hindi me, free, seedha browser me.
+Camera ke saamne haath hilakar science seekhne wale labs. Hindi aur English me, free, seedha browser me.
 
 | Lab | Folder | Subject |
 |---|---|---|
@@ -15,6 +15,8 @@ Camera ke saamne haath hilakar science seekhne wale labs. Hindi me, free, seedha
 Sab sirf HTML files hain. Koi server, database ya install nahi chahiye.
 
 **Home page:** sci-fi "Crazy Science OS". Boot screen par **हिंदी / ENGLISH** chuno (wahi power button hai), upar 🌐 se kabhi bhi bhasha badlo, 🔊 se awaaz on/off. Har click par robotic awaaz aati hai. Home page ki saari lines `index.html` ke `T` (hi / en) aur `LABS` me hain.
+
+**Labs bhi dono bhasha me:** home page par chuni bhasha har lab me apne aap aati hai (screen ka text, subtitles aur bolne wali aawaz). Lab ke andar 🌐 button ya start screen ke **हिंदी / English** se kabhi bhi badlo. Ye shared code `lang.js` me hai.
 
 ## GitHub Pages par daalna (free website)
 
@@ -37,8 +39,8 @@ Sab sirf HTML files hain. Koi server, database ya install nahi chahiye.
 
 ## Badlaav karna
 
-- **Jarvis ke sawaal-jawab:** `jarvis-hologram/script.js` me likho.
-- **Labs ki Hindi lines:** har lab ki `index.html` ke upar `LINES` / `PHASES` / `MOLS` me hain.
+- **Jarvis ke sawaal-jawab:** `jarvis-hologram/script.js` me likho (`answer` = Hindi, `answerEn` = English).
+- **Labs ki bolne wali lines:** har lab ki `index.html` ke upar `LINES` (`hi` / `en`) me hain. Chaand, molecule aur trig ki har kala / molecule / angle ki English line `lineEn` me hai.
 - Badlaav ke baad GitHub repo me wahi file dobara upload karo (Add file → Upload files). Same naam wali file replace ho jayegi.
 
 ## Apne computer par chalana

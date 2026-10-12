@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚛️</text></svg>">
 <title>Atom AR · Crazy Science</title>
+<script src="../lang.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
@@ -71,7 +72,8 @@
 <div id="ui">
   <div id="clap">👏</div>
   <div class="top">
-    <button class="icon" id="btnHome" title="Crazy Science: saare labs" onclick="location.href='../'">🏠</button>
+    <button class="icon" id="btnHome" title="Crazy Science: saare labs" data-en-title="Crazy Science: all labs" onclick="location.href='../'">🏠</button>
+    <button class="icon" id="btnLang" data-lang-toggle>🌐 EN</button>
     <button class="icon" id="btnRec" title="Video record (R)">⏺ REC</button>
     <button class="icon" id="btnReel" title="Reel frame 9:16 (V)">9:16</button>
     <button class="icon" id="btnFull" title="Fullscreen (F)">⛶</button>
@@ -82,36 +84,37 @@
 </div>
 
 <aside id="settings" aria-label="Settings">
-  <h2>SETTINGS <button class="icon" id="btnClose" title="Band karo (Esc)">✕</button></h2>
-  <label class="row inline">Haath atom ke aage dikhe <input type="checkbox" data-s="occlude"></label>
-  <label class="row inline">Ungli par glow point <input type="checkbox" data-s="dots"></label>
-  <label class="row inline">Hindi aawaz <input type="checkbox" data-s="voice"></label>
+  <h2>SETTINGS <button class="icon" id="btnClose" title="Band karo (Esc)" data-en-title="Close (Esc)">✕</button></h2>
+  <label class="row inline"><span data-en="Hand shows in front of the atom">Haath atom ke aage dikhe</span> <input type="checkbox" data-s="occlude"></label>
+  <label class="row inline"><span data-en="Glow dot on fingertip">Ungli par glow point</span> <input type="checkbox" data-s="dots"></label>
+  <label class="row inline"><span data-en="Voice (speaks the lines)">Aawaz (bolne wali lines)</span> <input type="checkbox" data-s="voice"></label>
   <label class="row inline">Sound effects <input type="checkbox" data-s="sfx"></label>
-  <label class="row">Taali
+  <label class="row"><span data-en="Clap">Taali</span>
     <select data-s="clapMode">
-      <option value="2">Do baar taali 👏👏 se atom aaye</option>
-      <option value="1">Ek baar taali 👏</option>
-      <option value="0">Band</option>
+      <option value="2" data-en="Double clap 👏👏 brings the atom">Do baar taali 👏👏 se atom aaye</option>
+      <option value="1" data-en="Single clap 👏">Ek baar taali 👏</option>
+      <option value="0" data-en="Off">Band</option>
     </select>
   </label>
-  <label class="row">Taali sensitivity <input type="range" min="1" max="10" step="1" data-s="clapSens"></label>
+  <label class="row"><span data-en="Clap sensitivity">Taali sensitivity</span> <input type="range" min="1" max="10" step="1" data-s="clapSens"></label>
   <label class="row">Smoothness
     <select data-s="fps">
-      <option value="30">30 FPS (Mac ke liye halka)</option>
-      <option value="60">60 FPS (smooth, zyada load)</option>
+      <option value="30" data-en="30 FPS (light, good for laptops)">30 FPS (Mac ke liye halka)</option>
+      <option value="60" data-en="60 FPS (smoother, more load)">60 FPS (smooth, zyada load)</option>
     </select>
   </label>
-  <div class="keys">Shortcuts: Space = naya atom / reset · X = fission (backup) · I = jaankari · R = record · V = 9:16 · H = clean screen · Esc = band</div>
+  <div class="keys" data-en="Shortcuts: Space = new atom / reset · X = fission (backup) · I = info · R = record · V = 9:16 · H = clean screen · Esc = close">Shortcuts: Space = naya atom / reset · X = fission (backup) · I = jaankari · R = record · V = 9:16 · H = clean screen · Esc = band</div>
 </aside>
 
 <div id="start">
   <div class="card">
     <h1>ATOM·AR</h1>
-    <p>Apni camera video me hawa me atom laao. Ungli se chhuo, pakad ke ghumao, aur dono haathon se kheench ke tod do 💥</p>
+    <p data-en="Bring an atom into the air in your camera video. Touch it with a finger, pinch to grab and spin it, and pull it apart with both hands to split it 💥">Apni camera video me hawa me atom laao. Ungli se chhuo, pakad ke ghumao, aur dono haathon se kheench ke tod do 💥</p>
     <button class="btn" id="btnStart">▶ START</button>
     <div id="loadList"><div id="ldCam">◌ Camera + mic</div><div id="ldHand">◌ Hand tracking</div></div>
-    <p class="note">Chrome me best chalta hai. Recording ke liye headphone mat lagana, taaki Hindi aawaz bhi video me aaye.</p>
-    <p class="note"><a href="../" style="color:inherit">← Crazy Science: saare labs</a></p>
+    <p class="note" data-en="Works best in Chrome. Don't wear headphones while recording, so the voice also gets into the video.">Chrome me best chalta hai. Recording ke liye headphone mat lagana, taaki aawaz bhi video me aaye.</p>
+    <div class="cs-lang"><button data-setlang="hi">हिंदी</button><button data-setlang="en">English</button></div>
+    <p class="note"><a href="../" style="color:inherit" data-en="← Crazy Science: all labs">← Crazy Science: saare labs</a></p>
   </div>
 </div>
 
@@ -124,17 +127,33 @@ import * as THREE from 'three';
 // ---------------------------------------------------------------- config
 const MP_BASE = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14';
 const HAND_MODEL = 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
-// Jo lines atom bolega: yahan badal sakte ho.
+// Jo lines atom bolega (hi = Hindi, en = English): yahan badal sakte ho.
 const LINES = {
-  spawn: 'ये रहा एक एटम! इसे छूकर देखिए।',
-  info: 'ये एक एटम है। बीच में न्यूक्लियस है, जिसमें प्रोटॉन और न्यूट्रॉन होते हैं। इसके चारों तरफ इलेक्ट्रॉन बहुत तेज़ी से घूमते हैं।',
-  fission: 'वाह! आपने न्यूक्लियर फ़िशन कर दिया! एटम टूटते ही बहुत सारी एनर्जी निकलती है।',
+  hi: {
+    spawn: 'ये रहा एक एटम! इसे छूकर देखिए।',
+    info: 'ये एक एटम है। बीच में न्यूक्लियस है, जिसमें प्रोटॉन और न्यूट्रॉन होते हैं। इसके चारों तरफ इलेक्ट्रॉन बहुत तेज़ी से घूमते हैं।',
+    fission: 'वाह! आपने न्यूक्लियर फ़िशन कर दिया! एटम टूटते ही बहुत सारी एनर्जी निकलती है।',
+  },
+  en: {
+    spawn: 'Here is an atom! Go ahead, touch it.',
+    info: 'This is an atom. In the middle is the nucleus, made of protons and neutrons. Electrons zoom around it very fast.',
+    fission: 'Wow! You just did nuclear fission! When an atom splits, a huge amount of energy comes out.',
+  },
 };
+const line = (k) => LINES[CS.lang][k];
 const LABELS = {
-  nucleus: ['NUCLEUS', 'नाभिक'],
-  proton: ['PROTON (+)', 'प्रोटॉन'],
-  neutron: ['NEUTRON (0)', 'न्यूट्रॉन'],
-  electron: ['ELECTRON (−)', 'इलेक्ट्रॉन'],
+  hi: {
+    nucleus: ['NUCLEUS', 'नाभिक'],
+    proton: ['PROTON (+)', 'प्रोटॉन'],
+    neutron: ['NEUTRON (0)', 'न्यूट्रॉन'],
+    electron: ['ELECTRON (−)', 'इलेक्ट्रॉन'],
+  },
+  en: {
+    nucleus: ['NUCLEUS', 'protons + neutrons'],
+    proton: ['PROTON (+)', 'positive charge'],
+    neutron: ['NEUTRON (0)', 'no charge'],
+    electron: ['ELECTRON (−)', 'negative, orbits fast'],
+  },
 };
 const ORB_A = 0.52, ORB_B = 0.2, TRAIL = 26;
 const PULL = 0.6; // how far apart (world units) the hands must pull to split the atom
@@ -439,7 +458,7 @@ function spawnAtom(at) {
   atom.nucleons.forEach((n) => n.mesh.position.copy(n.home));
   emitImplode(c, 700);
   sfx('spawn');
-  if (atom.spawned++ === 0) setTimeout(() => say(LINES.spawn), 900);
+  if (atom.spawned++ === 0) setTimeout(() => say(line('spawn')), 900);
   updateHint();
 }
 function setSides(axisWorld) {
@@ -470,14 +489,14 @@ function fission() {
   atom.alive = false; atom.root.visible = false; atom.stretch = atom.stretchT = 0;
   labelsOn = false;
   sfx('fission');
-  setTimeout(() => say(LINES.fission), 700);
+  setTimeout(() => say(line('fission')), 700);
   updateHint();
 }
 function toggleInfo() {
   if (!atom.alive) return;
   labelsOn = !labelsOn;
   sfx('blip');
-  if (labelsOn) say(LINES.info);
+  if (labelsOn) say(line('info'));
 }
 function updateAtom(dt) {
   if (!atom.alive) return;
@@ -780,16 +799,12 @@ function stretchSound(level) {
 
 // ---------------------------------------------------------------- voice + subtitles
 let speaking = false, sub = { text: '', a: 0 };
-function pickVoice() {
-  const vs = speechSynthesis.getVoices();
-  return vs.find((v) => /hi[-_]IN/i.test(v.lang) && /google/i.test(v.name)) || vs.find((v) => /hi[-_]IN/i.test(v.lang)) || vs.find((v) => /^hi/i.test(v.lang)) || null;
-}
 function say(text) {
   sub.text = text;
   if (!S.voice || !('speechSynthesis' in window)) { setTimeout(() => { if (sub.text === text) sub.text = ''; }, 3500); return; }
   speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
-  const v = pickVoice(); if (v) { u.voice = v; u.lang = v.lang; } else u.lang = 'hi-IN';
+  const v = CS.voice(); if (v) { u.voice = v; u.lang = v.lang; } else u.lang = CS.speechLang;
   u.rate = 1; u.pitch = 1;
   speaking = true;
   u.onend = u.onerror = () => { speaking = false; audio.busyUntil = performance.now() + 400; setTimeout(() => { if (sub.text === text) sub.text = ''; }, 1200); };
@@ -829,7 +844,7 @@ function drawLabels(a, W, H) {
   ];
   for (const [key, wp, dx, dy, color] of items) {
     const p = project(wp);
-    const at = pill(cp.x + dx * rp, cp.y + dy * rp, LABELS[key], color, a, H);
+    const at = pill(cp.x + dx * rp, cp.y + dy * rp, LABELS[CS.lang][key], color, a, H);
     fx.globalAlpha = a; fx.strokeStyle = color; fx.lineWidth = 1.5;
     fx.beginPath(); fx.moveTo(p.x, p.y); fx.lineTo(at.x, at.y); fx.stroke();
     fx.beginPath(); fx.arc(p.x, p.y, 4, 0, Math.PI * 2); fx.fillStyle = color; fx.fill();
@@ -875,7 +890,7 @@ function drawFx(dt) {
     const gr = fx.createLinearGradient(0, -fs / 2, 0, fs / 2); gr.addColorStop(0, '#ffffff'); gr.addColorStop(1, '#ffd25a');
     fx.fillStyle = gr; fx.fillText('NUCLEAR FISSION!', 0, 0);
     fx.font = `700 ${fs * 0.55}px Rajdhani, sans-serif`; fx.shadowBlur = 16; fx.fillStyle = '#fff';
-    fx.fillText('परमाणु विखंडन 💥', 0, fs * 0.95);
+    fx.fillText(CS.t('परमाणु विखंडन 💥', 'The atom split! 💥'), 0, fs * 0.95);
     fx.restore();
     if (t > 2.8) title = null;
   }
@@ -898,7 +913,7 @@ function drawFx(dt) {
 // ---------------------------------------------------------------- recording (3D view + overlay + mic + effects)
 const recState = { mr: null, c: null, ctx: null, chunks: [], t0: 0, dest: null, ext: 'webm', mime: '' };
 function startRecord() {
-  if (!window.MediaRecorder) { toast('Is browser me recording nahi chalegi. Chrome use karo.'); return; }
+  if (!window.MediaRecorder) { toast(CS.t('Is browser me recording nahi chalegi. Chrome use karo.', 'Recording does not work in this browser. Please use Chrome.')); return; }
   ensureAudio();
   const c = document.createElement('canvas'); c.width = glc.width; c.height = glc.height;
   recState.c = c; recState.ctx = c.getContext('2d');
@@ -928,7 +943,7 @@ function saveRecording() {
   a.href = URL.createObjectURL(blob); a.download = `atom-reel-${stamp}.${recState.ext}`;
   document.body.append(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 10000);
-  toast(`Video save ho gaya: Downloads me ${a.download}`, 5000);
+  toast(CS.t(`Video save ho gaya: Downloads me ${a.download}`, `Video saved to Downloads: ${a.download}`), 5000);
 }
 function recordFrame() {
   if (!recState.c) return;
@@ -992,8 +1007,10 @@ function setLoad(id, st) {
 }
 function updateHint() {
   $('#hint').innerHTML = atom.alive
-    ? '<b>☝️</b> chhuo · <b>🤏</b> pakad ke ghumao/phenko · <b>🤏🤏</b> dono haath se kheencho → 💥 · <b>✋</b> hatheli → jaankari'
-    : '<b>👏👏</b> taali · <b>🙌</b> dono hatheliyan · <b>Space</b> → atom bulao';
+    ? CS.t('<b>☝️</b> chhuo · <b>🤏</b> pakad ke ghumao/phenko · <b>🤏🤏</b> dono haath se kheencho → 💥 · <b>✋</b> hatheli → jaankari',
+      '<b>☝️</b> touch · <b>🤏</b> pinch to spin/throw · <b>🤏🤏</b> pull with both hands → 💥 · <b>✋</b> palm → info')
+    : CS.t('<b>👏👏</b> taali · <b>🙌</b> dono hatheliyan · <b>Space</b> → atom bulao',
+      '<b>👏👏</b> clap · <b>🙌</b> both palms · <b>Space</b> → call the atom');
 }
 function toggleReel() {
   document.body.classList.toggle('reel');
@@ -1052,14 +1069,15 @@ async function start() {
     layoutPlanes();
   }
   setLoad('ldCam', vStream && aStream ? 'ok' : vStream || aStream ? 'warn' : 'fail');
-  if (!vStream) toast('Camera nahi mila. Atom dikhega, par haath se control nahi hoga.', 5000);
+  if (!vStream) toast(CS.t('Camera nahi mila. Atom dikhega, par haath se control nahi hoga.', 'No camera found. The atom will show, but hand control won\'t work.'), 5000);
   started = true;
   updateHint();
   $('#start').classList.add('gone');
-  if (vStream) initHands().catch((e) => { console.error(e); setLoad('ldHand', 'fail'); toast('Hand tracking load nahi hua.'); });
+  if (vStream) initHands().catch((e) => { console.error(e); setLoad('ldHand', 'fail'); toast(CS.t('Hand tracking load nahi hua.', 'Hand tracking failed to load.')); });
 }
 $('#btnStart').addEventListener('click', start);
 
+CS.onChange(() => { updateHint(); if (sub.text) { window.speechSynthesis?.cancel(); sub.text = ''; } });
 updateHint();
 onResize();
 requestAnimationFrame(frame);

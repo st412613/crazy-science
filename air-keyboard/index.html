@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⌨️</text></svg>">
 <title>Air Keyboard · Crazy Science</title>
+<script src="../lang.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
@@ -68,7 +69,8 @@
 
 <div id="ui">
   <div class="top">
-    <button class="icon" id="btnHome" title="Crazy Science: saare labs" onclick="location.href='../'">🏠</button>
+    <button class="icon" id="btnHome" title="Crazy Science: saare labs" data-en-title="Crazy Science: all labs" onclick="location.href='../'">🏠</button>
+    <button class="icon" id="btnLang" data-lang-toggle>🌐 EN</button>
     <button class="icon" id="btnRec" title="Video record (R)">⏺ REC</button>
     <button class="icon" id="btnReel" title="Reel frame 9:16 (V)">9:16</button>
     <button class="icon" id="btnFull" title="Fullscreen (F)">⛶</button>
@@ -79,41 +81,42 @@
 </div>
 
 <aside id="settings" aria-label="Settings">
-  <h2>SETTINGS <button class="icon" id="btnClose" title="Band karo (Esc)">✕</button></h2>
-  <label class="row">Key kaise dabe
+  <h2>SETTINGS <button class="icon" id="btnClose" title="Band karo (Esc)" data-en-title="Close (Esc)">✕</button></h2>
+  <label class="row"><span data-en="How a key gets pressed">Key kaise dabe</span>
     <select data-s="mode">
-      <option value="pinch">🤏 Pinch (angutha + ungli milao)</option>
-      <option value="dwell">⏱️ Ruk ke (ungli key par roko)</option>
-      <option value="tap">👇 Tap (ungli neeche jhatko)</option>
+      <option value="pinch" data-en="🤏 Pinch (touch thumb + finger)">🤏 Pinch (angutha + ungli milao)</option>
+      <option value="dwell" data-en="⏱️ Hold (keep the finger on the key)">⏱️ Ruk ke (ungli key par roko)</option>
+      <option value="tap" data-en="👇 Tap (flick the finger down)">👇 Tap (ungli neeche jhatko)</option>
     </select>
   </label>
-  <label class="row">Ruk ke dabane ka time <input type="range" min="0.3" max="1.2" step="0.05" data-s="dwell"><small>Kam = jaldi dabega, zyada = galti kam</small></label>
+  <label class="row"><span data-en="Hold time">Ruk ke dabane ka time</span> <input type="range" min="0.3" max="1.2" step="0.05" data-s="dwell"><small data-en="Less = presses faster, more = fewer mistakes">Kam = jaldi dabega, zyada = galti kam</small></label>
   <label class="row">Keyboard size <input type="range" min="0.7" max="1.4" step="0.05" data-s="size"></label>
   <label class="row inline">Word suggestions <input type="checkbox" data-s="suggest"></label>
-  <label class="row inline">Haath keyboard ke aage dikhe <input type="checkbox" data-s="occlude"></label>
-  <label class="row inline">Key ki awaaz <input type="checkbox" data-s="sfx"></label>
-  <label class="row inline">Likha hua bolke sunaye (🙌 / 🔊) <input type="checkbox" data-s="voice"></label>
+  <label class="row inline"><span data-en="Hand shows in front of the keyboard">Haath keyboard ke aage dikhe</span> <input type="checkbox" data-s="occlude"></label>
+  <label class="row inline"><span data-en="Key sounds">Key ki awaaz</span> <input type="checkbox" data-s="sfx"></label>
+  <label class="row inline"><span data-en="Read the text aloud (🙌 / 🔊)">Likha hua bolke sunaye (🙌 / 🔊)</span> <input type="checkbox" data-s="voice"></label>
   <label class="row">Smoothness
     <select data-s="fps">
-      <option value="30">30 FPS (Mac ke liye halka)</option>
-      <option value="60">60 FPS (smooth, zyada load)</option>
+      <option value="30" data-en="30 FPS (light, good for laptops)">30 FPS (Mac ke liye halka)</option>
+      <option value="60" data-en="60 FPS (smoother, more load)">60 FPS (smooth, zyada load)</option>
     </select>
   </label>
-  <div class="keys">Gestures: ✋ hatheli baayein jhatko = shabd mitao · ✊ mutthi = sab saaf · 🙌 dono hatheliyan = bolo + fireworks · 🤏 ✥ ya screen ki title-bar pakdo = khiskao<br>Shortcuts: Backspace/Enter/keys bhi chalte hain · R = record · V = 9:16 · H = clean screen · Esc = band</div>
+  <div class="keys" data-en="Gestures: ✋ swipe palm left = delete word · ✊ fist = clear all · 🙌 both palms = speak + fireworks · 🤏 grab ✥ or the screen title bar = move<br>Shortcuts: Backspace/Enter/keys also work · R = record · V = 9:16 · H = clean screen · Esc = close">Gestures: ✋ hatheli baayein jhatko = shabd mitao · ✊ mutthi = sab saaf · 🙌 dono hatheliyan = bolo + fireworks · 🤏 ✥ ya screen ki title-bar pakdo = khiskao<br>Shortcuts: Backspace/Enter/keys bhi chalte hain · R = record · V = 9:16 · H = clean screen · Esc = band</div>
 </aside>
 
 <div id="start">
   <div class="card">
     <h1>AIR·KEYBOARD</h1>
-    <p>Hawa me keyboard, hawa me screen. Ungliyon se Hindi ya English me likho ⌨️✨</p>
+    <p data-en="A keyboard in the air, a screen in the air. Type in Hindi or English with your fingers ⌨️✨">Hawa me keyboard, hawa me screen. Ungliyon se Hindi ya English me likho ⌨️✨</p>
     <button class="btn" id="btnStart">▶ START</button>
     <div id="loadList"><div id="ldCam">◌ Camera + mic</div><div id="ldHand">◌ Hand tracking</div></div>
-    <p class="note">Chrome me best chalta hai. Haath camera se 1–2 feet door rakho, dono haath dikhne chahiye.</p>
-    <p class="note"><a href="../" style="color:inherit">← Crazy Science: saare labs</a></p>
+    <p class="note" data-en="Works best in Chrome. Keep your hands 1–2 feet from the camera; both hands should be visible.">Chrome me best chalta hai. Haath camera se 1–2 feet door rakho, dono haath dikhne chahiye.</p>
+    <div class="cs-lang"><button data-setlang="hi">हिंदी</button><button data-setlang="en">English</button></div>
+    <p class="note"><a href="../" style="color:inherit" data-en="← Crazy Science: all labs">← Crazy Science: saare labs</a></p>
   </div>
 </div>
 
-<!-- Jarvis ke sawaal-jawab (server ko "New folder clean" se chalao to milenge) -->
+<!-- Jarvis ke sawaal-jawab (Hindi + English) jarvis-hologram/script.js se aate hain; server site ke main folder se chalao -->
 <script src="../jarvis-hologram/script.js"></script>
 <script type="importmap">
 { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
@@ -222,10 +225,11 @@ function suggestions() {
 // ---------------------------------------------------------------- Jarvis answers (from ../jarvis-hologram/script.js when available)
 const QA = window.HOLO_SCRIPT || {
   notFound: ['हम्म, इस पर मुझे थोड़ा सोचना पड़ेगा!'],
+  notFoundEn: ['Hmm, I will have to think about that one!'],
   qa: [
-    { keys: ['नमस्ते', 'hello', 'hi'], answer: 'नमस्ते! हवा में लिखना कैसा लगा?' },
-    { keys: ['कौन हो', 'who are you'], answer: 'मैं जार्विस हूँ, आपका होलोग्राम असिस्टेंट।' },
-    { keys: ['किसने बनाया', 'who made you'], answer: 'मुझे शिवम ने बनाया है!' },
+    { keys: ['नमस्ते', 'hello', 'hi'], answer: 'नमस्ते! हवा में लिखना कैसा लगा?', answerEn: 'Hello! How do you like typing in the air?' },
+    { keys: ['कौन हो', 'who are you'], answer: 'मैं जार्विस हूँ, आपका होलोग्राम असिस्टेंट।', answerEn: 'I am Jarvis, your hologram assistant.' },
+    { keys: ['किसने बनाया', 'who made you'], answer: 'मुझे शिवम ने बनाया है!', answerEn: 'Shivam made me!' },
   ],
 };
 function looseNorm(s) {
@@ -237,15 +241,17 @@ function hasKey(text, key) {
   if (!/\s/.test(key.trim()) && n.length <= 3) return text.split(/\s+/).some((w) => looseNorm(w) === n);
   return looseNorm(text).includes(n);
 }
+// Answers in English when the site is in English and the question is typed in English letters.
 function jarvisAnswer(q) {
+  const en = CS.en && !isDeva(q), loc = en ? 'en-IN' : 'hi-IN';
   let best = null, bl = 0;
   for (const e of QA.qa || []) for (const key of e.keys) { const l = looseNorm(key).length; if (l > bl && hasKey(q, key)) { best = e; bl = l; } }
-  const raw = best ? best.answer : (QA.notFound || ['हम्म!'])[0];
+  const raw = best ? (en && best.answerEn) || best.answer : ((en && QA.notFoundEn) || QA.notFound || ['हम्म!'])[0];
   const d = new Date();
   return raw.replace(/\[[A-Z]+\]\s*/g, '')
-    .replaceAll('{name}', 'जार्विस')
-    .replaceAll('{time}', d.toLocaleTimeString('hi-IN', { hour: 'numeric', minute: '2-digit' }))
-    .replaceAll('{date}', d.toLocaleDateString('hi-IN', { weekday: 'long', day: 'numeric', month: 'long' }));
+    .replaceAll('{name}', en ? 'Jarvis' : 'जार्विस')
+    .replaceAll('{time}', d.toLocaleTimeString(loc, { hour: 'numeric', minute: '2-digit' }))
+    .replaceAll('{date}', d.toLocaleDateString(loc, { weekday: 'long', day: 'numeric', month: 'long' }));
 }
 
 // ---------------------------------------------------------------- renderer + camera layers
@@ -799,7 +805,7 @@ function drawFx(dt) {
 // ---------------------------------------------------------------- recording
 const recState = { mr: null, c: null, ctx: null, chunks: [], t0: 0, dest: null, ext: 'webm', mime: '' };
 function startRecord() {
-  if (!window.MediaRecorder) { toast('Is browser me recording nahi chalegi. Chrome use karo.'); return; }
+  if (!window.MediaRecorder) { toast(CS.t('Is browser me recording nahi chalegi. Chrome use karo.', 'Recording does not work in this browser. Please use Chrome.')); return; }
   ensureAudio();
   const c = document.createElement('canvas'); c.width = glc.width; c.height = glc.height;
   recState.c = c; recState.ctx = c.getContext('2d');
@@ -830,7 +836,7 @@ function saveRecording() {
   a.href = URL.createObjectURL(blob); a.download = `air-keyboard-${stamp}.${recState.ext}`;
   document.body.append(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 10000);
-  toast(`Video save ho gaya: Downloads me ${a.download}`, 5000);
+  toast(CS.t(`Video save ho gaya: Downloads me ${a.download}`, `Video saved to Downloads: ${a.download}`), 5000);
 }
 function recordFrame() {
   if (!recState.c) return;
@@ -896,8 +902,12 @@ function setLoad(id, st) {
   el.className = st; el.textContent = `${icon} ${el.textContent.replace(/^\S+\s/, '')}`;
 }
 function updateHint() {
-  const how = { pinch: '<b>🤏</b> key par pinch = dabao', dwell: '<b>⏱️</b> ungli key par roko = dabao', tap: '<b>👇</b> ungli neeche jhatko = dabao' }[S.mode];
-  $('#hint').innerHTML = `${how} · <b>✋⬅</b> shabd mitao · <b>✊</b> sab saaf · <b>🙌</b> bolo + 🎆 · <b>✥</b> khiskao`;
+  const how = CS.en
+    ? { pinch: '<b>🤏</b> pinch on a key = press', dwell: '<b>⏱️</b> hold finger on a key = press', tap: '<b>👇</b> flick finger down = press' }[S.mode]
+    : { pinch: '<b>🤏</b> key par pinch = dabao', dwell: '<b>⏱️</b> ungli key par roko = dabao', tap: '<b>👇</b> ungli neeche jhatko = dabao' }[S.mode];
+  $('#hint').innerHTML = CS.en
+    ? `${how} · <b>✋⬅</b> delete word · <b>✊</b> clear all · <b>🙌</b> speak + 🎆 · <b>✥</b> move`
+    : `${how} · <b>✋⬅</b> shabd mitao · <b>✊</b> sab saaf · <b>🙌</b> bolo + 🎆 · <b>✥</b> khiskao`;
 }
 function toggleReel() {
   document.body.classList.toggle('reel');
@@ -958,15 +968,16 @@ async function start() {
     layoutPlanes();
   }
   setLoad('ldCam', vStream && aStream ? 'ok' : vStream || aStream ? 'warn' : 'fail');
-  if (!vStream) toast('Camera nahi mila. Asli keyboard se type karke dekh sakte ho.', 5000);
-  if (!window.HOLO_SCRIPT) toast('Jarvis ke poore jawab ke liye server "New folder clean" folder se chalao.', 5000);
+  if (!vStream) toast(CS.t('Camera nahi mila. Asli keyboard se type karke dekh sakte ho.', 'No camera found. You can still try it by typing on your real keyboard.'), 5000);
+  if (!window.HOLO_SCRIPT) toast(CS.t('Jarvis ke poore jawab ke liye server site ke main folder se chalao.', 'For all of Jarvis\'s answers, run the server from the site\'s main folder.'), 5000);
   started = true;
   $('#start').classList.add('gone');
-  if (vStream) initHands().catch((e) => { console.error(e); setLoad('ldHand', 'fail'); toast('Hand tracking load nahi hua.'); });
+  if (vStream) initHands().catch((e) => { console.error(e); setLoad('ldHand', 'fail'); toast(CS.t('Hand tracking load nahi hua.', 'Hand tracking failed to load.')); });
 }
 $('#btnStart').addEventListener('click', start);
 
 refresh();
+CS.onChange(updateHint);
 updateHint();
 onResize();
 requestAnimationFrame(frame);

@@ -4,7 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌗</text></svg>">
-<title>चाँद की कलाएँ · Crazy Science</title>
+<title data-en="Moon Phases · Crazy Science">चाँद की कलाएँ · Crazy Science</title>
+<script src="../lang.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
@@ -26,7 +27,7 @@
 
   #ui { position: fixed; inset: 0; pointer-events: none; z-index: 5; }
   #ui button { pointer-events: auto; }
-  .top { position: absolute; top: 16px; left: 16px; display: flex; gap: 8px; align-items: center; }
+  .top { position: absolute; top: 16px; left: 16px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; max-width: calc(100% - 32px); }
   button.icon { height: 38px; min-width: 38px; padding: 0 12px; border-radius: 10px; border: 1px solid rgba(var(--c-rgb), .45); background: rgba(6, 10, 22, .65); color: var(--c); font: 700 13px 'Orbitron', sans-serif; letter-spacing: .08em; cursor: pointer; }
   button.icon:hover { background: rgba(var(--c-rgb), .16); }
   button.icon.on { background: var(--c); color: #060a16; }
@@ -73,11 +74,12 @@
 <div id="ui">
   <div id="clap">👏</div>
   <div class="top">
-    <button class="icon" id="btnHome" title="Crazy Science: saare labs" onclick="location.href='../'">🏠</button>
+    <button class="icon" id="btnHome" title="Crazy Science: saare labs" data-en-title="Crazy Science: all labs" onclick="location.href='../'">🏠</button>
+    <button class="icon" id="btnLang" data-lang-toggle>🌐 EN</button>
     <button class="icon" id="btnSettings" title="Settings">⚙</button>
     <button class="icon" id="btnRec" title="Video record (R)">⏺ REC</button>
     <button class="icon" id="btnReel" title="Reel frame 9:16 (V)">9:16</button>
-    <button class="icon" id="btnShadow" title="Earth ki parchhai (E)">🌍 परछाई?</button>
+    <button class="icon" id="btnShadow" title="Earth ki parchhai (E)" data-en-title="Earth's shadow (E)" data-en="🌍 Shadow?">🌍 परछाई?</button>
     <button class="icon" id="btnFull" title="Fullscreen (F)">⛶</button>
   </div>
   <div id="hint"></div>
@@ -85,38 +87,39 @@
 </div>
 
 <aside id="settings" aria-label="Settings">
-  <h2>SETTINGS <button class="icon" id="btnClose" title="Band karo (Esc)">✕</button></h2>
-  <label class="row inline">Naam aur kala ke nishaan <input type="checkbox" data-s="labels"></label>
-  <label class="row inline">Hindi aawaz <input type="checkbox" data-s="voice"></label>
+  <h2>SETTINGS <button class="icon" id="btnClose" title="Band karo (Esc)" data-en-title="Close (Esc)">✕</button></h2>
+  <label class="row inline"><span data-en="Names and phase markers">Naam aur kala ke nishaan</span> <input type="checkbox" data-s="labels"></label>
+  <label class="row inline"><span data-en="Voice (speaks the lines)">Aawaz (bolne wali lines)</span> <input type="checkbox" data-s="voice"></label>
   <label class="row inline">Sound effects <input type="checkbox" data-s="sfx"></label>
-  <label class="row inline">Haath aage dikhe <input type="checkbox" data-s="occlude"></label>
-  <label class="row inline">Ungli par glow point <input type="checkbox" data-s="dots"></label>
-  <label class="row">Taali
+  <label class="row inline"><span data-en="Hand shows in front">Haath aage dikhe</span> <input type="checkbox" data-s="occlude"></label>
+  <label class="row inline"><span data-en="Glow dot on fingertip">Ungli par glow point</span> <input type="checkbox" data-s="dots"></label>
+  <label class="row"><span data-en="Clap">Taali</span>
     <select data-s="clapMode">
-      <option value="2">Do baar taali 👏👏</option>
-      <option value="1">Ek baar taali 👏</option>
-      <option value="0">Band</option>
+      <option value="2" data-en="Double clap 👏👏">Do baar taali 👏👏</option>
+      <option value="1" data-en="Single clap 👏">Ek baar taali 👏</option>
+      <option value="0" data-en="Off">Band</option>
     </select>
   </label>
-  <label class="row">Taali sensitivity <input type="range" min="1" max="10" step="1" data-s="clapSens"></label>
+  <label class="row"><span data-en="Clap sensitivity">Taali sensitivity</span> <input type="range" min="1" max="10" step="1" data-s="clapSens"></label>
   <label class="row">Smoothness
     <select data-s="fps">
-      <option value="30">30 FPS (Mac ke liye halka)</option>
-      <option value="60">60 FPS (smooth, zyada load)</option>
+      <option value="30" data-en="30 FPS (light, good for laptops)">30 FPS (Mac ke liye halka)</option>
+      <option value="60" data-en="60 FPS (smoother, more load)">60 FPS (smooth, zyada load)</option>
     </select>
   </label>
-  <div class="keys">Shortcuts: Space = shuru / chalao-roko · ← → = pichhli / agli kala · 1–8 = seedha us kala par · T = guided tour · E = parchhai · ↑ ↓ = speed · L = nishaan · R = record · V = 9:16 · H = clean · Esc = band</div>
+  <div class="keys" data-en="Shortcuts: Space = start / play-pause · ← → = previous / next phase · 1–8 = jump to that phase · T = guided tour · E = shadow · ↑ ↓ = speed · L = markers · R = record · V = 9:16 · H = clean · Esc = close">Shortcuts: Space = shuru / chalao-roko · ← → = pichhli / agli kala · 1–8 = seedha us kala par · T = guided tour · E = parchhai · ↑ ↓ = speed · L = nishaan · R = record · V = 9:16 · H = clean · Esc = band</div>
 </aside>
 
 <div id="start">
   <div class="card">
     <h1>MOON·PHASES</h1>
-    <h2>चाँद की कलाएँ 🌑🌓🌕</h2>
-    <p>Chaand ko haath se Earth ke charon taraf ghumao, aur box me dekho ki Earth se wo kaisa dikhta hai. Dono hatheliyan dikhao to poora guided tour 🙌</p>
+    <h2 data-en="Phases of the Moon 🌑🌓🌕">चाँद की कलाएँ 🌑🌓🌕</h2>
+    <p data-en="Move the Moon around the Earth with your hand, and watch the box to see how it looks from Earth. Show both palms for a full guided tour 🙌">Chaand ko haath se Earth ke charon taraf ghumao, aur box me dekho ki Earth se wo kaisa dikhta hai. Dono hatheliyan dikhao to poora guided tour 🙌</p>
     <button class="btn" id="btnStart">▶ START</button>
     <div id="loadList"><div id="ldTex">◌ Textures</div><div id="ldCam">◌ Camera + mic</div><div id="ldHand">◌ Hand tracking</div></div>
-    <p class="note">Chrome me best chalta hai. Recording ke liye headphone mat lagana, taaki Hindi aawaz bhi video me aaye.</p>
-    <p class="note"><a href="../" style="color:inherit">← Crazy Science: saare labs</a></p>
+    <p class="note" data-en="Works best in Chrome. Don't wear headphones while recording, so the voice also gets into the video.">Chrome me best chalta hai. Recording ke liye headphone mat lagana, taaki aawaz bhi video me aaye.</p>
+    <div class="cs-lang"><button data-setlang="hi">हिंदी</button><button data-setlang="en">English</button></div>
+    <p class="note"><a href="../" style="color:inherit" data-en="← Crazy Science: all labs">← Crazy Science: saare labs</a></p>
   </div>
 </div>
 
@@ -132,20 +135,29 @@ const HAND_MODEL = 'https://storage.googleapis.com/mediapipe-models/hand_landmar
 const TEX_BASE = 'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r160/examples/textures/planets/';
 // The eight phases, starting at new moon. Lines are what the narrator says; edit freely.
 const PHASES = [
-  { emoji: '🌑', hi: 'अमावस्या', en: 'New Moon', line: 'अमावस्या। चाँद सूरज और पृथ्वी के बीच है, इसलिए उसका रोशन हिस्सा हमसे दूर है, और हमें चाँद दिखता ही नहीं।' },
-  { emoji: '🌒', hi: 'बढ़ता हँसिया चाँद', en: 'Waxing Crescent', line: 'बढ़ता हुआ हँसिया चाँद। अब रोशन हिस्से का थोड़ा सा भाग हमें दिखने लगा है।' },
-  { emoji: '🌓', hi: 'आधा चाँद', en: 'First Quarter', line: 'आधा चाँद। चाँद पृथ्वी के बगल में है, इसलिए हमें रोशन हिस्से का ठीक आधा भाग दिखता है।' },
-  { emoji: '🌔', hi: 'बढ़ता बड़ा चाँद', en: 'Waxing Gibbous', line: 'बढ़ता बड़ा चाँद। रोशन हिस्से का ज़्यादातर भाग अब हमारी तरफ़ है।' },
-  { emoji: '🌕', hi: 'पूर्णिमा', en: 'Full Moon', line: 'पूर्णिमा! पृथ्वी बीच में है, और चाँद का पूरा रोशन हिस्सा हमारी तरफ़ है।' },
-  { emoji: '🌖', hi: 'घटता बड़ा चाँद', en: 'Waning Gibbous', line: 'घटता बड़ा चाँद। अब रोशन हिस्सा धीरे-धीरे हमसे दूर होने लगा है।' },
-  { emoji: '🌗', hi: 'आधा चाँद', en: 'Last Quarter', line: 'घटता आधा चाँद। फिर से आधा हिस्सा दिख रहा है, पर इस बार दूसरी तरफ़ का।' },
-  { emoji: '🌘', hi: 'घटता हँसिया चाँद', en: 'Waning Crescent', line: 'घटता हँसिया चाँद। अगली अमावस्या आने ही वाली है।' },
+  { emoji: '🌑', hi: 'अमावस्या', en: 'New Moon', line: 'अमावस्या। चाँद सूरज और पृथ्वी के बीच है, इसलिए उसका रोशन हिस्सा हमसे दूर है, और हमें चाँद दिखता ही नहीं।', lineEn: "New Moon. The Moon is between the Sun and the Earth, so its lit side faces away from us, and we can't see the Moon at all." },
+  { emoji: '🌒', hi: 'बढ़ता हँसिया चाँद', en: 'Waxing Crescent', line: 'बढ़ता हुआ हँसिया चाँद। अब रोशन हिस्से का थोड़ा सा भाग हमें दिखने लगा है।', lineEn: 'Waxing crescent. Now we can see a small sliver of the lit side.' },
+  { emoji: '🌓', hi: 'आधा चाँद', en: 'First Quarter', line: 'आधा चाँद। चाँद पृथ्वी के बगल में है, इसलिए हमें रोशन हिस्से का ठीक आधा भाग दिखता है।', lineEn: 'First quarter. The Moon is beside the Earth, so we see exactly half of the lit side.' },
+  { emoji: '🌔', hi: 'बढ़ता बड़ा चाँद', en: 'Waxing Gibbous', line: 'बढ़ता बड़ा चाँद। रोशन हिस्से का ज़्यादातर भाग अब हमारी तरफ़ है।', lineEn: 'Waxing gibbous. Most of the lit side is now facing us.' },
+  { emoji: '🌕', hi: 'पूर्णिमा', en: 'Full Moon', line: 'पूर्णिमा! पृथ्वी बीच में है, और चाँद का पूरा रोशन हिस्सा हमारी तरफ़ है।', lineEn: 'Full Moon! The Earth is in the middle, and the whole lit side of the Moon faces us.' },
+  { emoji: '🌖', hi: 'घटता बड़ा चाँद', en: 'Waning Gibbous', line: 'घटता बड़ा चाँद। अब रोशन हिस्सा धीरे-धीरे हमसे दूर होने लगा है।', lineEn: 'Waning gibbous. The lit side is slowly turning away from us.' },
+  { emoji: '🌗', hi: 'आधा चाँद', en: 'Last Quarter', line: 'घटता आधा चाँद। फिर से आधा हिस्सा दिख रहा है, पर इस बार दूसरी तरफ़ का।', lineEn: 'Last quarter. Half is visible again, but this time the other half.' },
+  { emoji: '🌘', hi: 'घटता हँसिया चाँद', en: 'Waning Crescent', line: 'घटता हँसिया चाँद। अगली अमावस्या आने ही वाली है।', lineEn: 'Waning crescent. The next new moon is coming soon.' },
 ];
 const LINES = {
-  spawn: 'देखिए, सूरज की रोशनी हमेशा चाँद के आधे हिस्से पर पड़ती है। चाँद को पकड़कर घुमाइए, और बॉक्स में देखिए कि पृथ्वी से वह कैसा दिखता है।',
-  tourEnd: 'तो याद रखिए: चाँद हमेशा आधा रोशन रहता है। हमें उस रोशन हिस्से का कितना भाग दिखता है, उसी से कलाएँ बनती हैं।',
-  myth: 'ध्यान दीजिए, कलाएँ पृथ्वी की परछाई से नहीं बनतीं। चाँद तो परछाई के ऊपर-नीचे से निकल जाता है। परछाई में वह सिर्फ़ ग्रहण के समय आता है।',
+  hi: {
+    spawn: 'देखिए, सूरज की रोशनी हमेशा चाँद के आधे हिस्से पर पड़ती है। चाँद को पकड़कर घुमाइए, और बॉक्स में देखिए कि पृथ्वी से वह कैसा दिखता है।',
+    tourEnd: 'तो याद रखिए: चाँद हमेशा आधा रोशन रहता है। हमें उस रोशन हिस्से का कितना भाग दिखता है, उसी से कलाएँ बनती हैं।',
+    myth: 'ध्यान दीजिए, कलाएँ पृथ्वी की परछाई से नहीं बनतीं। चाँद तो परछाई के ऊपर-नीचे से निकल जाता है। परछाई में वह सिर्फ़ ग्रहण के समय आता है।',
+  },
+  en: {
+    spawn: 'Look, sunlight always falls on half of the Moon. Grab the Moon and move it around, and watch the box to see how it looks from Earth.',
+    tourEnd: 'So remember: the Moon is always half lit. How much of that lit half we can see is what makes the phases.',
+    myth: "Notice: the phases are not caused by Earth's shadow. The Moon passes above or below the shadow. It only goes into the shadow during an eclipse.",
+  },
 };
+const line = (k) => LINES[CS.lang][k];
+const phaseLine = (i) => (CS.en ? PHASES[i].lineEn : PHASES[i].line);
 const EARTH_R = 0.28, MOON_R = 0.1, ORBIT_R = 1.1, ORBIT_TILT = 0.21, SUN_X = -2.3, CYCLE_SEC = 24;
 const AUDIO_CONSTRAINTS = { echoCancellation: false, noiseSuppression: false, autoGainControl: false };
 const MIMES = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4;codecs=avc1,opus', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
@@ -410,7 +422,7 @@ function spawn() {
   moonState.a = Math.PI * 1.25; moonState.playing = true; moonState.speed = 1; moonState.target = null; moonState.idx = -1;
   sfx('spawn');
   sparkle(new V3(0, 0, 0), 300, 0xcfe3ff, 1.6);
-  if (sys.spawned++ === 0) setTimeout(() => say(LINES.spawn), 900);
+  if (sys.spawned++ === 0) setTimeout(() => say(line('spawn')), 900);
   updateHint();
 }
 function goToPhase(i, speak = true) {
@@ -438,14 +450,14 @@ function updateTour(dt) {
   tour.wait += dt;
   if (tour.wait < 0.7) return;
   tour.i++;
-  if (tour.i >= 8) { tour.active = false; goToPhase(0, false); setTimeout(() => say(LINES.tourEnd), 400); return; }
+  if (tour.i >= 8) { tour.active = false; goToPhase(0, false); setTimeout(() => say(line('tourEnd')), 400); return; }
   tour.moving = true;
   goToPhase(tour.i, true);
 }
 function toggleShadow() {
   showShadow = !showShadow;
   $('#btnShadow').classList.toggle('on', showShadow);
-  if (showShadow && sys.alive) { goToPhase(4, false); setTimeout(() => say(LINES.myth), 600); }
+  if (showShadow && sys.alive) { goToPhase(4, false); setTimeout(() => say(line('myth')), 600); }
 }
 function updateScene(dt) {
   if (!sys.alive) return;
@@ -466,7 +478,7 @@ function updateScene(dt) {
     ms.a += d * follow(0.02, dt) + Math.sign(d) * Math.min(Math.abs(d), 0.4 * dt);
     if (Math.abs(ms.target - ms.a) < 0.004) {
       ms.a = ms.target; ms.target = null;
-      if (ms.speakOnArrive >= 0) { say(PHASES[ms.speakOnArrive].line); ms.speakOnArrive = -1; }
+      if (ms.speakOnArrive >= 0) { say(phaseLine(ms.speakOnArrive)); ms.speakOnArrive = -1; }
     }
   } else if (ms.playing && !ms.grabbed) {
     ms.a += (TAU / CYCLE_SEC) * ms.speed * dt;
@@ -483,7 +495,7 @@ function updateScene(dt) {
   }
   if (ms.pendingIdx >= 0) {
     ms.pendingT += dt;
-    if (ms.pendingT > 0.6 && !tour.active) { say(PHASES[ms.pendingIdx].line); ms.pendingIdx = -1; }
+    if (ms.pendingT > 0.6 && !tour.active) { say(phaseLine(ms.pendingIdx)); ms.pendingIdx = -1; }
   }
 }
 
@@ -620,8 +632,8 @@ function updatePoses(dt) {
   if (kind !== pose.kind) { pose.kind = kind; pose.hold = 0; pose.fired = false; }
   if (kind === 'none' || pose.fired) return;
   pose.hold += dt;
-  if (kind === 'fist' && pose.hold > 0.35 && sys.alive && (moonState.playing || tour.active)) { pose.fired = true; moonState.playing = false; stopTour(); sfx('stop'); banner = { t: 0, text: '⏸ रुको' }; }
-  else if (kind === 'palm1' && pose.hold > 0.45 && sys.alive && !moonState.playing && !tour.active) { pose.fired = true; moonState.playing = true; moonState.target = null; sfx('blip'); banner = { t: 0, text: '▶ चलो' }; }
+  if (kind === 'fist' && pose.hold > 0.35 && sys.alive && (moonState.playing || tour.active)) { pose.fired = true; moonState.playing = false; stopTour(); sfx('stop'); banner = { t: 0, text: CS.t('⏸ रुको', '⏸ Stop') }; }
+  else if (kind === 'palm1' && pose.hold > 0.45 && sys.alive && !moonState.playing && !tour.active) { pose.fired = true; moonState.playing = true; moonState.target = null; sfx('blip'); banner = { t: 0, text: CS.t('▶ चलो', '▶ Go') }; }
   else if (kind === 'palms2' && pose.hold > 0.5) { pose.fired = true; if (!sys.alive) spawn(); else startTour(); }
 }
 
@@ -693,16 +705,12 @@ function sfx(type) {
 // ---------------------------------------------------------------- voice + subtitles
 let speaking = false;
 const sub = { text: '', last: '', a: 0 };
-function pickVoice() {
-  const vs = speechSynthesis.getVoices();
-  return vs.find((v) => /hi[-_]IN/i.test(v.lang) && /google/i.test(v.name)) || vs.find((v) => /hi[-_]IN/i.test(v.lang)) || vs.find((v) => /^hi/i.test(v.lang)) || null;
-}
 function say(text) {
   sub.text = text;
   if (!S.voice || !('speechSynthesis' in window)) { speaking = true; setTimeout(() => { speaking = false; if (sub.text === text) sub.text = ''; }, 900 + text.length * 55); return; }
   speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
-  const v = pickVoice(); if (v) { u.voice = v; u.lang = v.lang; } else u.lang = 'hi-IN';
+  const v = CS.voice(); if (v) { u.voice = v; u.lang = v.lang; } else u.lang = CS.speechLang;
   speaking = true;
   const done = () => { if (say.u !== u) return; speaking = false; audio.busyUntil = performance.now() + 400; setTimeout(() => { if (sub.text === text) sub.text = ''; }, 1200); };
   u.onend = u.onerror = done;
@@ -753,28 +761,30 @@ function drawFx(dt) {
       fx.globalAlpha = 1;
       const sw = sunGroup.getWorldPosition(new V3()), ew = earth.getWorldPosition(new V3()), mw = moon.getWorldPosition(new V3());
       const ss = project(sw), es = project(ew), msp = project(mw);
-      pill(ss.x, ss.y + projRadius(sw, 0.22 * sys.root.scale.x) + fs * 1.4, '☀️ सूरज · Sun', fs, '#ffd27a');
-      pill(es.x, es.y + projRadius(ew, EARTH_R * sys.root.scale.x) + fs * 1.2, '🌍 पृथ्वी · Earth', fs, '#9fd0ff');
-      pill(msp.x, msp.y - projRadius(mw, MOON_R * sys.root.scale.x) - fs * 1.2, moonState.grabbed ? '🤏 चाँद' : '🌙 चाँद · Moon', fs, '#ffffff');
+      pill(ss.x, ss.y + projRadius(sw, 0.22 * sys.root.scale.x) + fs * 1.4, CS.t('☀️ सूरज · Sun', '☀️ Sun'), fs, '#ffd27a');
+      pill(es.x, es.y + projRadius(ew, EARTH_R * sys.root.scale.x) + fs * 1.2, CS.t('🌍 पृथ्वी · Earth', '🌍 Earth'), fs, '#9fd0ff');
+      pill(msp.x, msp.y - projRadius(mw, MOON_R * sys.root.scale.x) - fs * 1.2, moonState.grabbed ? CS.t('🤏 चाँद', '🤏 Moon') : CS.t('🌙 चाँद · Moon', '🌙 Moon'), fs, '#ffffff');
       if (showShadow) {
         const shp = project(earth.localToWorld(new V3(1.0, 0, 0)));
-        pill(shp.x, shp.y, 'पृथ्वी की परछाई (सिर्फ़ ग्रहण में)', fs * 0.9, '#c9c9d6');
+        pill(shp.x, shp.y, CS.t('पृथ्वी की परछाई (सिर्फ़ ग्रहण में)', "Earth's shadow (only in an eclipse)"), fs * 0.9, '#c9c9d6');
       }
     }
     // "seen from Earth" box frame + phase card
     const r = insetRect();
     fx.strokeStyle = 'rgba(207,227,255,.8)'; fx.lineWidth = 2; fx.shadowColor = '#cfe3ff'; fx.shadowBlur = 10;
     fx.beginPath(); fx.roundRect(r.x, r.y, r.w, r.h, 14); fx.stroke(); fx.shadowBlur = 0;
-    pill(r.x + r.w / 2, r.y + fs * 1.1, '👀 पृथ्वी से ऐसा दिखता है', fs * 0.95, '#ffffff', 0.95);
+    pill(r.x + r.w / 2, r.y + fs * 1.1, CS.t('👀 पृथ्वी से ऐसा दिखता है', '👀 How it looks from Earth'), fs * 0.95, '#ffffff', 0.95);
     const lit = Math.round((1 - Math.cos(phi)) / 2 * 100), day = (phi / TAU * 29.5).toFixed(1);
-    const paksh = idx === 0 ? 'अमावस्या' : idx === 4 ? 'पूर्णिमा' : idx < 4 ? 'शुक्ल पक्ष (बढ़ता)' : 'कृष्ण पक्ष (घटता)';
+    const paksh = CS.en
+      ? (idx === 0 ? 'dark side faces us' : idx === 4 ? 'lit side faces us' : idx < 4 ? 'growing each night' : 'shrinking each night')
+      : (idx === 0 ? 'अमावस्या' : idx === 4 ? 'पूर्णिमा' : idx < 4 ? 'शुक्ल पक्ष (बढ़ता)' : 'कृष्ण पक्ष (घटता)');
     // phase card: under the box on portrait reels, top-left on wide screens (away from the orbit)
     const cx = W < H ? r.x + r.w / 2 : Math.max(150, W * 0.16), cy = W < H ? r.y + r.h + fs * 2 : 70 + fs * 1.5;
-    pill(cx, cy, `${P.emoji} ${P.hi}`, fs * 1.45, '#ffd27a', 0.97, 'rgba(6,10,22,.85)');
-    pill(cx, cy + fs * 2, `${P.en} · ${paksh}`, fs * 0.95, '#cfe3ff', 0.95);
-    pill(cx, cy + fs * 3.7, `रोशन: ${lit}% · दिन ${day} / 29.5`, fs * 0.95, '#ffffff', 0.95);
+    pill(cx, cy, `${P.emoji} ${CS.en ? P.en : P.hi}`, fs * 1.45, '#ffd27a', 0.97, 'rgba(6,10,22,.85)');
+    pill(cx, cy + fs * 2, CS.en ? paksh : `${P.en} · ${paksh}`, fs * 0.95, '#cfe3ff', 0.95);
+    pill(cx, cy + fs * 3.7, CS.t(`रोशन: ${lit}% · दिन ${day} / 29.5`, `Lit: ${lit}% · Day ${day} / 29.5`), fs * 0.95, '#ffffff', 0.95);
     // speed / state
-    pill(fs * 4, H - fs * 4.5, tour.active ? `🎓 टूर ${Math.min(8, tour.i + 1)}/8` : moonState.grabbed ? '🤏 हाथ से' : moonState.playing ? `▶ ${moonState.speed.toFixed(1)}×` : '⏸ रुका', fs * 1.1, '#ffd27a');
+    pill(fs * 4, H - fs * 4.5, tour.active ? `🎓 ${CS.t('टूर', 'Tour')} ${Math.min(8, tour.i + 1)}/8` : moonState.grabbed ? CS.t('🤏 हाथ से', '🤏 by hand') : moonState.playing ? `▶ ${moonState.speed.toFixed(1)}×` : CS.t('⏸ रुका', '⏸ paused'), fs * 1.1, '#ffd27a');
   }
   // pointers + hold rings
   if (S.dots) {
@@ -819,7 +829,7 @@ function drawFx(dt) {
 // ---------------------------------------------------------------- recording
 const recState = { mr: null, c: null, ctx: null, chunks: [], t0: 0, dest: null, ext: 'webm', mime: '' };
 function startRecord() {
-  if (!window.MediaRecorder) { toast('Is browser me recording nahi chalegi. Chrome use karo.'); return; }
+  if (!window.MediaRecorder) { toast(CS.t('Is browser me recording nahi chalegi. Chrome use karo.', 'Recording does not work in this browser. Please use Chrome.')); return; }
   ensureAudio();
   const c = document.createElement('canvas'); c.width = glc.width; c.height = glc.height;
   recState.c = c; recState.ctx = c.getContext('2d');
@@ -850,7 +860,7 @@ function saveRecording() {
   a.href = URL.createObjectURL(blob); a.download = `moon-phases-${stamp}.${recState.ext}`;
   document.body.append(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 10000);
-  toast(`Video save ho gaya: Downloads me ${a.download}`, 5000);
+  toast(CS.t(`Video save ho gaya: Downloads me ${a.download}`, `Video saved to Downloads: ${a.download}`), 5000);
 }
 function recordFrame() {
   if (!recState.c) return;
@@ -936,8 +946,10 @@ function setLoad(id, st) {
 }
 function updateHint() {
   $('#hint').innerHTML = sys.alive
-    ? '<b>🤏</b> chaand pakad ke ghumao · <b>🤏↔</b> view ghumao · <b>🤏↕</b> speed · <b>✊</b> roko · <b>✋</b> chalao · <b>🙌</b> guided tour'
-    : '<b>👏👏</b> taali · <b>🙌</b> dono hatheliyan · <b>Space</b> → shuru karo';
+    ? CS.t('<b>🤏</b> chaand pakad ke ghumao · <b>🤏↔</b> view ghumao · <b>🤏↕</b> speed · <b>✊</b> roko · <b>✋</b> chalao · <b>🙌</b> guided tour',
+      '<b>🤏</b> grab the Moon and move it · <b>🤏↔</b> turn the view · <b>🤏↕</b> speed · <b>✊</b> stop · <b>✋</b> play · <b>🙌</b> guided tour')
+    : CS.t('<b>👏👏</b> taali · <b>🙌</b> dono hatheliyan · <b>Space</b> → shuru karo',
+      '<b>👏👏</b> clap · <b>🙌</b> both palms · <b>Space</b> → start');
 }
 function toggleReel() {
   document.body.classList.toggle('reel');
@@ -1003,11 +1015,11 @@ async function start() {
     layoutPlanes();
   }
   setLoad('ldCam', vStream && aStream ? 'ok' : vStream || aStream ? 'warn' : 'fail');
-  if (!vStream) toast('Camera nahi mila. Keyboard (Space, ← →, T) se chala sakte ho.', 5000);
+  if (!vStream) toast(CS.t('Camera nahi mila. Keyboard (Space, ← →, T) se chala sakte ho.', 'No camera found. You can use the keyboard (Space, ← →, T).'), 5000);
   started = true;
   updateHint();
   $('#start').classList.add('gone');
-  if (vStream) initHands().catch((e) => { console.error(e); setLoad('ldHand', 'fail'); toast('Hand tracking load nahi hua.'); });
+  if (vStream) initHands().catch((e) => { console.error(e); setLoad('ldHand', 'fail'); toast(CS.t('Hand tracking load nahi hua.', 'Hand tracking failed to load.')); });
 }
 $('#btnStart').addEventListener('click', start);
 
@@ -1017,6 +1029,7 @@ Promise.all([loadTex('earth_atmos_2048.jpg'), loadTex('earth_clouds_1024.png'), 
   buildTextures({ earth: e, clouds: c, moon: m });
   setLoad('ldTex', e && m ? 'ok' : 'warn');
 });
+CS.onChange(() => { updateHint(); if (sub.text) { window.speechSynthesis?.cancel(); sub.text = ''; } });
 updateHint();
 onResize();
 requestAnimationFrame(frame);

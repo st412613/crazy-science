@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
 <title>Jarvis Hologram · Crazy Science</title>
+<script src="../lang.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
@@ -130,10 +131,11 @@
     <div class="status"><span class="dot"></span><span id="statusText">OFFLINE</span></div>
   </header>
   <div id="topRight">
-    <button class="icon" id="btnHome" title="Crazy Science: saare labs" onclick="location.href='../'">🏠</button>
+    <button class="icon" id="btnHome" title="Crazy Science: saare labs" data-en-title="Crazy Science: all labs" onclick="location.href='../'">🏠</button>
+    <button class="icon" id="btnLang" data-lang-toggle>🌐 EN</button>
     <div id="clock">--:--</div>
     <div id="meter" title="Mic level"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-    <button class="icon" id="btnKeyboard" title="Type karke poochho (T)">⌨</button>
+    <button class="icon" id="btnKeyboard" title="Type karke poochho (T)" data-en-title="Type your question (T)">⌨</button>
     <button class="icon" id="btnFull" title="Fullscreen (F)">⛶</button>
     <button class="icon" id="btnSettings" title="Settings">⚙</button>
   </div>
@@ -143,13 +145,13 @@
   </div>
   <div id="gestureTag"></div>
   <div id="subs"><div id="subUser"></div><div id="subAI"></div></div>
-  <form id="textBar" autocomplete="off"><input id="textInput" placeholder="Yahan likho aur Enter dabao…" aria-label="Sawaal likho"></form>
+  <form id="textBar" autocomplete="off"><input id="textInput" placeholder="Yahan likho aur Enter dabao…" data-en-ph="Type here and press Enter…" aria-label="Sawaal likho / Type a question"></form>
   <div id="hints">
-    <div><b>👏👏</b> do baar taali / <b id="hintName">"Jarvis"</b> bolo → bulao</div>
-    <div><b>🤏</b> ek haath se pinch karke ghumao → rotate</div>
-    <div><b>🤏 🤏</b> dono haath pinch karke phailao → zoom</div>
-    <div><b>✋</b> ek hatheli dikhao → particles me bikhar jayega</div>
-    <div><b>🙌</b> dono hatheliyan dikhao → wapas humanoid</div>
+    <div><b>👏👏</b> <span data-en="double clap / say">do baar taali /</span> <b id="hintName">"Jarvis"</b> <span data-en="→ call it">bolo → bulao</span></div>
+    <div data-en="<b>🤏</b> pinch with one hand and move → rotate"><b>🤏</b> ek haath se pinch karke ghumao → rotate</div>
+    <div data-en="<b>🤏 🤏</b> pinch with both hands and spread → zoom"><b>🤏 🤏</b> dono haath pinch karke phailao → zoom</div>
+    <div data-en="<b>✋</b> show one palm → it breaks into particles"><b>✋</b> ek hatheli dikhao → particles me bikhar jayega</div>
+    <div data-en="<b>🙌</b> show both palms → back to humanoid"><b>🙌</b> dono hatheliyan dikhao → wapas humanoid</div>
   </div>
   <div id="pip"><video id="cam" playsinline muted></video><canvas id="pipCanvas"></canvas><span>HAND TRACKING</span></div>
   <div id="clapFlash">👏</div>
@@ -157,47 +159,47 @@
 </div>
 
 <aside id="settings" aria-label="Settings">
-  <h2>SETTINGS <button class="icon" id="btnClose" title="Band karo (Esc)">✕</button></h2>
+  <h2>SETTINGS <button class="icon" id="btnClose" title="Band karo (Esc)" data-en-title="Close (Esc)">✕</button></h2>
 
   <h3>ASSISTANT</h3>
-  <label class="row">Naam (wake word)
+  <label class="row"><span data-en="Name (wake word)">Naam (wake word)</span>
     <input type="text" data-s="name">
-    <small>Comma se variants likho, jaise: Maya, माया. Hindi mode me Devanagari variant zaroor daalo.</small>
+    <small data-en="Write variants separated by commas, like: Maya, माया. In Hindi mode, be sure to add a Devanagari variant.">Comma se variants likho, jaise: Maya, माया. Hindi mode me Devanagari variant zaroor daalo.</small>
   </label>
-  <label class="row">Bhasha
+  <label class="row"><span data-en="Language">Bhasha</span>
     <select data-s="lang">
       <option value="hi-IN">हिन्दी (hi-IN)</option>
       <option value="en-IN">English (India)</option>
       <option value="en-US">English (US)</option>
     </select>
   </label>
-  <label class="row inline">Naam pukarne se aaye <input type="checkbox" data-s="wake"></label>
+  <label class="row inline"><span data-en="Comes when you call its name">Naam pukarne se aaye</span> <input type="checkbox" data-s="wake"></label>
 
-  <h3>SCRIPT (SAWAAL-JAWAB)</h3>
-  <label class="row">Jawab ka tarika
+  <h3 data-en="SCRIPT (Q &amp; A)">SCRIPT (SAWAAL-JAWAB)</h3>
+  <label class="row"><span data-en="How it answers">Jawab ka tarika</span>
     <select data-s="answerMode">
-      <option value="match">Sawaal match karke</option>
-      <option value="order">Line by line (list ke order me)</option>
+      <option value="match" data-en="By matching the question">Sawaal match karke</option>
+      <option value="order" data-en="Line by line (in list order)">Line by line (list ke order me)</option>
     </select>
-    <small>Sawaal-jawab badalne ke liye <code>script.js</code> file edit karo. Recording me <b>N</b> dabao to agla jawab turant bolega.</small>
+    <small data-en="To change the questions and answers, edit the <code>script.js</code> file. While recording, press <b>N</b> to play the next answer right away.">Sawaal-jawab badalne ke liye <code>script.js</code> file edit karo. Recording me <b>N</b> dabao to agla jawab turant bolega.</small>
   </label>
-  <div class="row">Script ke sawaal<ol id="qList"></ol></div>
+  <div class="row"><span data-en="Questions in the script">Script ke sawaal</span><ol id="qList"></ol></div>
 
-  <h3>TAALI (CLAP)</h3>
+  <h3 data-en="CLAP">TAALI (CLAP)</h3>
   <label class="row">Clap mode
     <select data-s="clapMode">
-      <option value="2">Do baar taali 👏👏</option>
-      <option value="1">Ek baar taali 👏</option>
-      <option value="0">Band</option>
+      <option value="2" data-en="Double clap 👏👏">Do baar taali 👏👏</option>
+      <option value="1" data-en="Single clap 👏">Ek baar taali 👏</option>
+      <option value="0" data-en="Off">Band</option>
     </select>
   </label>
   <label class="row">Sensitivity
     <input type="range" min="1" max="10" step="1" data-s="clapSens">
-    <small>Taali pakad me na aaye to badhao. Bina taali ke aa jaye to ghatao. Upar 👏 icon dikhe matlab taali sun li.</small>
+    <small data-en="Raise it if claps are missed. Lower it if it appears without a clap. The 👏 icon at the top means a clap was heard.">Taali pakad me na aaye to badhao. Bina taali ke aa jaye to ghatao. Upar 👏 icon dikhe matlab taali sun li.</small>
   </label>
-  <label class="row inline">Taali se gayab bhi ho <input type="checkbox" data-s="clapDismiss"></label>
+  <label class="row inline"><span data-en="Clap also makes it disappear">Taali se gayab bhi ho</span> <input type="checkbox" data-s="clapDismiss"></label>
 
-  <h3>AAWAZ</h3>
+  <h3 data-en="VOICE">AAWAZ</h3>
   <label class="row">Voice <select data-s="voice" id="voiceSel"></select></label>
   <label class="row">Speed <input type="range" min="0.7" max="1.4" step="0.05" data-s="rate"></label>
   <label class="row">Pitch <input type="range" min="0.5" max="1.5" step="0.05" data-s="pitch"></label>
@@ -208,37 +210,38 @@
   <label class="row">Background
     <select data-s="bg">
       <option value="dark">Dark sci-fi</option>
-      <option value="camera">Camera (AR, kamre me hologram)</option>
+      <option value="camera" data-en="Camera (AR, hologram in your room)">Camera (AR, kamre me hologram)</option>
     </select>
   </label>
   <label class="row">Quality
     <select data-s="quality">
-      <option value="low">Low (sabse halka)</option>
+      <option value="low" data-en="Low (lightest)">Low (sabse halka)</option>
       <option value="normal">Normal (30 FPS)</option>
-      <option value="high">High (60 FPS, zyada particles)</option>
+      <option value="high" data-en="High (60 FPS, more particles)">High (60 FPS, zyada particles)</option>
     </select>
   </label>
-  <label class="row inline">Webcam preview (haath ka skeleton) <input type="checkbox" data-s="pip"></label>
-  <label class="row inline">Screen par ungli ka cursor <input type="checkbox" data-s="cursor"></label>
+  <label class="row inline"><span data-en="Webcam preview (hand skeleton)">Webcam preview (haath ka skeleton)</span> <input type="checkbox" data-s="pip"></label>
+  <label class="row inline"><span data-en="Finger cursor on screen">Screen par ungli ka cursor</span> <input type="checkbox" data-s="cursor"></label>
   <label class="row inline">Sound effects <input type="checkbox" data-s="sfx"></label>
   <button class="btn" id="btnResetView" type="button">⟲ VIEW RESET</button>
 
   <h3>SHORTCUTS</h3>
-  <div class="keys">Space: bulao / bhejo · N: agla scripted jawab · P: particles on/off · H: recording ke liye clean screen · T: type karo · F: fullscreen · R: view reset · Esc: settings band</div>
+  <div class="keys" data-en="Space: call / send away · N: next scripted answer · P: particles on/off · H: clean screen for recording · T: type · F: fullscreen · R: view reset · Esc: close settings">Space: bulao / bhejo · N: agla scripted jawab · P: particles on/off · H: recording ke liye clean screen · T: type karo · F: fullscreen · R: view reset · Esc: settings band</div>
 </aside>
 
 <div id="start">
   <div class="card">
     <h1>HOLO·AI</h1>
-    <p class="sub">Taali bajao ya naam pukaro, hologram AI aa jayega. Haath se zoom/rotate karo, hatheli dikhao to particles me bikhar jayega.</p>
+    <p class="sub" data-en="Clap or call its name and the hologram AI appears. Zoom and rotate with your hands; show a palm and it breaks into particles.">Taali bajao ya naam pukaro, hologram AI aa jayega. Haath se zoom/rotate karo, hatheli dikhao to particles me bikhar jayega.</p>
     <button class="btn big" id="btnStart">▶ SYSTEM START</button>
     <div id="loadList">
       <div id="ld3d">◌ 3D model</div>
       <div id="ldCam">◌ Camera + mic</div>
       <div id="ldHand">◌ Hand tracking</div>
     </div>
-    <p class="note">Chrome me best chalta hai. Camera aur taali ki processing isi computer par hoti hai. Bolne ka text (speech-to-text) Chrome ki Google speech service banati hai.</p>
-    <p class="note"><a href="../" style="color:inherit">← Crazy Science: saare labs</a></p>
+    <p class="note" data-en="Works best in Chrome. Camera and clap processing happen on this computer. Speech-to-text is done by Chrome's Google speech service.">Chrome me best chalta hai. Camera aur taali ki processing isi computer par hoti hai. Bolne ka text (speech-to-text) Chrome ki Google speech service banati hai.</p>
+    <div class="cs-lang"><button data-setlang="hi">हिंदी</button><button data-setlang="en">English</button></div>
+    <p class="note"><a href="../" style="color:inherit" data-en="← Crazy Science: all labs">← Crazy Science: saare labs</a></p>
   </div>
 </div>
 
@@ -281,17 +284,23 @@ const JARVIS_VARIANTS = ['jarvis', 'जार्विस', 'जारविस'
 const DISMISS = /(\bbye\b|goodbye|good bye|go away|disappear|shut ?down|go to sleep|बाय|अलविदा|चले जाओ|चले जाइए|चली जाओ|गायब हो जाओ|बंद हो जाओ|सो जाओ|छुप जाओ|टाटा)/i;
 
 // ---------------------------------------------------------------- script (from script.js)
-const SCRIPT = (() => {
+// English uses the ...En fields (greetingsEn, answerEn, qEn); anything missing falls back to Hindi.
+function buildScript(en) {
   const d = {
     greetings: ['[WAVE] नमस्ते! मैं {name}, बोलिए क्या मदद करूँ?'],
     goodbye: '[WAVE] फिर मिलते हैं।', reform: '', ack: 'जी, बोलिए?',
     notFound: ['हम्म, इस पर मुझे थोड़ा सोचना पड़ेगा। कुछ और पूछिए!'], qa: [],
   };
-  const s = { ...d, ...(window.HOLO_SCRIPT || {}) };
-  s.qa = (Array.isArray(s.qa) ? s.qa : []).filter((e) => e && typeof e.answer === 'string' && Array.isArray(e.keys));
+  const src = window.HOLO_SCRIPT || {}, s = { ...d, ...src };
+  if (en) {
+    Object.assign(s, { greetings: ['[WAVE] Hello! I am {name}. How can I help?'], goodbye: '[WAVE] See you again.', reform: '', ack: 'Yes, tell me?', notFound: ['Hmm, I will have to think about that one. Ask me something else!'] });
+    for (const k of ['greetings', 'goodbye', 'reform', 'ack', 'notFound']) if (src[k + 'En'] !== undefined) s[k] = src[k + 'En'];
+  }
+  s.qa = (Array.isArray(s.qa) ? s.qa : []).filter((e) => e && typeof e.answer === 'string' && Array.isArray(e.keys))
+    .map((e) => (en ? { ...e, q: e.qEn || e.q, answer: e.answerEn || e.answer } : e));
   for (const k of ['greetings', 'notFound']) if (!Array.isArray(s[k]) || !s[k].length) s[k] = d[k];
   return s;
-})();
+}
 
 // ---------------------------------------------------------------- settings
 const DEFAULTS = {
@@ -310,8 +319,11 @@ function safeParse(s) { try { return JSON.parse(s) || {}; } catch { return {}; }
 const S = { ...DEFAULTS, ...safeParse(store.get('holo.settings')) };
 for (const k of Object.keys(S)) if (!(k in DEFAULTS)) delete S[k]; // drops keys from older versions (e.g. API key)
 if (!QUALITY[S.quality]) S.quality = 'normal';
+// The site language (🌐 / home page) decides Hindi vs English; en-IN vs en-US stays the user's choice.
+if (S.lang.startsWith('hi') === CS.en) S.lang = CS.en ? 'en-IN' : 'hi-IN';
 const saveSettings = () => store.set('holo.settings', JSON.stringify(S));
 saveSettings();
+let SCRIPT = buildScript(!S.lang.startsWith('hi'));
 
 // ---------------------------------------------------------------- utils
 const $ = (s) => document.querySelector(s);
@@ -605,7 +617,7 @@ async function loadCharacter() {
   setLoad('ld3d', 'wait');
   let gltf;
   try { gltf = await loadGLB(MODEL_URLS); } catch (e) {
-    console.error(e); setLoad('ld3d', 'fail'); toast('3D model load nahi hua. Internet check karo.'); return;
+    console.error(e); setLoad('ld3d', 'fail'); toast(CS.t('3D model load nahi hua. Internet check karo.', '3D model failed to load. Check your internet.')); return;
   }
   rig = buildRig(gltf);
   pivot.add(rig.root);
@@ -1008,7 +1020,7 @@ const isHidden = () => state.mode === 'standby' || state.mode === 'dismissing';
 
 function summon() {
   if (!isHidden()) return;
-  if (!rig || !P.points) { toast('Model abhi load ho raha hai…'); return; }
+  if (!rig || !P.points) { toast(CS.t('Model abhi load ho raha hai…', 'The model is still loading…')); return; }
   setMode('summoning');
   sfx('summon');
   startAssemble(state.mode === 'dismissing' || P.mode === 'burst');
@@ -1243,7 +1255,7 @@ function scripted(text, after) {
 const rec = { r: null, want: false, paused: false, running: false, utterWake: false };
 function initRecognition() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) { toast('Is browser me voice recognition nahi hai, Chrome use karo. Taali aur keyboard chalega.', 6000); return; }
+  if (!SR) { toast(CS.t('Is browser me voice recognition nahi hai, Chrome use karo. Taali aur keyboard chalega.', 'This browser has no voice recognition; please use Chrome. Clap and keyboard still work.'), 6000); return; }
   const r = new SR();
   r.continuous = true; r.interimResults = true; r.maxAlternatives = 1;
   r.onresult = (e) => {
@@ -1252,8 +1264,8 @@ function initRecognition() {
   r.onstart = () => { rec.running = true; };
   r.onend = () => { rec.running = false; if (rec.want && !rec.paused) setTimeout(startRec, 250); };
   r.onerror = (e) => {
-    if (e.error === 'not-allowed' || e.error === 'service-not-allowed') { rec.want = false; toast('Voice ke liye mic permission nahi mili. Taali aur keyboard chalega.', 6000); }
-    else if (e.error === 'network') toast('Voice recognition ke liye internet chahiye.');
+    if (e.error === 'not-allowed' || e.error === 'service-not-allowed') { rec.want = false; toast(CS.t('Voice ke liye mic permission nahi mili. Taali aur keyboard chalega.', 'No mic permission for voice. Clap and keyboard still work.'), 6000); }
+    else if (e.error === 'network') toast(CS.t('Voice recognition ke liye internet chahiye.', 'Voice recognition needs an internet connection.'));
   };
   rec.r = r; rec.want = true;
   startRec();
@@ -1577,7 +1589,7 @@ function updateBrand() {
   const n = latinName();
   $('#brandName').textContent = /^[a-z]+$/i.test(n) && n.length <= 8 ? n.toUpperCase().split('').join('.') : n.toUpperCase();
   $('#hintName').textContent = `"${n}"`;
-  $('#standbyHint').textContent = `👏👏 do baar taali bajao ya "${n}" bolo`;
+  $('#standbyHint').textContent = CS.t(`👏👏 do baar taali bajao ya "${n}" bolo`, `👏👏 clap twice or say "${n}"`);
 }
 function populateVoices() {
   const sel = $('#voiceSel');
@@ -1593,7 +1605,7 @@ if ('speechSynthesis' in window) speechSynthesis.onvoiceschanged = populateVoice
 function renderScriptList() {
   const ol = $('#qList'); ol.textContent = '';
   for (const e of SCRIPT.qa) { const li = document.createElement('li'); li.textContent = e.q || e.keys[0]; ol.append(li); }
-  if (!SCRIPT.qa.length) { const li = document.createElement('li'); li.textContent = 'script.js me koi sawaal nahi mila'; ol.append(li); }
+  if (!SCRIPT.qa.length) { const li = document.createElement('li'); li.textContent = CS.t('script.js me koi sawaal nahi mila', 'No questions found in script.js'); ol.append(li); }
 }
 
 function applySetting(k) {
@@ -1603,7 +1615,11 @@ function applySetting(k) {
   if (k === 'name') updateBrand();
   if (k === 'quality') { onResize(); buildParticles(); }
   if (k === 'answerMode') scriptIdx = 0;
-  if (k === 'lang') { populateVoices(); S.voice = ''; saveSettings(); try { rec.r?.abort(); } catch {} }
+  if (k === 'lang') {
+    populateVoices(); S.voice = ''; saveSettings(); try { rec.r?.abort(); } catch {}
+    SCRIPT = buildScript(!isHi()); scriptIdx = 0; renderScriptList(); updateBrand();
+    CS.set(isHi() ? 'hi' : 'en');
+  }
 }
 for (const el of document.querySelectorAll('[data-s]')) {
   const k = el.dataset.s;
@@ -1684,14 +1700,24 @@ async function start() {
   if (aStream) initMic(aStream);
   if (vStream) { cam.srcObject = new MediaStream(vStream.getVideoTracks()); try { await cam.play(); } catch {} }
   setLoad('ldCam', vStream && aStream ? 'ok' : vStream || aStream ? 'warn' : 'fail');
-  if (!vStream) { toast('Camera nahi mila, hand gestures band rahenge. Baaki sab chalega.', 5000); $('#pip').style.display = 'none'; }
+  if (!vStream) { toast(CS.t('Camera nahi mila, hand gestures band rahenge. Baaki sab chalega.', 'No camera found, so hand gestures are off. Everything else works.'), 5000); $('#pip').style.display = 'none'; }
   if (!noMedia) initRecognition();
   applyBg();
   setMode('standby');
   $('#start').classList.add('gone');
-  if (vStream) initHands().catch((e) => { console.error(e); setLoad('ldHand', 'fail'); toast('Hand tracking load nahi hua.'); });
+  if (vStream) initHands().catch((e) => { console.error(e); setLoad('ldHand', 'fail'); toast(CS.t('Hand tracking load nahi hua.', 'Hand tracking failed to load.')); });
 }
 $('#btnStart').addEventListener('click', start);
+
+// 🌐 language switch: keep the assistant's language, script and voice in step.
+CS.onChange(() => {
+  if (isHi() === !CS.en) return;
+  S.lang = CS.en ? 'en-IN' : 'hi-IN';
+  $('[data-s="lang"]').value = S.lang;
+  if (speech.speaking) { stopSpeech(); if (state.mode === 'speaking') setMode('idle'); setTimeout(resumeRec, 300); }
+  setSub('#subAI', '');
+  applySetting('lang');
+});
 
 // ---------------------------------------------------------------- boot
 applyColor();

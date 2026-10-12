@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🪐</text></svg>">
 <title>Solar System AR · Crazy Science</title>
+<script src="../lang.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
@@ -71,7 +72,8 @@
 <div id="ui">
   <div id="clap">👏</div>
   <div class="top">
-    <button class="icon" id="btnHome" title="Crazy Science: saare labs" onclick="location.href='../'">🏠</button>
+    <button class="icon" id="btnHome" title="Crazy Science: saare labs" data-en-title="Crazy Science: all labs" onclick="location.href='../'">🏠</button>
+    <button class="icon" id="btnLang" data-lang-toggle>🌐 EN</button>
     <button class="icon" id="btnRec" title="Video record (R)">⏺ REC</button>
     <button class="icon" id="btnReel" title="Reel frame 9:16 (V)">9:16</button>
     <button class="icon" id="btnFull" title="Fullscreen (F)">⛶</button>
@@ -82,37 +84,38 @@
 </div>
 
 <aside id="settings" aria-label="Settings">
-  <h2>SETTINGS <button class="icon" id="btnClose" title="Band karo (Esc)">✕</button></h2>
-  <label class="row inline">Grahon ke naam <input type="checkbox" data-s="labels"></label>
-  <label class="row inline">Haath grahon ke aage dikhe <input type="checkbox" data-s="occlude"></label>
-  <label class="row inline">Ungli par glow point <input type="checkbox" data-s="dots"></label>
-  <label class="row inline">Hindi aawaz <input type="checkbox" data-s="voice"></label>
+  <h2>SETTINGS <button class="icon" id="btnClose" title="Band karo (Esc)" data-en-title="Close (Esc)">✕</button></h2>
+  <label class="row inline"><span data-en="Planet names">Grahon ke naam</span> <input type="checkbox" data-s="labels"></label>
+  <label class="row inline"><span data-en="Hand shows in front of planets">Haath grahon ke aage dikhe</span> <input type="checkbox" data-s="occlude"></label>
+  <label class="row inline"><span data-en="Glow dot on fingertip">Ungli par glow point</span> <input type="checkbox" data-s="dots"></label>
+  <label class="row inline"><span data-en="Voice (speaks the lines)">Aawaz (bolne wali lines)</span> <input type="checkbox" data-s="voice"></label>
   <label class="row inline">Sound effects <input type="checkbox" data-s="sfx"></label>
-  <label class="row">Taali
+  <label class="row"><span data-en="Clap">Taali</span>
     <select data-s="clapMode">
-      <option value="2">Do baar taali 👏👏</option>
-      <option value="1">Ek baar taali 👏</option>
-      <option value="0">Band</option>
+      <option value="2" data-en="Double clap 👏👏">Do baar taali 👏👏</option>
+      <option value="1" data-en="Single clap 👏">Ek baar taali 👏</option>
+      <option value="0" data-en="Off">Band</option>
     </select>
   </label>
-  <label class="row">Taali sensitivity <input type="range" min="1" max="10" step="1" data-s="clapSens"></label>
+  <label class="row"><span data-en="Clap sensitivity">Taali sensitivity</span> <input type="range" min="1" max="10" step="1" data-s="clapSens"></label>
   <label class="row">Smoothness
     <select data-s="fps">
-      <option value="30">30 FPS (Mac ke liye halka)</option>
-      <option value="60">60 FPS (smooth, zyada load)</option>
+      <option value="30" data-en="30 FPS (light, good for laptops)">30 FPS (Mac ke liye halka)</option>
+      <option value="60" data-en="60 FPS (smoother, more load)">60 FPS (smooth, zyada load)</option>
     </select>
   </label>
-  <div class="keys">Shortcuts: Space = solar system / reset · S = time stop / chalu · ↑ ↓ = speed · L = naam · R = record · V = 9:16 · H = clean screen · Esc = band</div>
+  <div class="keys" data-en="Shortcuts: Space = solar system / reset · S = stop / resume time · ↑ ↓ = speed · L = names · R = record · V = 9:16 · H = clean screen · Esc = close">Shortcuts: Space = solar system / reset · S = time stop / chalu · ↑ ↓ = speed · L = naam · R = record · V = 9:16 · H = clean screen · Esc = band</div>
 </aside>
 
 <div id="start">
   <div class="card">
     <h1>SOLAR·AR</h1>
-    <p>Poora solar system tumhare haath me. Kisi bhi grah ko pakad ke dusri orbit me rakho, speed badlo, aur mutthi band karke samay rok do ✊</p>
+    <p data-en="The whole solar system in your hands. Grab any planet and drop it into another orbit, change the speed, and make a fist to stop time ✊">Poora solar system tumhare haath me. Kisi bhi grah ko pakad ke dusri orbit me rakho, speed badlo, aur mutthi band karke samay rok do ✊</p>
     <button class="btn" id="btnStart">▶ START</button>
     <div id="loadList"><div id="ldTex">◌ Textures</div><div id="ldCam">◌ Camera + mic</div><div id="ldHand">◌ Hand tracking</div></div>
-    <p class="note">Chrome me best chalta hai. Recording ke liye headphone mat lagana, taaki Hindi aawaz bhi video me aaye.</p>
-    <p class="note"><a href="../" style="color:inherit">← Crazy Science: saare labs</a></p>
+    <p class="note" data-en="Works best in Chrome. Don't wear headphones while recording, so the voice also gets into the video.">Chrome me best chalta hai. Recording ke liye headphone mat lagana, taaki aawaz bhi video me aaye.</p>
+    <div class="cs-lang"><button data-setlang="hi">हिंदी</button><button data-setlang="en">English</button></div>
+    <p class="note"><a href="../" style="color:inherit" data-en="← Crazy Science: all labs">← Crazy Science: saare labs</a></p>
   </div>
 </div>
 
@@ -126,13 +129,22 @@ import * as THREE from 'three';
 const MP_BASE = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14';
 const HAND_MODEL = 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
 const TEX_BASE = 'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r160/examples/textures/planets/';
-// Jo lines bolega: yahan badal sakte ho.
+// Jo lines bolega (hi = Hindi, en = English): yahan badal sakte ho.
 const LINES = {
-  spawn: 'ये रहा हमारा सौर मंडल! किसी भी ग्रह को पकड़कर दूसरी कक्षा में रख सकते हैं।',
-  kepler: 'ध्यान दीजिए, सूरज के पास वाले ग्रह तेज़ घूमते हैं, और दूर वाले धीमे।',
-  stop: 'समय रुक गया!',
-  resume: 'समय फिर से चल पड़ा!',
+  hi: {
+    spawn: 'ये रहा हमारा सौर मंडल! किसी भी ग्रह को पकड़कर दूसरी कक्षा में रख सकते हैं।',
+    kepler: 'ध्यान दीजिए, सूरज के पास वाले ग्रह तेज़ घूमते हैं, और दूर वाले धीमे।',
+    stop: 'समय रुक गया!',
+    resume: 'समय फिर से चल पड़ा!',
+  },
+  en: {
+    spawn: 'Here is our solar system! You can grab any planet and put it in a different orbit.',
+    kepler: 'Notice: planets close to the Sun go around fast, and the far ones go slowly.',
+    stop: 'Time has stopped!',
+    resume: 'Time is moving again!',
+  },
 };
+const line = (k) => LINES[CS.lang][k];
 const ORBITS = [0.34, 0.47, 0.62, 0.77, 0.98, 1.2, 1.38, 1.55];
 const SUN_R = 0.17;
 const PLANETS = [
@@ -498,7 +510,7 @@ function spawnSystem() {
   planets.forEach((p, i) => { p.slot = p.home; p.state = 'enter'; p.t = -i * 0.12; p.angle = i * 2.4; p.r = 3; p.y = 0; p.userSpin = 0; });
   emitImplode(sys.root.position, 500, 0xffc65a, 1.6);
   sfx('spawn');
-  if (sys.spawned++ === 0) setTimeout(() => say(LINES.spawn), 1200);
+  if (sys.spawned++ === 0) setTimeout(() => say(line('spawn')), 1200);
   updateHint();
 }
 function resetSystem() {
@@ -515,8 +527,8 @@ function setStopped(on) {
   if (!sys.alive || sim.stopped === on) return;
   sim.stopped = on;
   sfx(on ? 'stop' : 'resume');
-  banner = { t: 0, text: on ? '⏸ TIME STOP' : '▶ TIME RESUME', sub: on ? 'समय रुक गया' : 'समय फिर चल पड़ा' };
-  say(on ? LINES.stop : LINES.resume);
+  banner = { t: 0, text: on ? '⏸ TIME STOP' : '▶ TIME RESUME', sub: on ? CS.t('समय रुक गया', 'Time has stopped') : CS.t('समय फिर चल पड़ा', 'Time is moving again') };
+  say(line(on ? 'stop' : 'resume'));
 }
 function burnPlanet(p) {
   p.state = 'burn'; p.t = 0; p.from = p.r;
@@ -528,12 +540,14 @@ function onBurnt(p) {
   emitBurst(c, 420, [0xffffff, 0xffd060, 0xff8a20, 0xff4d10], 2.2);
   addRing(c, 0xffb050, 0.3, 2.6, 0.7, 1);
   flash = 0.55; sunHeat = 1.2;
-  say(`अरे! ${p.spec.hi} सूरज में जल ${p.spec.fem ? 'गई' : 'गया'}!`);
+  say(CS.t(`अरे! ${p.spec.hi} सूरज में जल ${p.spec.fem ? 'गई' : 'गया'}!`, `Oops! ${p.spec.en} burned up in the Sun!`));
 }
 function announceMove(p, from, to) {
   if (from === to) return;
-  const line = to === p.home ? `${p.spec.hi} अपनी कक्षा में वापस!` : `${p.spec.hi} अब ${PLANETS[to].hi} की कक्षा में है!`;
-  say(sys.moved++ === 0 ? `${line} ${LINES.kepler}` : line);
+  const msg = CS.en
+    ? (to === p.home ? `${p.spec.en} is back in its own orbit!` : `${p.spec.en} is now in ${PLANETS[to].en}'s orbit!`)
+    : (to === p.home ? `${p.spec.hi} अपनी कक्षा में वापस!` : `${p.spec.hi} अब ${PLANETS[to].hi} की कक्षा में है!`);
+  say(sys.moved++ === 0 ? `${msg} ${line('kepler')}` : msg);
 }
 function updateSystem(dt) {
   if (!sys.alive) return;
@@ -854,16 +868,12 @@ function sfx(type) {
 // ---------------------------------------------------------------- voice + subtitles
 let speaking = false;
 const sub = { text: '', last: '', a: 0 };
-function pickVoice() {
-  const vs = speechSynthesis.getVoices();
-  return vs.find((v) => /hi[-_]IN/i.test(v.lang) && /google/i.test(v.name)) || vs.find((v) => /hi[-_]IN/i.test(v.lang)) || vs.find((v) => /^hi/i.test(v.lang)) || null;
-}
 function say(text) {
   sub.text = text;
   if (!S.voice || !('speechSynthesis' in window)) { setTimeout(() => { if (sub.text === text) sub.text = ''; }, 3500); return; }
   speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
-  const v = pickVoice(); if (v) { u.voice = v; u.lang = v.lang; } else u.lang = 'hi-IN';
+  const v = CS.voice(); if (v) { u.voice = v; u.lang = v.lang; } else u.lang = CS.speechLang;
   speaking = true;
   u.onend = u.onerror = () => { speaking = false; audio.busyUntil = performance.now() + 400; setTimeout(() => { if (sub.text === text) sub.text = ''; }, 1200); };
   say.u = u; // keep a reference so Chrome fires onend
@@ -899,13 +909,15 @@ function drawFx(dt) {
         if (!p.group.visible || p.state === 'enter') continue;
         const wp = p.group.getWorldPosition(new V3()), sp = project(wp), rad = projRadius(wp, p.spec.r * sys.root.scale.x * p.group.scale.x);
         const dragging = p.state === 'drag';
-        pillText(sp.x, sp.y + rad + fs * 0.95, `${p.spec.hi} · ${p.spec.en}`, dragging ? fs * 1.25 : fs, dragging ? '#ffffff' : '#ffe2a8', dragging ? 1 : 0.85);
+        pillText(sp.x, sp.y + rad + fs * 0.95, CS.en ? p.spec.en : `${p.spec.hi} · ${p.spec.en}`, dragging ? fs * 1.25 : fs, dragging ? '#ffffff' : '#ffe2a8', dragging ? 1 : 0.85);
       }
     }
     // where the dragged planet will go
     if (grab.mode === 'planet' && grab.planet) {
       const p = grab.planet, wp = p.group.getWorldPosition(new V3()), sp = project(wp);
-      const text = p.r < SUN_R * 1.5 ? '🔥 सूरज में जल जाएगा!' : highlightSlot >= 0 ? `→ ${PLANETS[highlightSlot].hi} की कक्षा` : '↩ वापस अपनी कक्षा में';
+      const text = p.r < SUN_R * 1.5 ? CS.t('🔥 सूरज में जल जाएगा!', '🔥 It will burn in the Sun!')
+        : highlightSlot >= 0 ? CS.t(`→ ${PLANETS[highlightSlot].hi} की कक्षा`, `→ ${PLANETS[highlightSlot].en}'s orbit`)
+        : CS.t('↩ वापस अपनी कक्षा में', '↩ Back to its own orbit');
       pillText(sp.x, sp.y - fs * 2.6, text, fs * 1.2, p.r < SUN_R * 1.5 ? '#ff9a5a' : '#ffffff', 1, 'rgba(10,6,2,.82)');
     }
     // speed meter
@@ -974,7 +986,7 @@ function drawFx(dt) {
 // ---------------------------------------------------------------- recording
 const recState = { mr: null, c: null, ctx: null, chunks: [], t0: 0, dest: null, ext: 'webm', mime: '' };
 function startRecord() {
-  if (!window.MediaRecorder) { toast('Is browser me recording nahi chalegi. Chrome use karo.'); return; }
+  if (!window.MediaRecorder) { toast(CS.t('Is browser me recording nahi chalegi. Chrome use karo.', 'Recording does not work in this browser. Please use Chrome.')); return; }
   ensureAudio();
   const c = document.createElement('canvas'); c.width = glc.width; c.height = glc.height;
   recState.c = c; recState.ctx = c.getContext('2d');
@@ -1005,7 +1017,7 @@ function saveRecording() {
   a.href = URL.createObjectURL(blob); a.download = `solar-reel-${stamp}.${recState.ext}`;
   document.body.append(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 10000);
-  toast(`Video save ho gaya: Downloads me ${a.download}`, 5000);
+  toast(CS.t(`Video save ho gaya: Downloads me ${a.download}`, `Video saved to Downloads: ${a.download}`), 5000);
 }
 function recordFrame() {
   if (!recState.c) return;
@@ -1067,8 +1079,10 @@ function setLoad(id, st) {
 }
 function updateHint() {
   $('#hint').innerHTML = sys.alive
-    ? '<b>🤏</b> grah pakad ke dusri orbit me chhodo · <b>🤏↕</b> khaali jagah = speed · <b>✊</b> rok do · <b>✋</b> chalao · <b>☝️</b> swipe = ghumao'
-    : '<b>👏👏</b> taali · <b>🙌</b> dono hatheliyan · <b>Space</b> → solar system bulao';
+    ? CS.t('<b>🤏</b> grah pakad ke dusri orbit me chhodo · <b>🤏↕</b> khaali jagah = speed · <b>✊</b> rok do · <b>✋</b> chalao · <b>☝️</b> swipe = ghumao',
+      '<b>🤏</b> grab a planet, drop it in another orbit · <b>🤏↕</b> empty space = speed · <b>✊</b> stop · <b>✋</b> resume · <b>☝️</b> swipe = rotate')
+    : CS.t('<b>👏👏</b> taali · <b>🙌</b> dono hatheliyan · <b>Space</b> → solar system bulao',
+      '<b>👏👏</b> clap · <b>🙌</b> both palms · <b>Space</b> → call the solar system');
 }
 function toggleReel() {
   document.body.classList.toggle('reel');
@@ -1129,11 +1143,11 @@ async function start() {
     layoutPlanes();
   }
   setLoad('ldCam', vStream && aStream ? 'ok' : vStream || aStream ? 'warn' : 'fail');
-  if (!vStream) toast('Camera nahi mila. Solar system dikhega, par haath se control nahi hoga.', 5000);
+  if (!vStream) toast(CS.t('Camera nahi mila. Solar system dikhega, par haath se control nahi hoga.', 'No camera found. The solar system will show, but hand control won\'t work.'), 5000);
   started = true;
   updateHint();
   $('#start').classList.add('gone');
-  if (vStream) initHands().catch((e) => { console.error(e); setLoad('ldHand', 'fail'); toast('Hand tracking load nahi hua.'); });
+  if (vStream) initHands().catch((e) => { console.error(e); setLoad('ldHand', 'fail'); toast(CS.t('Hand tracking load nahi hua.', 'Hand tracking failed to load.')); });
 }
 $('#btnStart').addEventListener('click', start);
 
@@ -1143,6 +1157,7 @@ Promise.all([loadTex('earth_atmos_2048.jpg'), loadTex('earth_clouds_1024.png'), 
   buildPlanets({ atmos, clouds, moon });
   setLoad('ldTex', atmos ? 'ok' : 'warn');
 });
+CS.onChange(() => { updateHint(); if (sub.text) { window.speechSynthesis?.cancel(); sub.text = ''; } });
 updateHint();
 onResize();
 requestAnimationFrame(frame);
