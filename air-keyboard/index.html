@@ -1,0 +1,986 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⌨️</text></svg>">
+<title>Air Keyboard · Crazy Science</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --c: #46dcff;
+    --c-rgb: 70, 220, 255;
+    --text: #e6f7ff;
+    --dim: rgba(230, 247, 255, .62);
+    --panel: rgba(4, 12, 20, .84);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #000; color: var(--text); font-family: 'Rajdhani', system-ui, sans-serif; overflow: hidden; }
+  #stage { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 100vw; height: 100vh; overflow: hidden; background: #000; }
+  body.reel #stage { width: min(100vw, calc(100vh * 9 / 16)); height: min(100vh, calc(100vw * 16 / 9)); }
+  #gl, #fx { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  #cam { position: fixed; width: 2px; height: 2px; opacity: 0; pointer-events: none; }
+
+  #ui { position: fixed; inset: 0; pointer-events: none; z-index: 5; }
+  #ui button { pointer-events: auto; }
+  .top { position: absolute; top: 16px; right: 16px; display: flex; gap: 8px; align-items: center; }
+  button.icon { height: 38px; min-width: 38px; padding: 0 12px; border-radius: 10px; border: 1px solid rgba(var(--c-rgb), .45); background: rgba(4, 12, 20, .65); color: var(--c); font: 700 13px 'Orbitron', sans-serif; letter-spacing: .08em; cursor: pointer; }
+  button.icon:hover { background: rgba(var(--c-rgb), .16); }
+  button.icon.on { background: var(--c); color: #001018; }
+  #btnRec.on { background: #ff2d4a; border-color: #ff2d4a; color: #fff; animation: blink 1s infinite; }
+  #hint { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); background: var(--panel); border: 1px solid rgba(var(--c-rgb), .3); border-radius: 12px; padding: 8px 14px; font-size: 15px; color: var(--dim); text-align: center; width: max-content; max-width: calc(100% - 32px); line-height: 1.5; }
+  #hint b { color: var(--c); }
+  #toast { position: absolute; top: 66px; left: 50%; transform: translateX(-50%); background: var(--panel); border: 1px solid rgba(var(--c-rgb), .4); padding: 10px 16px; border-radius: 10px; font-size: 16px; opacity: 0; transition: opacity .3s; max-width: calc(100% - 32px); text-align: center; z-index: 6; }
+  #toast.on { opacity: 1; }
+  body.clean #hint, body.clean .top button:not(#btnRec) { display: none; }
+
+  #settings { position: fixed; top: 0; right: 0; height: 100%; width: min(360px, 100%); background: rgba(3, 10, 18, .96); border-left: 1px solid rgba(var(--c-rgb), .3); z-index: 10; transform: translateX(100%); transition: transform .3s; overflow-y: auto; padding: 20px; }
+  #settings.open { transform: none; }
+  #settings h2 { font-family: 'Orbitron', sans-serif; font-size: 14px; letter-spacing: .25em; color: var(--c); margin: 4px 0 12px; display: flex; justify-content: space-between; align-items: center; }
+  .row { display: flex; flex-direction: column; gap: 5px; margin: 12px 0; font-size: 16px; }
+  .row.inline { flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; }
+  .row small, .keys { color: var(--dim); font-size: 13px; line-height: 1.6; }
+  .row select { padding: 9px 10px; border-radius: 8px; border: 1px solid rgba(var(--c-rgb), .35); background: #06121d; color: var(--text); font: 600 15px 'Rajdhani', sans-serif; }
+  input[type=range], input[type=checkbox] { accent-color: var(--c); }
+  input[type=checkbox] { width: 18px; height: 18px; flex: none; }
+
+  #start { position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; background: radial-gradient(ellipse at center, rgba(2, 12, 24, .7), #000); padding: 16px; transition: opacity .6s; }
+  #start.gone { opacity: 0; pointer-events: none; }
+  #start .card { max-width: 580px; text-align: center; }
+  #start h1 { font-family: 'Orbitron', sans-serif; font-weight: 900; letter-spacing: .2em; font-size: clamp(28px, 6.5vw, 50px); color: var(--c); text-shadow: 0 0 24px rgba(var(--c-rgb), .8); margin: 0 0 10px; padding-left: .2em; }
+  #start p { font-size: 19px; line-height: 1.5; margin: 0 0 22px; }
+  #start .note { font-size: 14px; color: var(--dim); margin-top: 16px; }
+  .btn { padding: 14px 30px; border-radius: 12px; border: 1px solid rgba(var(--c-rgb), .6); background: rgba(var(--c-rgb), .14); color: var(--c); font: 700 16px 'Orbitron', sans-serif; letter-spacing: .14em; cursor: pointer; }
+  .btn:disabled { opacity: .5; cursor: wait; }
+  #loadList { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; margin-top: 18px; font-size: 15px; color: var(--dim); }
+  #loadList .ok { color: #3dff8b; } #loadList .fail { color: #ff5b6b; } #loadList .warn { color: #ffd23d; }
+  @keyframes blink { 50% { opacity: .55; } }
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="gl"></canvas>
+  <canvas id="fx"></canvas>
+</div>
+<video id="cam" playsinline muted></video>
+
+<div id="ui">
+  <div class="top">
+    <button class="icon" id="btnHome" title="Crazy Science: saare labs" onclick="location.href='../'">🏠</button>
+    <button class="icon" id="btnRec" title="Video record (R)">⏺ REC</button>
+    <button class="icon" id="btnReel" title="Reel frame 9:16 (V)">9:16</button>
+    <button class="icon" id="btnFull" title="Fullscreen (F)">⛶</button>
+    <button class="icon" id="btnSettings" title="Settings">⚙</button>
+  </div>
+  <div id="hint"></div>
+  <div id="toast" role="status"></div>
+</div>
+
+<aside id="settings" aria-label="Settings">
+  <h2>SETTINGS <button class="icon" id="btnClose" title="Band karo (Esc)">✕</button></h2>
+  <label class="row">Key kaise dabe
+    <select data-s="mode">
+      <option value="pinch">🤏 Pinch (angutha + ungli milao)</option>
+      <option value="dwell">⏱️ Ruk ke (ungli key par roko)</option>
+      <option value="tap">👇 Tap (ungli neeche jhatko)</option>
+    </select>
+  </label>
+  <label class="row">Ruk ke dabane ka time <input type="range" min="0.3" max="1.2" step="0.05" data-s="dwell"><small>Kam = jaldi dabega, zyada = galti kam</small></label>
+  <label class="row">Keyboard size <input type="range" min="0.7" max="1.4" step="0.05" data-s="size"></label>
+  <label class="row inline">Word suggestions <input type="checkbox" data-s="suggest"></label>
+  <label class="row inline">Haath keyboard ke aage dikhe <input type="checkbox" data-s="occlude"></label>
+  <label class="row inline">Key ki awaaz <input type="checkbox" data-s="sfx"></label>
+  <label class="row inline">Likha hua bolke sunaye (🙌 / 🔊) <input type="checkbox" data-s="voice"></label>
+  <label class="row">Smoothness
+    <select data-s="fps">
+      <option value="30">30 FPS (Mac ke liye halka)</option>
+      <option value="60">60 FPS (smooth, zyada load)</option>
+    </select>
+  </label>
+  <div class="keys">Gestures: ✋ hatheli baayein jhatko = shabd mitao · ✊ mutthi = sab saaf · 🙌 dono hatheliyan = bolo + fireworks · 🤏 ✥ ya screen ki title-bar pakdo = khiskao<br>Shortcuts: Backspace/Enter/keys bhi chalte hain · R = record · V = 9:16 · H = clean screen · Esc = band</div>
+</aside>
+
+<div id="start">
+  <div class="card">
+    <h1>AIR·KEYBOARD</h1>
+    <p>Hawa me keyboard, hawa me screen. Ungliyon se Hindi ya English me likho ⌨️✨</p>
+    <button class="btn" id="btnStart">▶ START</button>
+    <div id="loadList"><div id="ldCam">◌ Camera + mic</div><div id="ldHand">◌ Hand tracking</div></div>
+    <p class="note">Chrome me best chalta hai. Haath camera se 1–2 feet door rakho, dono haath dikhne chahiye.</p>
+    <p class="note"><a href="../" style="color:inherit">← Crazy Science: saare labs</a></p>
+  </div>
+</div>
+
+<!-- Jarvis ke sawaal-jawab (server ko "New folder clean" se chalao to milenge) -->
+<script src="../jarvis-hologram/script.js"></script>
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ---------------------------------------------------------------- config
+const MP_BASE = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14';
+const HAND_MODEL = 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
+const AUDIO_CONSTRAINTS = { echoCancellation: false, noiseSuppression: false, autoGainControl: false };
+const MIMES = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4;codecs=avc1,opus', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
+
+// ---------------------------------------------------------------- settings
+const DEFAULTS = { mode: 'pinch', dwell: 0.55, size: 1, suggest: true, occlude: true, sfx: true, voice: true, fps: '30' };
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+};
+const S = { ...DEFAULTS, ...(() => { try { return JSON.parse(store.get('airkb.settings')) || {}; } catch { return {}; } })() };
+const saveSettings = () => store.set('airkb.settings', JSON.stringify(S));
+
+// ---------------------------------------------------------------- utils
+const $ = (s) => document.querySelector(s);
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const follow = (rate, dt) => 1 - Math.pow(rate, dt);
+const V3 = THREE.Vector3;
+const isDeva = (s) => /[ऀ-ॿ]/.test(s);
+const randUnit = (v = new V3()) => { const u = Math.random() * 2 - 1, a = Math.random() * Math.PI * 2, r = Math.sqrt(1 - u * u); return v.set(r * Math.cos(a), r * Math.sin(a), u); };
+let toastTimer;
+function toast(msg, ms = 3200) {
+  const el = $('#toast'); el.textContent = msg; el.classList.add('on');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('on'), ms);
+}
+
+// ---------------------------------------------------------------- keyboard layouts
+const k = (s) => s.split(' ').map((c) => ({ label: c, ch: c, w: 1 }));
+const matra = (s) => s.split(' ').map((c) => ({ label: '◌' + c, ch: c, w: 1, matra: true }));
+const BTN = {
+  shift: { label: '⇧', act: 'shift', w: 1.4, tone: 'nav' },
+  back: { label: '⌫', act: 'back', w: 1.4, tone: 'del' },
+  space: { label: 'SPACE', act: 'space', w: 3.6, tone: 'space' },
+  enter: { label: '↵', act: 'enter', w: 1.4, tone: 'ok' },
+  jarvis: { label: '🤖', act: 'jarvis', w: 1.1, tone: 'ai' },
+  speak: { label: '🔊', act: 'speak', w: 1.1, tone: 'ai' },
+};
+const page = (to, label, w = 1.3) => ({ label, act: 'page', to, w, tone: 'nav' });
+const PAGES = {
+  en: [
+    k('1 2 3 4 5 6 7 8 9 0'),
+    k('q w e r t y u i o p'),
+    k('a s d f g h j k l ?'),
+    [BTN.shift, ...k('z x c v b n m ,'), BTN.back],
+    [page('sym', '#😊'), page('hi1', 'हिं', 1.1), BTN.jarvis, BTN.speak, BTN.space, { label: '.', ch: '.', w: 1 }, BTN.enter],
+  ],
+  sym: [
+    k('@ # ₹ & * ( ) - + /'),
+    k('! " \' : ; % = < > ~'),
+    k('😊 😂 ❤️ 🔥 👍 🙏 🎉 ✨ 💯 🇮🇳'),
+    [...k('😎 🤖 🚀 🌍 ⚛️ 💡 📚 🎆'), { ...BTN.back, w: 2 }],
+    [page('en', 'ABC'), page('hi1', 'हिं', 1.1), BTN.jarvis, BTN.speak, BTN.space, { label: '.', ch: '.', w: 1 }, BTN.enter],
+  ],
+  hi1: [
+    k('क ख ग घ ङ च छ ज झ ञ'),
+    k('ट ठ ड ढ ण त थ द ध न'),
+    k('प फ ब भ म य र ल व ह'),
+    [...k('श ष स क्ष त्र ज्ञ ड़'), ...matra('़ ्'), BTN.back],
+    [page('hi2', 'अ ◌ा'), page('en', 'ENG', 1.1), BTN.jarvis, BTN.speak, BTN.space, { label: '।', ch: '।', w: 1 }, BTN.enter],
+  ],
+  hi2: [
+    k('अ आ इ ई उ ऊ ए ऐ ओ औ'),
+    matra('ा ि ी ु ू े ै ो ौ ृ'),
+    [...matra('ं ँ ः ्'), ...k('ऋ ॐ ? ! ,'), BTN.back],
+    k('1 2 3 4 5 6 7 8 9 0'),
+    [page('hi1', 'क ख'), page('en', 'ENG', 1.1), BTN.jarvis, BTN.speak, BTN.space, { label: '।', ch: '।', w: 1 }, BTN.enter],
+  ],
+};
+
+// ---------------------------------------------------------------- word suggestions
+const WORDS_EN = `the and you that was for are with this have from one not what all when your can said there each which how their will about out many then them some would make like into time has look more write see number way could people than first water been call who now find long down day did get come made may part hello love india thank thanks please good morning night happy birthday friend friends family welcome amazing awesome beautiful great best world video follow subscribe share comment today tomorrow yesterday school student teacher science technology future computer keyboard hologram jarvis shivam magic virtual reality power energy dream dreams success life diwali holi bharat jai hind namaste okay yes sorry where why because very much really nice cool wow keep learning coding python javascript artificial intelligence welcome brother sister mother father home work study exam result smile proud country flag freedom peace together everyone always never something nothing everything`.split(/\s+/);
+const WORDS_HI = `नमस्ते नमस्कार धन्यवाद शुक्रिया भारत मैं मेरा मेरी मेरे आप आपका आपकी आपके हम हमारा हमारी तुम तुम्हारा यह वह ये वो है हैं था थी थे हूँ हो का की के में से को पर और या लेकिन क्या कैसे कहाँ क्यों कब कौन कितना अच्छा अच्छी बहुत प्यार दोस्त दोस्तों परिवार माँ पापा भाई बहन जय हिंद राम दिवाली होली शुभकामनाएं जन्मदिन मुबारक सुप्रभात शुभ रात्रि सपना सपने सफलता मेहनत ज़िंदगी दुनिया विज्ञान कंप्यूटर कीबोर्ड होलोग्राम जादू भविष्य शिवम जार्विस वीडियो फॉलो लाइक शेयर कमेंट आज कल अभी समय पानी खाना घर स्कूल छात्र शिक्षक पढ़ाई सीखना सीखो करो करें करना देखो देखिए बोलो लिखो आओ जाओ चलो हाँ नहीं ठीक सब कुछ सबसे नया नई पहला खुश खुशी सुंदर शानदार कमाल धमाका देश गर्व हिंदी भाषा स्वागत इंडिया जीवन मुस्कान सपनों मंज़िल`.split(/\s+/);
+const learned = (() => { try { return JSON.parse(store.get('airkb.words')) || {}; } catch { return {}; } })();
+function learnWord(w) {
+  w = w.replace(/[.,!?।"'():;]+$/g, '');
+  if (Array.from(w).length < 2) return;
+  learned[w] = (learned[w] || 0) + 1;
+  store.set('airkb.words', JSON.stringify(learned));
+}
+function currentWord() { const m = ed.text.match(/(\S+)$/); return m ? m[1] : ''; }
+function suggestions() {
+  if (!S.suggest) return [];
+  const part = currentWord();
+  const hi = part ? isDeva(part) : ed.page.startsWith('hi');
+  if (!part) return hi ? ['नमस्ते', 'मैं', 'आप'] : ['Hello', 'I', 'The'];
+  const lower = part.toLowerCase();
+  const pool = [...Object.keys(learned).sort((a, b) => learned[b] - learned[a]), ...(hi ? WORDS_HI : WORDS_EN)];
+  const out = [];
+  for (const w of pool) {
+    if (w.toLowerCase().startsWith(lower) && w.toLowerCase() !== lower && !out.some((o) => o.toLowerCase() === w.toLowerCase())) out.push(w);
+    if (out.length === 3) break;
+  }
+  const cap = /^[A-Z]/.test(part);
+  return out.map((w) => (cap ? w[0].toUpperCase() + w.slice(1) : w));
+}
+
+// ---------------------------------------------------------------- Jarvis answers (from ../jarvis-hologram/script.js when available)
+const QA = window.HOLO_SCRIPT || {
+  notFound: ['हम्म, इस पर मुझे थोड़ा सोचना पड़ेगा!'],
+  qa: [
+    { keys: ['नमस्ते', 'hello', 'hi'], answer: 'नमस्ते! हवा में लिखना कैसा लगा?' },
+    { keys: ['कौन हो', 'who are you'], answer: 'मैं जार्विस हूँ, आपका होलोग्राम असिस्टेंट।' },
+    { keys: ['किसने बनाया', 'who made you'], answer: 'मुझे शिवम ने बनाया है!' },
+  ],
+};
+function looseNorm(s) {
+  return s.toLowerCase().normalize('NFC').replace(/[ँ-ः़ा-्ॢॣ]/g, '').replace(/[शष]/g, 'स').replace(/[^\p{L}\p{N}]+/gu, '');
+}
+function hasKey(text, key) {
+  const n = looseNorm(key);
+  if (n.length < 2) return false;
+  if (!/\s/.test(key.trim()) && n.length <= 3) return text.split(/\s+/).some((w) => looseNorm(w) === n);
+  return looseNorm(text).includes(n);
+}
+function jarvisAnswer(q) {
+  let best = null, bl = 0;
+  for (const e of QA.qa || []) for (const key of e.keys) { const l = looseNorm(key).length; if (l > bl && hasKey(q, key)) { best = e; bl = l; } }
+  const raw = best ? best.answer : (QA.notFound || ['हम्म!'])[0];
+  const d = new Date();
+  return raw.replace(/\[[A-Z]+\]\s*/g, '')
+    .replaceAll('{name}', 'जार्विस')
+    .replaceAll('{time}', d.toLocaleTimeString('hi-IN', { hour: 'numeric', minute: '2-digit' }))
+    .replaceAll('{date}', d.toLocaleDateString('hi-IN', { weekday: 'long', day: 'numeric', month: 'long' }));
+}
+
+// ---------------------------------------------------------------- renderer + camera layers
+const stage = $('#stage'), glc = $('#gl'), fxc = $('#fx'), fx = fxc.getContext('2d');
+const cam = $('#cam');
+const renderer = new THREE.WebGLRenderer({ canvas: glc, antialias: true, powerPreference: 'high-performance' });
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x000000);
+const camera = new THREE.PerspectiveCamera(50, 1, 0.05, 100);
+camera.position.set(0, 0, 3);
+scene.add(camera);
+const camTex = new THREE.VideoTexture(cam);
+camTex.colorSpace = THREE.SRGBColorSpace;
+const maskCanvas = document.createElement('canvas');
+maskCanvas.width = 320; maskCanvas.height = 180;
+const mctx = maskCanvas.getContext('2d');
+const maskTex = new THREE.CanvasTexture(maskCanvas);
+const bgPlane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: camTex, depthTest: false, depthWrite: false, toneMapped: false }));
+bgPlane.renderOrder = -10; bgPlane.frustumCulled = false; bgPlane.position.z = -40; bgPlane.visible = false;
+camera.add(bgPlane);
+// The camera image drawn again through a hand-shaped mask, so fingers appear in front of the keys.
+const handLayer = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: camTex, alphaMap: maskTex, transparent: true, depthTest: false, depthWrite: false, toneMapped: false }));
+handLayer.renderOrder = 50; handLayer.frustumCulled = false; handLayer.position.z = -0.5; handLayer.visible = false;
+camera.add(handLayer);
+function layoutPlanes() {
+  for (const [m, d] of [[bgPlane, 40], [handLayer, 0.5]]) {
+    const h = 2 * d * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+    m.scale.set(-h * camera.aspect, h, 1);
+  }
+  const vw = cam.videoWidth || 1280, vh = cam.videoHeight || 720, va = vw / vh, sa = camera.aspect;
+  for (const t of [camTex, maskTex]) {
+    if (sa > va) { t.repeat.set(1, va / sa); t.offset.set(0, (1 - va / sa) / 2); }
+    else { t.repeat.set(sa / va, 1); t.offset.set((1 - sa / va) / 2, 0); }
+  }
+  maskCanvas.width = 320; maskCanvas.height = Math.round(320 * vh / vw);
+}
+cam.addEventListener('loadedmetadata', layoutPlanes);
+
+// ---------------------------------------------------------------- 3D panels: keyboard + hologram screen
+const KB_W = 2.4, KB_PX = [1200, 520], SC_W = 2.3, SC_PX = [1200, 470];
+const KB_H = KB_W * KB_PX[1] / KB_PX[0], SC_H = SC_W * SC_PX[1] / SC_PX[0];
+const rig = new THREE.Group();
+scene.add(rig);
+function panel(w, h, px) {
+  const c = document.createElement('canvas'); c.width = px[0]; c.height = px[1];
+  const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, toneMapped: false, side: THREE.DoubleSide }));
+  return { c, g: c.getContext('2d'), tex, mesh, w, h };
+}
+const kb = panel(KB_W, KB_H, KB_PX);
+kb.mesh.position.set(0, -0.62, 0.2);
+kb.mesh.rotation.x = -0.5;
+rig.add(kb.mesh);
+const sc = panel(SC_W, SC_H, SC_PX);
+sc.mesh.position.set(0, 0.58, -0.1);
+rig.add(sc.mesh);
+
+// ---------------------------------------------------------------- editor state
+const ed = { text: '', page: 'en', shift: false, reply: '', flash: 0, dirtyKb: true, dirtySc: true, keys: [], sugs: [], hover: new Map() };
+function autoShift() { ed.shift = ed.page === 'en' && (/^\s*$/.test(ed.text) || /[.!?\n]\s*$/.test(ed.text)); }
+autoShift();
+
+function layoutKeys() {
+  const [W, H] = KB_PX, pad = 18, top = 84, rows = PAGES[ed.page], rh = (H - top - pad) / rows.length;
+  const unit = (W - pad * 2) / 10.4;
+  ed.keys = [];
+  rows.forEach((row, ri) => {
+    const total = row.reduce((s, key) => s + key.w, 0) * unit;
+    let x = (W - total) / 2;
+    for (const key of row) {
+      ed.keys.push({ key, x: x + 4, y: top + ri * rh + 4, w: key.w * unit - 8, h: rh - 8 });
+      x += key.w * unit;
+    }
+  });
+  // top strip: move handle + 3 suggestion chips
+  ed.keys.push({ key: { label: '✥', act: 'move', tone: 'nav' }, x: pad, y: 14, w: 76, h: 56 });
+  const sw = (W - pad * 2 - 96) / 3;
+  ed.sugs.forEach((s, i) => ed.keys.push({ key: { label: s, act: 'sug', word: s, tone: 'sug' }, x: pad + 96 + i * sw, y: 14, w: sw - 10, h: 56 }));
+}
+const TONES = { nav: '#b46bff', del: '#ff6a6a', ok: '#3dff8b', space: '#46dcff', ai: '#ffc65a', sug: '#ffe08a' };
+function drawKeyboard() {
+  const { g } = kb, [W, H] = KB_PX;
+  g.clearRect(0, 0, W, H);
+  g.fillStyle = 'rgba(2,14,24,.55)'; g.strokeStyle = 'rgba(70,220,255,.7)'; g.lineWidth = 3;
+  g.beginPath(); g.roundRect(4, 4, W - 8, H - 8, 26); g.fill(); g.stroke();
+  const hovered = new Set(ed.hover.values());
+  for (const r of ed.keys) {
+    const key = r.key, tone = TONES[key.tone] || '#46dcff', hot = hovered.has(r), press = r.press || 0;
+    g.fillStyle = press > 0 ? `rgba(70,220,255,${0.25 + press * 0.6})` : hot ? 'rgba(70,220,255,.28)' : 'rgba(8,36,52,.72)';
+    g.strokeStyle = hot || press ? '#ffffff' : tone;
+    g.lineWidth = hot ? 4 : 2;
+    g.shadowColor = tone; g.shadowBlur = hot || press ? 22 : 8;
+    g.beginPath(); g.roundRect(r.x, r.y, r.w, r.h, 14); g.fill(); g.stroke();
+    g.shadowBlur = 0;
+    let label = key.label;
+    if (key.ch && ed.page === 'en' && ed.shift && /^[a-z]$/.test(key.ch)) label = key.ch.toUpperCase();
+    if (key.act === 'shift' && ed.shift) label = '⇪';
+    const deva = isDeva(label);
+    const fs = key.act === 'sug' ? 34 : key.act === 'space' ? 26 : deva ? 40 : 36;
+    g.font = `${key.act === 'space' ? 700 : 600} ${fs}px ${key.act === 'space' ? 'Orbitron' : 'Rajdhani'}, sans-serif`;
+    g.fillStyle = press > 0 ? '#001018' : '#ffffff';
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText(label, r.x + r.w / 2, r.y + r.h / 2 + 2);
+  }
+  kb.tex.needsUpdate = true;
+}
+function wrapLines(g, text, maxW) {
+  const out = [];
+  for (const para of text.split('\n')) {
+    let cur = '';
+    for (const word of para.split(/(\s+)/)) {
+      const t = cur + word;
+      if (g.measureText(t).width > maxW && cur.trim()) { out.push(cur.trimEnd()); cur = word.trimStart(); }
+      else cur = t;
+    }
+    out.push(cur);
+  }
+  return out;
+}
+function drawScreen() {
+  const { g } = sc, [W, H] = SC_PX;
+  g.clearRect(0, 0, W, H);
+  g.fillStyle = 'rgba(2,12,22,.62)'; g.strokeStyle = 'rgba(70,220,255,.85)'; g.lineWidth = 4;
+  g.shadowColor = '#46dcff'; g.shadowBlur = 18;
+  g.beginPath(); g.roundRect(6, 6, W - 12, H - 12, 24); g.fill(); g.stroke();
+  g.shadowBlur = 0;
+  // title bar (grab it to move the screen)
+  g.fillStyle = 'rgba(70,220,255,.14)'; g.beginPath(); g.roundRect(6, 6, W - 12, 58, [24, 24, 0, 0]); g.fill();
+  g.font = '700 26px Orbitron, sans-serif'; g.fillStyle = '#46dcff'; g.textAlign = 'left'; g.textBaseline = 'middle';
+  g.fillText('✦ AIR NOTE', 30, 36);
+  g.textAlign = 'right'; g.font = '700 26px Rajdhani, sans-serif'; g.fillStyle = 'rgba(230,247,255,.7)';
+  g.fillText(`${ed.page.startsWith('hi') ? 'हिन्दी' : 'ENGLISH'} · ${{ pinch: '🤏 PINCH', dwell: '⏱️ HOLD', tap: '👇 TAP' }[S.mode]}`, W - 30, 36);
+  // text, auto-sized: big when short, smaller as it grows
+  const body = ed.text;
+  let fs = 84, lines;
+  const maxW = W - 80, areaH = (ed.reply ? 230 : 360);
+  for (; fs >= 34; fs -= 6) {
+    g.font = `700 ${fs}px Rajdhani, sans-serif`;
+    lines = wrapLines(g, body + '|', maxW);
+    if (lines.length * fs * 1.15 <= areaH) break;
+  }
+  g.font = `700 ${fs}px Rajdhani, sans-serif`;
+  lines = wrapLines(g, body + '|', maxW);
+  const maxLines = Math.max(1, Math.floor(areaH / (fs * 1.15)));
+  lines = lines.slice(-maxLines);
+  g.textAlign = 'left'; g.textBaseline = 'top';
+  g.shadowColor = '#46dcff'; g.shadowBlur = 14 + ed.flash * 20;
+  let cx = 40, cy = 84;
+  lines.forEach((l, i) => {
+    const y = 84 + i * fs * 1.15;
+    const hasCursor = i === lines.length - 1 && l.endsWith('|');
+    const txt = hasCursor ? l.slice(0, -1) : l;
+    g.fillStyle = '#ffffff';
+    g.fillText(txt, 40, y);
+    if (hasCursor) { cx = 40 + g.measureText(txt).width + 4; cy = y; }
+  });
+  g.shadowBlur = 0;
+  if (!body) { g.fillStyle = 'rgba(230,247,255,.35)'; g.fillText(ed.page.startsWith('hi') ? 'हवा में लिखिए…' : 'Type in the air…', 40, 84); }
+  // blinking cursor
+  if (Math.floor(T * 2) % 2 === 0 || ed.flash > 0.1) { g.fillStyle = ed.flash > 0.1 ? '#ffffff' : '#46dcff'; g.fillRect(body ? cx : 40, cy + 6, 6, fs * 0.95); }
+  ed.cursorPx = { x: body ? cx : 40, y: cy + fs * 0.5 };
+  // Jarvis reply
+  if (ed.reply) {
+    g.strokeStyle = 'rgba(255,198,90,.5)'; g.lineWidth = 2; g.beginPath(); g.moveTo(40, H - 150); g.lineTo(W - 40, H - 150); g.stroke();
+    g.font = '700 48px Rajdhani, sans-serif'; g.fillStyle = '#ffc65a'; g.shadowColor = '#ffc65a'; g.shadowBlur = 14;
+    wrapLines(g, '🤖 ' + ed.reply, maxW).slice(0, 2).forEach((l, i) => g.fillText(l, 40, H - 136 + i * 56));
+    g.shadowBlur = 0;
+  }
+  sc.tex.needsUpdate = true;
+}
+
+// ---------------------------------------------------------------- typing actions
+function refresh() { ed.sugs = suggestions(); layoutKeys(); ed.dirtyKb = ed.dirtySc = true; }
+function insert(ch) {
+  if (ed.reply) ed.reply = '';
+  let c = ch;
+  if (ed.page === 'en' && ed.shift && /^[a-z]$/.test(c)) c = c.toUpperCase();
+  ed.text += c;
+  ed.flash = 1;
+  if (ed.page === 'en') autoShift();
+  if (ed.page === 'hi2') ed.page = 'hi1'; // after a vowel or matra, back to consonants
+  if (/\s/.test(c)) learnWord(ed.text.trimEnd().split(/\s+/).pop() || '');
+  refresh();
+}
+function backspace() {
+  const a = Array.from(ed.text); a.pop(); ed.text = a.join('');
+  if (ed.page === 'en') autoShift();
+  refresh();
+}
+function deleteWord() { ed.text = ed.text.replace(/\s*\S+\s*$/, ''); if (ed.page === 'en') autoShift(); refresh(); }
+function clearAll() {
+  if (!ed.text && !ed.reply) return;
+  burstAt(screenPoint(SC_PX[0] / 2, SC_PX[1] / 2), 500, [0x46dcff, 0xffffff, 0xb46bff], 2.2);
+  ed.text = ''; ed.reply = ''; autoShift(); refresh();
+  banner = { t: 0, text: '🧹 CLEAR' };
+  sfx('clear');
+}
+function speakText(text) {
+  if (!S.voice || !text.trim() || !('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, ''));
+  const hi = isDeva(text), vs = speechSynthesis.getVoices();
+  const v = hi ? vs.find((x) => /hi[-_]IN/i.test(x.lang) && /google/i.test(x.name)) || vs.find((x) => /^hi/i.test(x.lang))
+    : vs.find((x) => /en[-_]IN/i.test(x.lang)) || vs.find((x) => /^en/i.test(x.lang));
+  if (v) { u.voice = v; u.lang = v.lang; } else u.lang = hi ? 'hi-IN' : 'en-IN';
+  speakText.u = u; // keep a reference so Chrome fires onend
+  speechSynthesis.speak(u);
+}
+function celebrate() {
+  for (let i = 0; i < 5; i++) setTimeout(() => {
+    const p = screenPoint(Math.random() * SC_PX[0], Math.random() * SC_PX[1] * 0.8);
+    burstAt(p, 220, [[0xff5a5a, 0xffd25a], [0x46dcff, 0xffffff], [0xb46bff, 0xff7ad9], [0x3dff8b, 0xffffff]][i % 4], 2.6);
+    sfx('pop');
+  }, i * 220);
+  banner = { t: 0, text: '🎆 ' + (ed.page.startsWith('hi') ? 'वाह!' : 'WOW!') };
+  speakText(ed.text);
+}
+function press(r, handId) {
+  const key = r.key;
+  r.press = 1;
+  sparkAtKey(r);
+  if (key.act === 'move') return;
+  sfx(key.act === 'space' ? 'space' : key.act === 'back' ? 'del' : key.act === 'enter' ? 'enter' : 'key');
+  switch (key.act) {
+    case 'shift': ed.shift = !ed.shift; refresh(); break;
+    case 'back': backspace(); break;
+    case 'space': insert(' '); break;
+    case 'enter': insert('\n'); break;
+    case 'page': ed.page = key.to; if (key.to === 'en') autoShift(); else ed.shift = false; refresh(); break;
+    case 'sug': {
+      const part = currentWord();
+      ed.text = ed.text.slice(0, ed.text.length - part.length) + key.word + ' ';
+      learnWord(key.word); ed.flash = 1; if (ed.page === 'en') autoShift(); refresh();
+      break;
+    }
+    case 'speak': speakText(ed.text); break;
+    case 'jarvis': {
+      const q = ed.text.trim();
+      ed.reply = q ? jarvisAnswer(q) : (ed.page.startsWith('hi') ? 'पहले कुछ लिखिए, फिर मुझसे पूछिए!' : 'Type something first, then ask me!');
+      speakText(ed.reply); refresh();
+      break;
+    }
+    default: insert(key.ch);
+  }
+}
+
+// ---------------------------------------------------------------- particles
+const pointsMat = new THREE.ShaderMaterial({
+  uniforms: { uPx: { value: 1 } },
+  vertexShader: `
+    attribute float aAlpha; attribute float aSize; attribute vec3 aCol;
+    uniform float uPx; varying float vA; varying vec3 vC;
+    void main() { vA = aAlpha; vC = aCol; vec4 mv = modelViewMatrix * vec4(position, 1.0); gl_PointSize = min(aSize * uPx * (3.0 / -mv.z), 50.0); gl_Position = projectionMatrix * mv; }`,
+  fragmentShader: `
+    varying float vA; varying vec3 vC;
+    void main() { float d = length(gl_PointCoord - 0.5); float core = 1.0 - smoothstep(0.0, 0.2, d);
+      gl_FragColor = vec4(vC * (1.0 + core), (1.0 - smoothstep(0.05, 0.5, d)) * vA);
+      #include <colorspace_fragment>
+    }`,
+  transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+});
+const PN = 1600;
+const parts = { pos: new Float32Array(PN * 3), vel: new Float32Array(PN * 3), al: new Float32Array(PN), size: new Float32Array(PN), col: new Float32Array(PN * 3), age: new Float32Array(PN), life: new Float32Array(PN), live: 0, cursor: 0 };
+{
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(parts.pos, 3).setUsage(THREE.DynamicDrawUsage));
+  g.setAttribute('aAlpha', new THREE.BufferAttribute(parts.al, 1).setUsage(THREE.DynamicDrawUsage));
+  g.setAttribute('aSize', new THREE.BufferAttribute(parts.size, 1).setUsage(THREE.DynamicDrawUsage));
+  g.setAttribute('aCol', new THREE.BufferAttribute(parts.col, 3).setUsage(THREE.DynamicDrawUsage));
+  parts.points = new THREE.Points(g, pointsMat);
+  parts.points.frustumCulled = false; parts.points.renderOrder = 40;
+  scene.add(parts.points);
+}
+function burstAt(c, n, colors, speed = 1.5) {
+  const d = new V3(), cs = colors.map((h) => new THREE.Color(h));
+  for (let i = 0; i < n; i++) {
+    const j = parts.cursor; parts.cursor = (parts.cursor + 1) % PN;
+    const col = cs[i % cs.length], sp = 0.2 + Math.pow(Math.random(), 2) * speed;
+    randUnit(d);
+    parts.pos.set([c.x, c.y, c.z], j * 3);
+    parts.vel.set([d.x * sp, d.y * sp, d.z * sp * 0.5], j * 3);
+    parts.col.set([col.r, col.g, col.b], j * 3);
+    parts.size[j] = 2 + Math.random() * 5; parts.age[j] = 0; parts.life[j] = 0.5 + Math.random() * 0.9;
+  }
+  const a = parts.points.geometry.attributes; a.aCol.needsUpdate = a.aSize.needsUpdate = true;
+}
+function updateParts(dt) {
+  let live = 0;
+  const drag = Math.pow(0.3, dt);
+  for (let i = 0; i < PN; i++) {
+    if (parts.life[i] <= 0) { parts.al[i] = 0; continue; }
+    parts.age[i] += dt;
+    const k = parts.age[i] / parts.life[i];
+    if (k >= 1) { parts.life[i] = 0; parts.al[i] = 0; continue; }
+    live++;
+    const i3 = i * 3;
+    for (let a = 0; a < 3; a++) { parts.vel[i3 + a] *= drag; parts.pos[i3 + a] += parts.vel[i3 + a] * dt; }
+    parts.vel[i3 + 1] -= 0.6 * dt;
+    parts.al[i] = Math.pow(1 - k, 1.4);
+  }
+  if (live || parts.live) { const a = parts.points.geometry.attributes; a.position.needsUpdate = a.aAlpha.needsUpdate = true; }
+  parts.live = live;
+}
+function kbPoint(px, py) { return kb.mesh.localToWorld(new V3((px / KB_PX[0] - 0.5) * KB_W, (0.5 - py / KB_PX[1]) * KB_H, 0.01)); }
+function screenPoint(px, py) { return sc.mesh.localToWorld(new V3((px / SC_PX[0] - 0.5) * SC_W, (0.5 - py / SC_PX[1]) * SC_H, 0.01)); }
+function sparkAtKey(r) { burstAt(kbPoint(r.x + r.w / 2, r.y + r.h / 2), 26, [0x46dcff, 0xffffff], 0.9); if (ed.cursorPx) burstAt(screenPoint(ed.cursorPx.x, ed.cursorPx.y), 14, [0xffffff, 0x46dcff], 0.5); }
+
+// ---------------------------------------------------------------- hands
+let handLM = null, hands = [], lastVT = -1, lastDetect = 0, nextHandId = 1;
+async function initHands() {
+  setLoad('ldHand', 'wait');
+  const { FilesetResolver, HandLandmarker } = await import(`${MP_BASE}/vision_bundle.mjs`);
+  const fileset = await FilesetResolver.forVisionTasks(`${MP_BASE}/wasm`);
+  const opts = (delegate) => ({
+    baseOptions: { modelAssetPath: HAND_MODEL, delegate },
+    runningMode: 'VIDEO', numHands: 2,
+    minHandDetectionConfidence: 0.6, minHandPresenceConfidence: 0.5, minTrackingConfidence: 0.5,
+  });
+  try { handLM = await HandLandmarker.createFromOptions(fileset, opts('GPU')); }
+  catch { handLM = await HandLandmarker.createFromOptions(fileset, opts('CPU')); }
+  setLoad('ldHand', 'ok');
+  toast('Hand tracking ready ✓');
+}
+function stageSize() { return { W: stage.clientWidth || innerWidth, H: stage.clientHeight || innerHeight }; }
+function toStage(p) {
+  const { W, H } = stageSize(), vw = cam.videoWidth || 1280, vh = cam.videoHeight || 720;
+  const s = Math.max(W / vw, H / vh), dw = vw * s, dh = vh * s;
+  return { x: ((1 - p.x) * dw + (W - dw) / 2) / W, y: (p.y * dh + (H - dh) / 2) / H };
+}
+const raycaster = new THREE.Raycaster();
+function rayFrom(pt) { raycaster.setFromCamera({ x: pt.x * 2 - 1, y: -(pt.y * 2 - 1) }, camera); return raycaster; }
+// Which key (or screen title bar) is under a stage point.
+function hitAt(pt) {
+  const rc = rayFrom(pt);
+  const hk = rc.intersectObject(kb.mesh)[0];
+  if (hk?.uv) {
+    const x = hk.uv.x * KB_PX[0], y = (1 - hk.uv.y) * KB_PX[1];
+    const r = ed.keys.find((q) => x >= q.x && x <= q.x + q.w && y >= q.y && y <= q.y + q.h);
+    if (r) return { type: 'key', r };
+  }
+  const hs = rc.intersectObject(sc.mesh)[0];
+  if (hs?.uv && (1 - hs.uv.y) * SC_PX[1] < 70) return { type: 'title' };
+  return null;
+}
+function trackHands(now) {
+  if (!handLM || cam.readyState < 2 || cam.currentTime === lastVT || now - lastDetect < 30) return;
+  lastVT = cam.currentTime; lastDetect = now;
+  let res;
+  try { res = handLM.detectForVideo(cam, now); } catch { return; }
+  ingestHands(res.landmarks || [], now);
+}
+function ingestHands(list, now = performance.now()) {
+  const vw = cam.videoWidth || 1280, vh = cam.videoHeight || 720, asp = vw / vh;
+  const next = list.map((lm) => {
+    const d = (a, b) => Math.hypot((lm[a].x - lm[b].x) * asp, lm[a].y - lm[b].y);
+    const size = Math.max(1e-4, d(0, 9));
+    const fist = [[8, 5], [12, 9], [16, 13], [20, 17]].every(([t, m]) => d(0, t) < d(0, m) * 1.25);
+    const open = !fist && [[8, 6], [12, 10], [16, 14], [20, 18]].every(([t, p]) => d(0, t) > d(0, p) * 1.15) && d(4, 5) > size * 0.55 && d(8, 20) > size * 0.9;
+    return {
+      lm, fist, open, indexOut: d(0, 8) > d(0, 5) * 1.2, ratio: d(4, 8) / size, wrist: lm[0], t: now, pinch: false, id: 0,
+      tip: toStage(lm[8]), mid: toStage({ x: (lm[4].x + lm[8].x) / 2, y: (lm[4].y + lm[8].y) / 2 }), palm: toStage(lm[9]),
+    };
+  });
+  for (const h of next) {
+    let prev = null, best = 0.25;
+    for (const p of hands) { const dd = Math.hypot(p.wrist.x - h.wrist.x, p.wrist.y - h.wrist.y); if (dd < best) { best = dd; prev = p; } }
+    h.id = prev ? prev.id : nextHandId++;
+    h.pinch = !h.fist && h.indexOut && (prev?.pinch ? h.ratio < 0.45 : h.ratio < 0.3);
+    if (h.pinch) h.open = false;
+    if (prev) for (const key of ['tip', 'mid', 'palm']) { h[key].x = prev[key].x + (h[key].x - prev[key].x) * 0.8; h[key].y = prev[key].y + (h[key].y - prev[key].y) * 0.8; }
+    const dts = prev ? Math.max(0.016, (now - prev.t) / 1000) : 1;
+    h.palmVX = prev ? (h.palm.x - prev.palm.x) / dts : 0;
+    h.tipVY = prev ? (h.tip.y - prev.tip.y) / dts : 0;
+    h.hist = [...(prev?.hist || []), { ...h.tip }].slice(-6);
+    // pointer: between thumb and index for pinch typing, index tip otherwise
+    h.ptr = S.mode === 'pinch' ? h.mid : h.tip;
+  }
+  hands = next;
+}
+function drawMask() {
+  const w = maskCanvas.width, h = maskCanvas.height;
+  mctx.clearRect(0, 0, w, h);
+  if (S.occlude && hands.length) {
+    mctx.fillStyle = mctx.strokeStyle = '#fff';
+    mctx.lineCap = mctx.lineJoin = 'round';
+    mctx.filter = 'blur(1.5px)';
+    for (const hd of hands) {
+      const L = hd.lm, P = (i) => [L[i].x * w, L[i].y * h];
+      const size = Math.hypot((L[0].x - L[9].x) * w, (L[0].y - L[9].y) * h);
+      mctx.lineWidth = size * 0.32;
+      for (const chain of [[0, 1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16], [17, 18, 19, 20]]) {
+        mctx.beginPath(); chain.forEach((i, j) => (j ? mctx.lineTo(...P(i)) : mctx.moveTo(...P(i)))); mctx.stroke();
+      }
+      mctx.beginPath(); [0, 1, 2, 5, 9, 13, 17].forEach((i, j) => (j ? mctx.lineTo(...P(i)) : mctx.moveTo(...P(i)))); mctx.closePath(); mctx.fill(); mctx.stroke();
+      const [wx, wy] = P(0), [mx, my] = P(9), len = Math.hypot(wx - mx, wy - my) || 1;
+      mctx.lineWidth = size * 0.85;
+      mctx.beginPath(); mctx.moveTo(wx, wy); mctx.lineTo(wx + (wx - mx) / len * size * 3.5, wy + (wy - my) / len * size * 3.5); mctx.stroke();
+    }
+    mctx.filter = 'none';
+  }
+  maskTex.needsUpdate = true;
+}
+
+// ---------------------------------------------------------------- typing input: pinch / dwell / tap, plus gestures
+const per = new Map(); // per-hand state: wasPinch, hoverKey, dwellT, repeatT, cool, drag
+let banner = null, swipeCool = 0;
+const pose = { kind: 'none', hold: 0, fired: false };
+function updateInput(dt) {
+  const seen = new Set();
+  ed.hover.clear();
+  for (const h of hands) {
+    seen.add(h.id);
+    const st = per.get(h.id) || { wasPinch: false, key: null, dwellT: 0, repeatT: 0, cool: 0, drag: null };
+    per.set(h.id, st);
+    st.cool = Math.max(0, st.cool - dt);
+    // dragging a panel by its handle / title bar
+    if (st.drag) {
+      if (!h.pinch) st.drag = null;
+      else {
+        const plane = new THREE.Plane(new V3(0, 0, 1), -st.drag.mesh.getWorldPosition(new V3()).z);
+        const hit = rayFrom(h.ptr).ray.intersectPlane(plane, new V3());
+        if (hit) { const local = rig.worldToLocal(hit.add(st.drag.offset)); st.drag.mesh.position.x = local.x; st.drag.mesh.position.y = local.y; }
+      }
+      st.wasPinch = h.pinch;
+      continue;
+    }
+    if (h.open || h.fist) { st.key = null; st.dwellT = 0; st.wasPinch = h.pinch; continue; }
+    const hit = hitAt(h.ptr);
+    const r = hit?.type === 'key' ? hit.r : null;
+    if (r) ed.hover.set(h.id, r);
+    if (r !== st.key) { st.key = r; st.dwellT = 0; st.repeatT = 0; ed.dirtyKb = true; }
+    const pinchStart = h.pinch && !st.wasPinch;
+    if (pinchStart && (r?.key.act === 'move' || hit?.type === 'title')) {
+      const mesh = r ? kb.mesh : sc.mesh;
+      const plane = new THREE.Plane(new V3(0, 0, 1), -mesh.getWorldPosition(new V3()).z);
+      const at = rayFrom(h.ptr).ray.intersectPlane(plane, new V3()) || mesh.getWorldPosition(new V3());
+      st.drag = { mesh, offset: mesh.getWorldPosition(new V3()).sub(at) };
+      sfx('key');
+    } else if (S.mode === 'pinch') {
+      if (pinchStart && r) { press(r, h.id); st.repeatT = 0; }
+      // hold ⌫ to keep deleting
+      if (h.pinch && r?.key.act === 'back') { st.repeatT += dt; if (st.repeatT > 0.45) { st.repeatT -= 0.09; press(r, h.id); } }
+    } else if (S.mode === 'dwell') {
+      if (r && st.cool <= 0) {
+        st.dwellT += dt;
+        if (st.dwellT >= S.dwell) { press(r, h.id); st.dwellT = 0; st.cool = r.key.act === 'back' ? 0.15 : 0.35; }
+      }
+    } else if (S.mode === 'tap') {
+      // a quick downward flick of the index finger presses the key it started over
+      if (h.tipVY > 1.4 && st.cool <= 0) {
+        const from = h.hist[0] || h.tip;
+        const hr = hitAt(from);
+        if (hr?.type === 'key') { press(hr.r, h.id); st.cool = 0.3; }
+      }
+    }
+    st.wasPinch = h.pinch;
+  }
+  for (const id of per.keys()) if (!seen.has(id)) per.delete(id);
+  // ✋ swipe left = delete word
+  swipeCool = Math.max(0, swipeCool - dt);
+  for (const h of hands) if (h.open && h.palmVX < -2.2 && swipeCool <= 0 && ed.text) { deleteWord(); swipeCool = 0.6; sfx('swipe'); banner = { t: 0, text: '⌫ WORD' }; }
+  // ✊ hold = clear all, 🙌 hold = speak + fireworks
+  const opens = hands.filter((h) => h.open).length, fists = hands.filter((h) => h.fist).length;
+  const kind = opens >= 2 ? 'palms2' : fists ? 'fist' : 'none';
+  if (kind !== pose.kind) { pose.kind = kind; pose.hold = 0; pose.fired = false; }
+  if (kind !== 'none' && !pose.fired) {
+    pose.hold += dt;
+    if (kind === 'fist' && pose.hold > 0.6) { pose.fired = true; clearAll(); }
+    if (kind === 'palms2' && pose.hold > 0.5) { pose.fired = true; celebrate(); }
+  }
+}
+
+// ---------------------------------------------------------------- audio
+const audio = { ctx: null, bus: null, mic: null, noise: null };
+function ensureAudio() {
+  if (!audio.ctx) {
+    audio.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    audio.bus = audio.ctx.createGain(); audio.bus.gain.value = 0.9; audio.bus.connect(audio.ctx.destination);
+  }
+  audio.ctx.resume?.();
+}
+function noiseBuffer() {
+  if (audio.noise) return audio.noise;
+  const ctx = audio.ctx, b = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate), d = b.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  return (audio.noise = b);
+}
+function sfx(type) {
+  if (!S.sfx || !audio.ctx) return;
+  const ctx = audio.ctx, t = ctx.currentTime, out = audio.bus;
+  const tone = (f0, f1, len, wave, peak, at = 0) => {
+    const o = ctx.createOscillator(), g = ctx.createGain(), s = t + at;
+    o.type = wave; o.frequency.setValueAtTime(f0, s); o.frequency.exponentialRampToValueAtTime(f1, s + len);
+    g.gain.setValueAtTime(0.0001, s); g.gain.exponentialRampToValueAtTime(peak, s + 0.005); g.gain.exponentialRampToValueAtTime(0.0001, s + len);
+    o.connect(g).connect(out); o.start(s); o.stop(s + len + 0.02);
+  };
+  const click = (freq, len, peak) => {
+    const n = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+    n.buffer = noiseBuffer(); f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = 2;
+    g.gain.setValueAtTime(peak, t); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+    n.connect(f).connect(g).connect(out); n.start(t); n.stop(t + len);
+  };
+  if (type === 'key') { click(3200, 0.05, 0.5); tone(1800, 1200, 0.04, 'sine', 0.08); }
+  else if (type === 'space') { click(1200, 0.08, 0.6); }
+  else if (type === 'del') { click(2200, 0.06, 0.4); tone(900, 500, 0.06, 'sine', 0.08); }
+  else if (type === 'enter') { click(1600, 0.08, 0.5); tone(880, 1320, 0.12, 'sine', 0.12); }
+  else if (type === 'swipe') { click(5000, 0.2, 0.3); tone(1200, 300, 0.2, 'sine', 0.1); }
+  else if (type === 'clear') { click(6000, 0.5, 0.4); tone(1500, 120, 0.5, 'sawtooth', 0.08); }
+  else if (type === 'pop') { click(2500, 0.25, 0.7); tone(300, 60, 0.3, 'sine', 0.3); tone(2400, 3200, 0.2, 'sine', 0.05, 0.05); }
+}
+
+// ---------------------------------------------------------------- 2D overlay (recorded): pointers, rings, banner
+let pr = 1;
+function drawFx(dt) {
+  const { W, H } = stageSize();
+  fx.setTransform(pr, 0, 0, pr, 0, 0);
+  fx.clearRect(0, 0, W, H);
+  for (const h of hands) {
+    const st = per.get(h.id);
+    if (h.open || h.fist) {
+      if (pose.hold > 0 && !pose.fired && pose.kind !== 'none') {
+        const need = pose.kind === 'fist' ? 0.6 : 0.5, p = { x: h.palm.x * W, y: h.palm.y * H };
+        fx.strokeStyle = h.fist ? '#ff6a6a' : '#ffc65a'; fx.lineWidth = 3; fx.shadowColor = fx.strokeStyle; fx.shadowBlur = 12;
+        fx.beginPath(); fx.arc(p.x, p.y, 32, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.min(1, pose.hold / need)); fx.stroke();
+        fx.shadowBlur = 0;
+      }
+      continue;
+    }
+    const x = h.ptr.x * W, y = h.ptr.y * H, onKey = !!st?.key;
+    fx.shadowColor = '#46dcff'; fx.shadowBlur = onKey ? 18 : 8;
+    fx.strokeStyle = h.pinch ? '#ffffff' : '#46dcff'; fx.lineWidth = 2.5;
+    fx.beginPath(); fx.arc(x, y, h.pinch ? 7 : 10, 0, Math.PI * 2); fx.stroke();
+    fx.fillStyle = 'rgba(200,245,255,.9)'; fx.beginPath(); fx.arc(x, y, 3, 0, Math.PI * 2); fx.fill();
+    if (S.mode === 'dwell' && st?.key && st.dwellT > 0) {
+      fx.strokeStyle = '#ffffff'; fx.lineWidth = 3;
+      fx.beginPath(); fx.arc(x, y, 18, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.min(1, st.dwellT / S.dwell)); fx.stroke();
+    }
+    fx.shadowBlur = 0;
+  }
+  if (banner) {
+    banner.t += dt;
+    const t = banner.t, a = t < 0.7 ? 1 : Math.max(0, 1 - (t - 0.7) / 0.4), bs = Math.min(W * 0.06, H * 0.05);
+    fx.save(); fx.globalAlpha = a; fx.textAlign = 'center'; fx.textBaseline = 'middle';
+    fx.font = `900 ${bs}px Orbitron, sans-serif`; fx.shadowColor = '#46dcff'; fx.shadowBlur = 22; fx.fillStyle = '#fff';
+    fx.fillText(banner.text, W / 2, H * 0.08 + (1 - Math.min(1, t * 5)) * 12);
+    fx.restore();
+    if (t > 1.1) banner = null;
+  }
+}
+
+// ---------------------------------------------------------------- recording
+const recState = { mr: null, c: null, ctx: null, chunks: [], t0: 0, dest: null, ext: 'webm', mime: '' };
+function startRecord() {
+  if (!window.MediaRecorder) { toast('Is browser me recording nahi chalegi. Chrome use karo.'); return; }
+  ensureAudio();
+  const c = document.createElement('canvas'); c.width = glc.width; c.height = glc.height;
+  recState.c = c; recState.ctx = c.getContext('2d');
+  recordFrame();
+  const tracks = [...c.captureStream(30).getVideoTracks()];
+  recState.dest = audio.ctx.createMediaStreamDestination();
+  audio.bus.connect(recState.dest);
+  audio.mic?.connect(recState.dest);
+  tracks.push(...recState.dest.stream.getAudioTracks());
+  recState.mime = MIMES.find((m) => MediaRecorder.isTypeSupported(m)) || '';
+  recState.ext = recState.mime.startsWith('video/mp4') ? 'mp4' : 'webm';
+  const mr = new MediaRecorder(new MediaStream(tracks), recState.mime ? { mimeType: recState.mime, videoBitsPerSecond: 8_000_000 } : undefined);
+  recState.chunks = [];
+  mr.ondataavailable = (e) => { if (e.data.size) recState.chunks.push(e.data); };
+  mr.onstop = saveRecording;
+  mr.start(1000);
+  recState.mr = mr; recState.t0 = performance.now();
+  $('#btnRec').classList.add('on');
+}
+function stopRecord() { recState.mr?.stop(); recState.mr = null; $('#btnRec').classList.remove('on'); $('#btnRec').textContent = '⏺ REC'; }
+function saveRecording() {
+  try { audio.bus.disconnect(recState.dest); } catch {}
+  try { audio.mic?.disconnect(recState.dest); } catch {}
+  recState.c = null;
+  const blob = new Blob(recState.chunks, { type: recState.mime || 'video/webm' });
+  const a = document.createElement('a');
+  const d = new Date(), stamp = `${d.getHours()}${String(d.getMinutes()).padStart(2, '0')}${String(d.getSeconds()).padStart(2, '0')}`;
+  a.href = URL.createObjectURL(blob); a.download = `air-keyboard-${stamp}.${recState.ext}`;
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+  toast(`Video save ho gaya: Downloads me ${a.download}`, 5000);
+}
+function recordFrame() {
+  if (!recState.c) return;
+  const c = recState.c;
+  if (c.width !== glc.width || c.height !== glc.height) { c.width = glc.width; c.height = glc.height; }
+  recState.ctx.drawImage(glc, 0, 0);
+  recState.ctx.drawImage(fxc, 0, 0, c.width, c.height);
+  if (recState.mr) {
+    const s = Math.floor((performance.now() - recState.t0) / 1000);
+    $('#btnRec').textContent = `■ ${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+  }
+}
+
+// ---------------------------------------------------------------- main loop
+let T = 0, lastRender = 0, started = false;
+function fitRig() {
+  const hh = camera.position.z * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)), hw = hh * camera.aspect;
+  rig.scale.setScalar(Math.min(1, (hw * 1.92) / KB_W) * S.size);
+}
+function tick(dt, now) {
+  T += dt;
+  trackHands(now);
+  updateInput(dt);
+  updateParts(dt);
+  fitRig();
+  ed.flash *= Math.pow(0.02, dt);
+  let pressing = false;
+  for (const r of ed.keys) if (r.press > 0) { r.press = Math.max(0, r.press - dt * 4); pressing = true; }
+  if (pressing || ed.dirtyKb || ed.hover.size) drawKeyboard();
+  ed.dirtyKb = false;
+  drawScreen(); // cheap, and keeps the cursor blinking
+  drawMask();
+}
+function render(dt) {
+  renderer.render(scene, camera);
+  drawFx(dt);
+  recordFrame();
+}
+function frame(now) {
+  requestAnimationFrame(frame);
+  if (now - lastRender < 1000 / Number(S.fps) - 2) return;
+  const dt = Math.min(0.06, (now - lastRender) / 1000);
+  lastRender = now;
+  if (glc.width === 0 || Math.abs(camera.aspect - stage.clientWidth / Math.max(1, stage.clientHeight)) > 1e-3) onResize();
+  tick(dt, now);
+  render(dt);
+}
+function onResize() {
+  const { W, H } = stageSize();
+  if (!W || !H) return;
+  pr = Math.min(devicePixelRatio || 1, 1.5);
+  renderer.setPixelRatio(pr); renderer.setSize(W, H, false);
+  fxc.width = Math.round(W * pr); fxc.height = Math.round(H * pr);
+  camera.aspect = W / H; camera.updateProjectionMatrix();
+  pointsMat.uniforms.uPx.value = pr;
+  layoutPlanes();
+}
+addEventListener('resize', onResize);
+
+// ---------------------------------------------------------------- UI
+function setLoad(id, st) {
+  const el = document.getElementById(id), icon = { wait: '◌', ok: '✓', fail: '✕', warn: '!' }[st];
+  el.className = st; el.textContent = `${icon} ${el.textContent.replace(/^\S+\s/, '')}`;
+}
+function updateHint() {
+  const how = { pinch: '<b>🤏</b> key par pinch = dabao', dwell: '<b>⏱️</b> ungli key par roko = dabao', tap: '<b>👇</b> ungli neeche jhatko = dabao' }[S.mode];
+  $('#hint').innerHTML = `${how} · <b>✋⬅</b> shabd mitao · <b>✊</b> sab saaf · <b>🙌</b> bolo + 🎆 · <b>✥</b> khiskao`;
+}
+function toggleReel() {
+  document.body.classList.toggle('reel');
+  $('#btnReel').classList.toggle('on', document.body.classList.contains('reel'));
+  onResize();
+}
+for (const el of document.querySelectorAll('[data-s]')) {
+  const key = el.dataset.s;
+  if (el.type === 'checkbox') el.checked = !!S[key]; else el.value = S[key];
+  el.addEventListener(el.type === 'range' ? 'input' : 'change', () => {
+    S[key] = el.type === 'checkbox' ? el.checked : el.type === 'range' ? parseFloat(el.value) : el.value;
+    saveSettings(); updateHint(); refresh();
+  });
+}
+$('#btnSettings').addEventListener('click', () => $('#settings').classList.toggle('open'));
+$('#btnClose').addEventListener('click', () => $('#settings').classList.remove('open'));
+$('#btnReel').addEventListener('click', toggleReel);
+$('#btnRec').addEventListener('click', () => (recState.mr ? stopRecord() : startRecord()));
+const toggleFull = () => (document.fullscreenElement ? document.exitFullscreen?.() : document.documentElement.requestFullscreen?.().catch(() => {}));
+$('#btnFull').addEventListener('click', toggleFull);
+// Real keyboard works too (handy for testing and backup during recording).
+addEventListener('keydown', (e) => {
+  if (e.target.matches('input, select')) return;
+  if (e.metaKey || e.ctrlKey) {
+    if (e.key.toLowerCase() === 'r' && started) { e.preventDefault(); recState.mr ? stopRecord() : startRecord(); }
+    return;
+  }
+  if (e.key === 'Escape') { $('#settings').classList.remove('open'); return; }
+  if (!started) return;
+  if (e.key === 'Backspace') { e.preventDefault(); backspace(); sfx('del'); }
+  else if (e.key === 'Enter') { insert('\n'); sfx('enter'); }
+  else if (e.key.length === 1 || /[ऀ-ॿ]/.test(e.key)) { e.preventDefault(); ed.text += e.key; ed.flash = 1; refresh(); sfx('key'); }
+});
+document.fonts?.ready?.then(() => refresh());
+
+async function start() {
+  const btn = $('#btnStart');
+  btn.disabled = true; btn.textContent = 'STARTING…';
+  ensureAudio();
+  setLoad('ldCam', 'wait');
+  const md = navigator.mediaDevices;
+  const noMedia = new URLSearchParams(location.search).has('nomedia');
+  let vStream = null, aStream = null;
+  if (md?.getUserMedia && !noMedia) {
+    try {
+      const s = await md.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' }, audio: AUDIO_CONSTRAINTS });
+      vStream = aStream = s;
+    } catch {
+      try { vStream = await md.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 } } }); } catch {}
+      try { aStream = await md.getUserMedia({ audio: AUDIO_CONSTRAINTS }); } catch {}
+    }
+  }
+  if (aStream) audio.mic = audio.ctx.createMediaStreamSource(new MediaStream(aStream.getAudioTracks()));
+  if (vStream) {
+    cam.srcObject = new MediaStream(vStream.getVideoTracks());
+    try { await cam.play(); } catch {}
+    bgPlane.visible = handLayer.visible = true;
+    layoutPlanes();
+  }
+  setLoad('ldCam', vStream && aStream ? 'ok' : vStream || aStream ? 'warn' : 'fail');
+  if (!vStream) toast('Camera nahi mila. Asli keyboard se type karke dekh sakte ho.', 5000);
+  if (!window.HOLO_SCRIPT) toast('Jarvis ke poore jawab ke liye server "New folder clean" folder se chalao.', 5000);
+  started = true;
+  $('#start').classList.add('gone');
+  if (vStream) initHands().catch((e) => { console.error(e); setLoad('ldHand', 'fail'); toast('Hand tracking load nahi hua.'); });
+}
+$('#btnStart').addEventListener('click', start);
+
+refresh();
+updateHint();
+onResize();
+requestAnimationFrame(frame);
+// Console hooks for testing without a camera.
+window.__kb = {
+  step(sec) { for (let i = 0; i < Math.max(1, Math.round(sec * 30)); i++) tick(1 / 30, performance.now()); render(sec); },
+  ingestHands, ed, S, kb, sc, rig, hitAt, refresh, press, get hands() { return hands; },
+  keyCenter(label) { // stage coords of a key centre, for tests
+    const r = ed.keys.find((q) => q.key.label === label || q.key.ch === label);
+    if (!r) return null;
+    const p = kbPoint(r.x + r.w / 2, r.y + r.h / 2).project(camera);
+    return { x: (p.x + 1) / 2, y: (1 - p.y) / 2 };
+  },
+};
+</script>
+</body>
+</html>

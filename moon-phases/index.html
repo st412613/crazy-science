@@ -1,0 +1,1030 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌗</text></svg>">
+<title>चाँद की कलाएँ · Crazy Science</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --c: #cfe3ff;
+    --c-rgb: 207, 227, 255;
+    --gold: #ffd27a;
+    --text: #f2f6ff;
+    --dim: rgba(242, 246, 255, .62);
+    --panel: rgba(6, 10, 22, .84);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #000; color: var(--text); font-family: 'Rajdhani', system-ui, sans-serif; overflow: hidden; }
+  #stage { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 100vw; height: 100vh; overflow: hidden; background: #000; }
+  body.reel #stage { width: min(100vw, calc(100vh * 9 / 16)); height: min(100vh, calc(100vw * 16 / 9)); }
+  #gl, #fx { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  #cam { position: fixed; width: 2px; height: 2px; opacity: 0; pointer-events: none; }
+
+  #ui { position: fixed; inset: 0; pointer-events: none; z-index: 5; }
+  #ui button { pointer-events: auto; }
+  .top { position: absolute; top: 16px; left: 16px; display: flex; gap: 8px; align-items: center; }
+  button.icon { height: 38px; min-width: 38px; padding: 0 12px; border-radius: 10px; border: 1px solid rgba(var(--c-rgb), .45); background: rgba(6, 10, 22, .65); color: var(--c); font: 700 13px 'Orbitron', sans-serif; letter-spacing: .08em; cursor: pointer; }
+  button.icon:hover { background: rgba(var(--c-rgb), .16); }
+  button.icon.on { background: var(--c); color: #060a16; }
+  #btnRec.on { background: #ff2d4a; border-color: #ff2d4a; color: #fff; animation: blink 1s infinite; }
+  #hint { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); background: var(--panel); border: 1px solid rgba(var(--c-rgb), .3); border-radius: 12px; padding: 8px 14px; font-size: 15px; color: var(--dim); text-align: center; width: max-content; max-width: calc(100% - 32px); line-height: 1.5; }
+  #hint b { color: var(--gold); }
+  #toast { position: absolute; top: 66px; left: 50%; transform: translateX(-50%); background: var(--panel); border: 1px solid rgba(var(--c-rgb), .4); padding: 10px 16px; border-radius: 10px; font-size: 16px; opacity: 0; transition: opacity .3s; max-width: calc(100% - 32px); text-align: center; z-index: 6; }
+  #toast.on { opacity: 1; }
+  #clap { position: absolute; bottom: 70px; left: 18px; font-size: 26px; opacity: 0; transition: opacity .35s; }
+  #clap.on { opacity: 1; transition: none; }
+  body.clean #hint, body.clean .top button:not(#btnRec), body.clean #clap { display: none; }
+
+  #settings { position: fixed; top: 0; left: 0; height: 100%; width: min(360px, 100%); background: rgba(5, 8, 18, .96); border-right: 1px solid rgba(var(--c-rgb), .3); z-index: 10; transform: translateX(-100%); transition: transform .3s; overflow-y: auto; padding: 20px; }
+  #settings.open { transform: none; }
+  #settings h2 { font-family: 'Orbitron', sans-serif; font-size: 14px; letter-spacing: .25em; color: var(--c); margin: 4px 0 12px; display: flex; justify-content: space-between; align-items: center; }
+  .row { display: flex; flex-direction: column; gap: 5px; margin: 12px 0; font-size: 16px; }
+  .row.inline { flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; }
+  .keys { color: var(--dim); font-size: 13px; line-height: 1.6; }
+  .row select { padding: 9px 10px; border-radius: 8px; border: 1px solid rgba(var(--c-rgb), .35); background: #0b1022; color: var(--text); font: 600 15px 'Rajdhani', sans-serif; }
+  input[type=range], input[type=checkbox] { accent-color: var(--gold); }
+  input[type=checkbox] { width: 18px; height: 18px; flex: none; }
+
+  #start { position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; background: radial-gradient(ellipse at center, rgba(12, 18, 40, .7), #000); padding: 16px; transition: opacity .6s; }
+  #start.gone { opacity: 0; pointer-events: none; }
+  #start .card { max-width: 580px; text-align: center; }
+  #start h1 { font-family: 'Orbitron', sans-serif; font-weight: 900; letter-spacing: .18em; font-size: clamp(26px, 6vw, 46px); color: var(--c); text-shadow: 0 0 24px rgba(var(--c-rgb), .7); margin: 0 0 6px; }
+  #start h2 { font-size: 26px; margin: 0 0 14px; color: var(--gold); }
+  #start p { font-size: 19px; line-height: 1.5; margin: 0 0 22px; }
+  #start .note { font-size: 14px; color: var(--dim); margin-top: 16px; }
+  .btn { padding: 14px 30px; border-radius: 12px; border: 1px solid rgba(var(--c-rgb), .6); background: rgba(var(--c-rgb), .14); color: var(--c); font: 700 16px 'Orbitron', sans-serif; letter-spacing: .14em; cursor: pointer; }
+  .btn:disabled { opacity: .5; cursor: wait; }
+  #loadList { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; margin-top: 18px; font-size: 15px; color: var(--dim); }
+  #loadList .ok { color: #3dff8b; } #loadList .fail { color: #ff5b6b; } #loadList .warn { color: #ffd23d; }
+  @keyframes blink { 50% { opacity: .55; } }
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="gl"></canvas>
+  <canvas id="fx"></canvas>
+</div>
+<video id="cam" playsinline muted></video>
+
+<div id="ui">
+  <div id="clap">👏</div>
+  <div class="top">
+    <button class="icon" id="btnHome" title="Crazy Science: saare labs" onclick="location.href='../'">🏠</button>
+    <button class="icon" id="btnSettings" title="Settings">⚙</button>
+    <button class="icon" id="btnRec" title="Video record (R)">⏺ REC</button>
+    <button class="icon" id="btnReel" title="Reel frame 9:16 (V)">9:16</button>
+    <button class="icon" id="btnShadow" title="Earth ki parchhai (E)">🌍 परछाई?</button>
+    <button class="icon" id="btnFull" title="Fullscreen (F)">⛶</button>
+  </div>
+  <div id="hint"></div>
+  <div id="toast" role="status"></div>
+</div>
+
+<aside id="settings" aria-label="Settings">
+  <h2>SETTINGS <button class="icon" id="btnClose" title="Band karo (Esc)">✕</button></h2>
+  <label class="row inline">Naam aur kala ke nishaan <input type="checkbox" data-s="labels"></label>
+  <label class="row inline">Hindi aawaz <input type="checkbox" data-s="voice"></label>
+  <label class="row inline">Sound effects <input type="checkbox" data-s="sfx"></label>
+  <label class="row inline">Haath aage dikhe <input type="checkbox" data-s="occlude"></label>
+  <label class="row inline">Ungli par glow point <input type="checkbox" data-s="dots"></label>
+  <label class="row">Taali
+    <select data-s="clapMode">
+      <option value="2">Do baar taali 👏👏</option>
+      <option value="1">Ek baar taali 👏</option>
+      <option value="0">Band</option>
+    </select>
+  </label>
+  <label class="row">Taali sensitivity <input type="range" min="1" max="10" step="1" data-s="clapSens"></label>
+  <label class="row">Smoothness
+    <select data-s="fps">
+      <option value="30">30 FPS (Mac ke liye halka)</option>
+      <option value="60">60 FPS (smooth, zyada load)</option>
+    </select>
+  </label>
+  <div class="keys">Shortcuts: Space = shuru / chalao-roko · ← → = pichhli / agli kala · 1–8 = seedha us kala par · T = guided tour · E = parchhai · ↑ ↓ = speed · L = nishaan · R = record · V = 9:16 · H = clean · Esc = band</div>
+</aside>
+
+<div id="start">
+  <div class="card">
+    <h1>MOON·PHASES</h1>
+    <h2>चाँद की कलाएँ 🌑🌓🌕</h2>
+    <p>Chaand ko haath se Earth ke charon taraf ghumao, aur box me dekho ki Earth se wo kaisa dikhta hai. Dono hatheliyan dikhao to poora guided tour 🙌</p>
+    <button class="btn" id="btnStart">▶ START</button>
+    <div id="loadList"><div id="ldTex">◌ Textures</div><div id="ldCam">◌ Camera + mic</div><div id="ldHand">◌ Hand tracking</div></div>
+    <p class="note">Chrome me best chalta hai. Recording ke liye headphone mat lagana, taaki Hindi aawaz bhi video me aaye.</p>
+    <p class="note"><a href="../" style="color:inherit">← Crazy Science: saare labs</a></p>
+  </div>
+</div>
+
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ---------------------------------------------------------------- config
+const MP_BASE = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14';
+const HAND_MODEL = 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
+const TEX_BASE = 'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r160/examples/textures/planets/';
+// The eight phases, starting at new moon. Lines are what the narrator says; edit freely.
+const PHASES = [
+  { emoji: '🌑', hi: 'अमावस्या', en: 'New Moon', line: 'अमावस्या। चाँद सूरज और पृथ्वी के बीच है, इसलिए उसका रोशन हिस्सा हमसे दूर है, और हमें चाँद दिखता ही नहीं।' },
+  { emoji: '🌒', hi: 'बढ़ता हँसिया चाँद', en: 'Waxing Crescent', line: 'बढ़ता हुआ हँसिया चाँद। अब रोशन हिस्से का थोड़ा सा भाग हमें दिखने लगा है।' },
+  { emoji: '🌓', hi: 'आधा चाँद', en: 'First Quarter', line: 'आधा चाँद। चाँद पृथ्वी के बगल में है, इसलिए हमें रोशन हिस्से का ठीक आधा भाग दिखता है।' },
+  { emoji: '🌔', hi: 'बढ़ता बड़ा चाँद', en: 'Waxing Gibbous', line: 'बढ़ता बड़ा चाँद। रोशन हिस्से का ज़्यादातर भाग अब हमारी तरफ़ है।' },
+  { emoji: '🌕', hi: 'पूर्णिमा', en: 'Full Moon', line: 'पूर्णिमा! पृथ्वी बीच में है, और चाँद का पूरा रोशन हिस्सा हमारी तरफ़ है।' },
+  { emoji: '🌖', hi: 'घटता बड़ा चाँद', en: 'Waning Gibbous', line: 'घटता बड़ा चाँद। अब रोशन हिस्सा धीरे-धीरे हमसे दूर होने लगा है।' },
+  { emoji: '🌗', hi: 'आधा चाँद', en: 'Last Quarter', line: 'घटता आधा चाँद। फिर से आधा हिस्सा दिख रहा है, पर इस बार दूसरी तरफ़ का।' },
+  { emoji: '🌘', hi: 'घटता हँसिया चाँद', en: 'Waning Crescent', line: 'घटता हँसिया चाँद। अगली अमावस्या आने ही वाली है।' },
+];
+const LINES = {
+  spawn: 'देखिए, सूरज की रोशनी हमेशा चाँद के आधे हिस्से पर पड़ती है। चाँद को पकड़कर घुमाइए, और बॉक्स में देखिए कि पृथ्वी से वह कैसा दिखता है।',
+  tourEnd: 'तो याद रखिए: चाँद हमेशा आधा रोशन रहता है। हमें उस रोशन हिस्से का कितना भाग दिखता है, उसी से कलाएँ बनती हैं।',
+  myth: 'ध्यान दीजिए, कलाएँ पृथ्वी की परछाई से नहीं बनतीं। चाँद तो परछाई के ऊपर-नीचे से निकल जाता है। परछाई में वह सिर्फ़ ग्रहण के समय आता है।',
+};
+const EARTH_R = 0.28, MOON_R = 0.1, ORBIT_R = 1.1, ORBIT_TILT = 0.21, SUN_X = -2.3, CYCLE_SEC = 24;
+const AUDIO_CONSTRAINTS = { echoCancellation: false, noiseSuppression: false, autoGainControl: false };
+const MIMES = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4;codecs=avc1,opus', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
+// Render layers: 0 = both views, 1 = only the "seen from Earth" box, 2 = only the main view.
+const BOTH = 0, INSET = 1, MAIN = 2;
+
+// ---------------------------------------------------------------- settings
+const DEFAULTS = { labels: true, voice: true, sfx: true, occlude: true, dots: true, clapMode: '2', clapSens: 6, fps: '30' };
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+};
+const S = { ...DEFAULTS, ...(() => { try { return JSON.parse(store.get('moon.settings')) || {}; } catch { return {}; } })() };
+const saveSettings = () => store.set('moon.settings', JSON.stringify(S));
+
+// ---------------------------------------------------------------- utils
+const $ = (s) => document.querySelector(s);
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const follow = (rate, dt) => 1 - Math.pow(rate, dt);
+const easeOutBack = (p) => 1 + 2.4 * Math.pow(p - 1, 3) + 1.4 * Math.pow(p - 1, 2);
+const TAU = Math.PI * 2;
+const wrap = (a) => ((a % TAU) + TAU) % TAU;
+const V3 = THREE.Vector3;
+const onLayer = (obj, layer) => { obj.traverse((o) => o.layers.set(layer)); return obj; };
+let toastTimer;
+function toast(msg, ms = 3200) {
+  const el = $('#toast'); el.textContent = msg; el.classList.add('on');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('on'), ms);
+}
+
+// ---------------------------------------------------------------- renderer + camera layers
+const stage = $('#stage'), glc = $('#gl'), fxc = $('#fx'), fx = fxc.getContext('2d');
+const cam = $('#cam');
+const renderer = new THREE.WebGLRenderer({ canvas: glc, antialias: true, powerPreference: 'high-performance' });
+renderer.autoClear = false;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x000000);
+const camera = new THREE.PerspectiveCamera(50, 1, 0.05, 100);
+camera.position.set(0, 0, 3.2);
+camera.layers.enable(MAIN);
+scene.add(camera);
+const insetCam = new THREE.PerspectiveCamera(10, 1, 0.01, 100);
+insetCam.layers.enable(INSET);
+scene.add(new THREE.AmbientLight(0xffffff, 0.035)); // faint earthshine; night sides stay dark on purpose
+
+const camTex = new THREE.VideoTexture(cam);
+camTex.colorSpace = THREE.SRGBColorSpace;
+const maskCanvas = document.createElement('canvas');
+maskCanvas.width = 320; maskCanvas.height = 180;
+const mctx = maskCanvas.getContext('2d');
+const maskTex = new THREE.CanvasTexture(maskCanvas);
+const DIM = 0xa8a8b4; // darker room so the sunlight reads clearly
+const bgPlane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: camTex, color: DIM, depthTest: false, depthWrite: false, toneMapped: false }));
+bgPlane.renderOrder = -10; bgPlane.frustumCulled = false; bgPlane.position.z = -40; bgPlane.visible = false;
+const handLayer = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: camTex, color: DIM, alphaMap: maskTex, transparent: true, depthTest: false, depthWrite: false, toneMapped: false }));
+handLayer.renderOrder = 50; handLayer.frustumCulled = false; handLayer.position.z = -0.5; handLayer.visible = false;
+const flashPlane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ color: 0xfff2d0, transparent: true, opacity: 0, depthTest: false, depthWrite: false }));
+flashPlane.renderOrder = 60; flashPlane.frustumCulled = false; flashPlane.position.z = -0.3;
+camera.add(onLayer(bgPlane, MAIN), onLayer(handLayer, MAIN), onLayer(flashPlane, MAIN));
+function layoutPlanes() {
+  for (const [m, d, mirror] of [[bgPlane, 40, true], [handLayer, 0.5, true], [flashPlane, 0.3, false]]) {
+    const h = 2 * d * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+    m.scale.set((mirror ? -1 : 1) * h * camera.aspect, h, 1);
+  }
+  const vw = cam.videoWidth || 1280, vh = cam.videoHeight || 720, va = vw / vh, sa = camera.aspect;
+  for (const t of [camTex, maskTex]) {
+    if (sa > va) { t.repeat.set(1, va / sa); t.offset.set(0, (1 - va / sa) / 2); }
+    else { t.repeat.set(sa / va, 1); t.offset.set((1 - sa / va) / 2, 0); }
+  }
+  maskCanvas.width = 320; maskCanvas.height = Math.round(320 * vh / vw);
+}
+cam.addEventListener('loadedmetadata', layoutPlanes);
+
+// ---------------------------------------------------------------- textures + materials
+function radialTex(stops) {
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const g = c.getContext('2d'), gr = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+  stops.forEach(([p, a]) => gr.addColorStop(p, `rgba(255,255,255,${a})`));
+  g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+const GLOW = radialTex([[0, 1], [0.22, 0.55], [0.5, 0.15], [1, 0]]);
+function sprite(color, scale, opacity = 1) {
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW, color, transparent: true, opacity, depthWrite: false, blending: THREE.AdditiveBlending }));
+  s.scale.setScalar(scale);
+  return s;
+}
+const texLoader = new THREE.TextureLoader();
+function loadTex(name) {
+  return new Promise((res) => texLoader.load(TEX_BASE + name, (t) => { t.colorSpace = THREE.SRGBColorSpace; res(t); }, undefined, () => res(null)));
+}
+const pointsMat = new THREE.ShaderMaterial({
+  uniforms: { uPx: { value: 1 }, uTime: { value: 0 } },
+  vertexShader: `
+    attribute float aAlpha; attribute float aSize; attribute vec3 aCol;
+    uniform float uPx; varying float vA; varying vec3 vC;
+    void main() { vA = aAlpha; vC = aCol; vec4 mv = modelViewMatrix * vec4(position, 1.0); gl_PointSize = min(aSize * uPx * (3.0 / -mv.z), 40.0); gl_Position = projectionMatrix * mv; }`,
+  fragmentShader: `
+    varying float vA; varying vec3 vC;
+    void main() { float d = length(gl_PointCoord - 0.5); float core = 1.0 - smoothstep(0.0, 0.2, d);
+      gl_FragColor = vec4(vC * (1.0 + core), (1.0 - smoothstep(0.05, 0.5, d)) * vA);
+      #include <colorspace_fragment>
+    }`,
+  transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+});
+
+// ---------------------------------------------------------------- the scene: sun → earth ← moon
+const sys = { alive: false, t: 0, spawned: 0, root: new THREE.Group(), tilt: new THREE.Group(), yaw: new THREE.Group(), yawUser: 0 };
+sys.root.visible = false;
+scene.add(sys.root);
+sys.root.add(sys.tilt);
+sys.tilt.add(sys.yaw);
+
+// Sun (off to one side) with a stream of light particles flowing toward Earth
+const sunGroup = new THREE.Group();
+sunGroup.position.set(SUN_X, 0, 0);
+sys.yaw.add(sunGroup);
+const sunCore = new THREE.Mesh(new THREE.SphereGeometry(0.22, 32, 20), new THREE.MeshBasicMaterial({ color: 0xffd36a }));
+sunGroup.add(sunCore, sprite(0xffb040, 1.4, 0.9), sprite(0xff8a20, 2.6, 0.35));
+const sunLight = new THREE.DirectionalLight(0xffffff, 4.6);
+sunGroup.add(sunLight);
+const RAYS = 260;
+const rayGeo = new THREE.BufferGeometry();
+{
+  const pos = new Float32Array(RAYS * 3), al = new Float32Array(RAYS), size = new Float32Array(RAYS), col = new Float32Array(RAYS * 3), speed = new Float32Array(RAYS);
+  const c = new THREE.Color(0xffd98a);
+  for (let i = 0; i < RAYS; i++) {
+    pos.set([Math.random(), (Math.random() - 0.5) * 0.9, (Math.random() - 0.5) * 2.6], i * 3);
+    al[i] = 0.25 + Math.random() * 0.35; size[i] = 2 + Math.random() * 2.5; speed[i] = 0.5 + Math.random() * 0.6;
+    col.set([c.r, c.g, c.b], i * 3);
+  }
+  rayGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  rayGeo.setAttribute('aAlpha', new THREE.BufferAttribute(al, 1));
+  rayGeo.setAttribute('aSize', new THREE.BufferAttribute(size, 1));
+  rayGeo.setAttribute('aCol', new THREE.BufferAttribute(col, 3));
+  rayGeo.setAttribute('aSpeed', new THREE.BufferAttribute(speed, 1));
+}
+const rayMat = new THREE.ShaderMaterial({
+  uniforms: { uPx: pointsMat.uniforms.uPx, uTime: { value: 0 }, uFrom: { value: SUN_X + 0.25 }, uLen: { value: 3.6 } },
+  vertexShader: `
+    attribute float aAlpha; attribute float aSize; attribute vec3 aCol; attribute float aSpeed;
+    uniform float uPx; uniform float uTime; uniform float uFrom; uniform float uLen; varying float vA; varying vec3 vC;
+    void main() {
+      float k = fract(position.x + uTime * aSpeed * 0.18);
+      vec3 p = vec3(uFrom + k * uLen, position.y, position.z);
+      vA = aAlpha * smoothstep(0.0, 0.08, k) * (1.0 - smoothstep(0.85, 1.0, k)); vC = aCol;
+      vec4 mv = modelViewMatrix * vec4(p, 1.0); gl_PointSize = min(aSize * uPx * (3.0 / -mv.z), 20.0); gl_Position = projectionMatrix * mv;
+    }`,
+  fragmentShader: pointsMat.fragmentShader,
+  transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+});
+const rays = new THREE.Points(rayGeo, rayMat);
+rays.frustumCulled = false;
+sys.yaw.add(onLayer(rays, MAIN));
+
+// Earth
+const earth = new THREE.Group();
+sys.yaw.add(earth);
+sunLight.target = earth;
+let earthMesh = null, clouds = null;
+// Earth's shadow (umbra), pointing away from the Sun; shown for the myth-buster
+const shadowGeo = new THREE.CylinderGeometry(0.1, EARTH_R, 1.6, 48, 1, true);
+shadowGeo.rotateZ(Math.PI / 2); shadowGeo.translate(0.8, 0, 0);
+const shadow = new THREE.Mesh(shadowGeo, new THREE.MeshBasicMaterial({ color: 0x18223a, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide }));
+earth.add(onLayer(shadow, MAIN));
+// Moon orbit (tilted a little, like the real one, so it usually misses Earth's shadow)
+const orbit = new THREE.Group();
+orbit.rotation.z = ORBIT_TILT;
+sys.yaw.add(orbit);
+const orbitLine = new THREE.Mesh(new THREE.RingGeometry(ORBIT_R - 0.004, ORBIT_R + 0.004, 200), new THREE.MeshBasicMaterial({ color: 0xcfe3ff, transparent: true, opacity: 0.35, side: THREE.DoubleSide, depthWrite: false }));
+orbitLine.rotation.x = -Math.PI / 2;
+orbit.add(onLayer(orbitLine, MAIN));
+const moon = new THREE.Mesh(new THREE.SphereGeometry(MOON_R, 64, 40), new THREE.MeshStandardMaterial({ color: 0xbbbbbb, roughness: 1, metalness: 0 }));
+orbit.add(moon);
+const moonState = { a: Math.PI * 1.25, target: null, playing: true, speed: 1, grabbed: false, idx: -1, pendingIdx: -1, pendingT: 0 };
+const moonPos = (a) => new V3(Math.cos(a) * ORBIT_R, 0, -Math.sin(a) * ORBIT_R);
+const phaseAngle = () => wrap(moonState.a - Math.PI); // 0 = new moon, π = full moon
+const phaseIndex = () => Math.round(phaseAngle() / (TAU / 8)) % 8;
+
+// Stars (only in the "seen from Earth" box)
+{
+  const n = 500, g = new THREE.BufferGeometry(), pos = new Float32Array(n * 3), al = new Float32Array(n), size = new Float32Array(n), col = new Float32Array(n * 3);
+  const d = new V3();
+  for (let i = 0; i < n; i++) {
+    const u = Math.random() * 2 - 1, a = Math.random() * TAU, r = Math.sqrt(1 - u * u);
+    d.set(r * Math.cos(a), r * Math.sin(a), u).multiplyScalar(30);
+    pos.set([d.x, d.y, d.z], i * 3); al[i] = 0.3 + Math.random() * 0.6; size[i] = 6 + Math.random() * 10; col.set([1, 1, 1], i * 3);
+  }
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  g.setAttribute('aAlpha', new THREE.BufferAttribute(al, 1));
+  g.setAttribute('aSize', new THREE.BufferAttribute(size, 1));
+  g.setAttribute('aCol', new THREE.BufferAttribute(col, 3));
+  const stars = new THREE.Points(g, pointsMat);
+  stars.frustumCulled = false;
+  scene.add(onLayer(stars, INSET));
+}
+
+function buildTextures(t) {
+  earthMesh = new THREE.Mesh(new THREE.SphereGeometry(EARTH_R, 64, 40), new THREE.MeshStandardMaterial({ map: t.earth || null, color: t.earth ? 0xffffff : 0x2a6cd6, roughness: 0.9 }));
+  earthMesh.rotation.z = 0.41;
+  earth.add(earthMesh);
+  if (t.clouds) {
+    clouds = new THREE.Mesh(new THREE.SphereGeometry(EARTH_R * 1.02, 64, 40), new THREE.MeshStandardMaterial({ map: t.clouds, transparent: true, depthWrite: false, roughness: 1 }));
+    clouds.rotation.z = 0.41;
+    earth.add(clouds);
+  }
+  earth.add(sprite(0x4aa8ff, EARTH_R * 3.6, 0.45));
+  onLayer(earth, MAIN);
+  shadow.layers.set(MAIN);
+  if (t.moon) { moon.material.map = t.moon; moon.material.color.set(0xffffff); moon.material.needsUpdate = true; }
+}
+
+// ---------------------------------------------------------------- particles (sparkles)
+const PN = 600;
+const parts = { pos: new Float32Array(PN * 3), vel: new Float32Array(PN * 3), al: new Float32Array(PN), size: new Float32Array(PN), col: new Float32Array(PN * 3), age: new Float32Array(PN), life: new Float32Array(PN), live: 0, cursor: 0 };
+{
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(parts.pos, 3).setUsage(THREE.DynamicDrawUsage));
+  g.setAttribute('aAlpha', new THREE.BufferAttribute(parts.al, 1).setUsage(THREE.DynamicDrawUsage));
+  g.setAttribute('aSize', new THREE.BufferAttribute(parts.size, 1).setUsage(THREE.DynamicDrawUsage));
+  g.setAttribute('aCol', new THREE.BufferAttribute(parts.col, 3).setUsage(THREE.DynamicDrawUsage));
+  parts.points = new THREE.Points(g, pointsMat);
+  parts.points.frustumCulled = false;
+  scene.add(onLayer(parts.points, MAIN));
+}
+function sparkle(c, n, color, speed = 0.8) {
+  const col = new THREE.Color(color), d = new V3();
+  for (let i = 0; i < n; i++) {
+    const j = parts.cursor; parts.cursor = (parts.cursor + 1) % PN;
+    const u = Math.random() * 2 - 1, a = Math.random() * TAU, r = Math.sqrt(1 - u * u), sp = 0.2 + Math.random() * speed;
+    d.set(r * Math.cos(a), r * Math.sin(a), u);
+    parts.pos.set([c.x, c.y, c.z], j * 3); parts.vel.set([d.x * sp, d.y * sp, d.z * sp], j * 3);
+    parts.col.set([col.r, col.g, col.b], j * 3); parts.size[j] = 2 + Math.random() * 4; parts.age[j] = 0; parts.life[j] = 0.5 + Math.random() * 0.7;
+  }
+  const a = parts.points.geometry.attributes; a.aCol.needsUpdate = a.aSize.needsUpdate = true;
+}
+function updateParts(dt) {
+  let live = 0;
+  const drag = Math.pow(0.3, dt);
+  for (let i = 0; i < PN; i++) {
+    if (parts.life[i] <= 0) { parts.al[i] = 0; continue; }
+    parts.age[i] += dt;
+    const k = parts.age[i] / parts.life[i];
+    if (k >= 1) { parts.life[i] = 0; parts.al[i] = 0; continue; }
+    live++;
+    for (let a = 0; a < 3; a++) { parts.vel[i * 3 + a] *= drag; parts.pos[i * 3 + a] += parts.vel[i * 3 + a] * dt; }
+    parts.al[i] = Math.pow(1 - k, 1.4);
+  }
+  if (live || parts.live) { const a = parts.points.geometry.attributes; a.position.needsUpdate = a.aAlpha.needsUpdate = true; }
+  parts.live = live;
+}
+
+// ---------------------------------------------------------------- life cycle, guided tour, myth-buster
+let showShadow = false, flash = 0;
+const tour = { active: false, i: 0, wait: 0, moving: false };
+function fitScale() {
+  const hh = camera.position.z * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)), hw = hh * camera.aspect;
+  return camera.aspect < 1 ? Math.min(1, (hw * 0.98) / (ORBIT_R + MOON_R + 0.05)) : Math.min(1, (hw * 0.92) / 2.65);
+}
+function spawn() {
+  sys.alive = true; sys.t = 0; sys.root.visible = true;
+  moonState.a = Math.PI * 1.25; moonState.playing = true; moonState.speed = 1; moonState.target = null; moonState.idx = -1;
+  sfx('spawn');
+  sparkle(new V3(0, 0, 0), 300, 0xcfe3ff, 1.6);
+  if (sys.spawned++ === 0) setTimeout(() => say(LINES.spawn), 900);
+  updateHint();
+}
+function goToPhase(i, speak = true) {
+  if (!sys.alive) return;
+  i = ((i % 8) + 8) % 8;
+  const target = Math.PI + i * TAU / 8;
+  // move forward along the orbit to the target (the way time actually runs)
+  let d = wrap(target - moonState.a);
+  if (d > Math.PI * 1.6) d -= TAU; // tiny step backwards instead of a full lap
+  moonState.target = moonState.a + d;
+  moonState.playing = false;
+  moonState.speakOnArrive = speak ? i : -1;
+}
+function startTour() {
+  if (!sys.alive) return;
+  tour.active = true; tour.i = 0; tour.wait = 0; tour.moving = true;
+  goToPhase(0, true);
+  sfx('blip');
+}
+function stopTour() { tour.active = false; }
+function updateTour(dt) {
+  if (!tour.active) return;
+  if (tour.moving) { if (moonState.target === null) { tour.moving = false; tour.wait = 0; } return; }
+  if (speaking) return;
+  tour.wait += dt;
+  if (tour.wait < 0.7) return;
+  tour.i++;
+  if (tour.i >= 8) { tour.active = false; goToPhase(0, false); setTimeout(() => say(LINES.tourEnd), 400); return; }
+  tour.moving = true;
+  goToPhase(tour.i, true);
+}
+function toggleShadow() {
+  showShadow = !showShadow;
+  $('#btnShadow').classList.toggle('on', showShadow);
+  if (showShadow && sys.alive) { goToPhase(4, false); setTimeout(() => say(LINES.myth), 600); }
+}
+function updateScene(dt) {
+  if (!sys.alive) return;
+  sys.t += dt;
+  const portrait = camera.aspect < 1;
+  sys.root.scale.setScalar(fitScale() * easeOutBack(clamp(sys.t / 0.8, 0, 1)) + 1e-4);
+  sys.root.position.set(portrait ? 0 : 0.25, portrait ? -0.25 : -0.1, 0);
+  sys.tilt.rotation.x = portrait ? 0.95 : 0.55;
+  sys.yaw.rotation.y = (portrait ? -Math.PI / 2 + 0.45 : 0) + sys.yawUser; // portrait: sun up-left, clear of the inset box
+  rayMat.uniforms.uTime.value += dt;
+  if (earthMesh) earthMesh.rotation.y += dt * 0.25;
+  if (clouds) clouds.rotation.y += dt * 0.3;
+  shadow.material.opacity += ((showShadow ? 0.55 : 0) - shadow.material.opacity) * follow(0.01, dt);
+  // moon motion: dragged, animating to a phase, or orbiting on its own
+  const ms = moonState;
+  if (ms.target !== null && !ms.grabbed) {
+    const d = ms.target - ms.a;
+    ms.a += d * follow(0.02, dt) + Math.sign(d) * Math.min(Math.abs(d), 0.4 * dt);
+    if (Math.abs(ms.target - ms.a) < 0.004) {
+      ms.a = ms.target; ms.target = null;
+      if (ms.speakOnArrive >= 0) { say(PHASES[ms.speakOnArrive].line); ms.speakOnArrive = -1; }
+    }
+  } else if (ms.playing && !ms.grabbed) {
+    ms.a += (TAU / CYCLE_SEC) * ms.speed * dt;
+  }
+  // keep the angle in [0, 2π), shifting any pending target by the same amount
+  if (ms.a >= TAU || ms.a < 0) { const k = Math.floor(ms.a / TAU) * TAU; ms.a -= k; if (ms.target !== null) ms.target -= k; }
+  moon.position.copy(moonPos(ms.a));
+  moon.rotation.y = ms.a + Math.PI; // tidally locked: the same face always looks at Earth
+  // phase change: sparkle + (when the user moved it) say the phase after it settles
+  const idx = phaseIndex();
+  if (idx !== ms.idx) {
+    if (ms.idx >= 0) { sfx('tick'); sparkle(moon.getWorldPosition(new V3()), 18, 0xcfe3ff, 0.5); }
+    ms.idx = idx; ms.pendingIdx = ms.grabbed ? idx : -1; ms.pendingT = 0;
+  }
+  if (ms.pendingIdx >= 0) {
+    ms.pendingT += dt;
+    if (ms.pendingT > 0.6 && !tour.active) { say(PHASES[ms.pendingIdx].line); ms.pendingIdx = -1; }
+  }
+}
+
+// ---------------------------------------------------------------- hands
+let handLM = null, hands = [], lastVT = -1, lastDetect = 0, nextHandId = 1;
+async function initHands() {
+  setLoad('ldHand', 'wait');
+  const { FilesetResolver, HandLandmarker } = await import(`${MP_BASE}/vision_bundle.mjs`);
+  const fileset = await FilesetResolver.forVisionTasks(`${MP_BASE}/wasm`);
+  const opts = (delegate) => ({
+    baseOptions: { modelAssetPath: HAND_MODEL, delegate },
+    runningMode: 'VIDEO', numHands: 2,
+    minHandDetectionConfidence: 0.6, minHandPresenceConfidence: 0.5, minTrackingConfidence: 0.5,
+  });
+  try { handLM = await HandLandmarker.createFromOptions(fileset, opts('GPU')); }
+  catch { handLM = await HandLandmarker.createFromOptions(fileset, opts('CPU')); }
+  setLoad('ldHand', 'ok');
+  toast('Hand tracking ready ✓');
+}
+function stageSize() { return { W: stage.clientWidth || innerWidth, H: stage.clientHeight || innerHeight }; }
+function toStage(p) {
+  const { W, H } = stageSize(), vw = cam.videoWidth || 1280, vh = cam.videoHeight || 720;
+  const s = Math.max(W / vw, H / vh), dw = vw * s, dh = vh * s;
+  return { x: ((1 - p.x) * dw + (W - dw) / 2) / W, y: (p.y * dh + (H - dh) / 2) / H };
+}
+const raycaster = new THREE.Raycaster(), orbitPlane = new THREE.Plane();
+function rayFrom(pt) { raycaster.setFromCamera({ x: pt.x * 2 - 1, y: -(pt.y * 2 - 1) }, camera); return raycaster.ray; }
+function orbitAngleAt(pt) {
+  orbit.updateMatrixWorld(true);
+  const n = new V3(0, 1, 0).applyQuaternion(orbit.getWorldQuaternion(new THREE.Quaternion()));
+  orbitPlane.setFromNormalAndCoplanarPoint(n, orbit.getWorldPosition(new V3()));
+  const hit = rayFrom(pt).intersectPlane(orbitPlane, new V3());
+  if (!hit) return null;
+  const l = orbit.worldToLocal(hit);
+  return Math.atan2(-l.z, l.x);
+}
+function trackHands(now) {
+  if (!handLM || cam.readyState < 2 || cam.currentTime === lastVT || now - lastDetect < 30) return;
+  lastVT = cam.currentTime; lastDetect = now;
+  let res;
+  try { res = handLM.detectForVideo(cam, now); } catch { return; }
+  ingestHands(res.landmarks || [], now);
+}
+function ingestHands(list, now = performance.now()) {
+  const vw = cam.videoWidth || 1280, vh = cam.videoHeight || 720, asp = vw / vh;
+  const next = list.map((lm) => {
+    const d = (a, b) => Math.hypot((lm[a].x - lm[b].x) * asp, lm[a].y - lm[b].y);
+    const size = Math.max(1e-4, d(0, 9));
+    const fist = [[8, 5], [12, 9], [16, 13], [20, 17]].every(([t, m]) => d(0, t) < d(0, m) * 1.25);
+    const open = !fist && [[8, 6], [12, 10], [16, 14], [20, 18]].every(([t, p]) => d(0, t) > d(0, p) * 1.15) && d(4, 5) > size * 0.55 && d(8, 20) > size * 0.9;
+    return {
+      lm, fist, open, indexOut: d(0, 8) > d(0, 5) * 1.2, ratio: d(4, 8) / size, wrist: lm[0], t: now, pinch: false, id: 0,
+      tip: toStage(lm[8]), pt: toStage({ x: (lm[4].x + lm[8].x) / 2, y: (lm[4].y + lm[8].y) / 2 }), palm: toStage(lm[9]),
+    };
+  });
+  for (const h of next) {
+    let prev = null, best = 0.25;
+    for (const p of hands) { const dd = Math.hypot(p.wrist.x - h.wrist.x, p.wrist.y - h.wrist.y); if (dd < best) { best = dd; prev = p; } }
+    h.id = prev ? prev.id : nextHandId++;
+    h.pinch = !h.fist && h.indexOut && (prev?.pinch ? h.ratio < 0.45 : h.ratio < 0.3);
+    if (h.pinch) h.open = false;
+    if (prev) for (const k of ['tip', 'pt', 'palm']) { h[k].x = prev[k].x + (h[k].x - prev[k].x) * 0.75; h[k].y = prev[k].y + (h[k].y - prev[k].y) * 0.75; }
+  }
+  hands = next;
+}
+function drawMask() {
+  const w = maskCanvas.width, h = maskCanvas.height;
+  mctx.clearRect(0, 0, w, h);
+  if (S.occlude && hands.length) {
+    mctx.fillStyle = mctx.strokeStyle = '#fff';
+    mctx.lineCap = mctx.lineJoin = 'round';
+    mctx.filter = 'blur(1.5px)';
+    for (const hd of hands) {
+      const L = hd.lm, P = (i) => [L[i].x * w, L[i].y * h];
+      const size = Math.hypot((L[0].x - L[9].x) * w, (L[0].y - L[9].y) * h);
+      mctx.lineWidth = size * 0.32;
+      for (const chain of [[0, 1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16], [17, 18, 19, 20]]) {
+        mctx.beginPath(); chain.forEach((i, j) => (j ? mctx.lineTo(...P(i)) : mctx.moveTo(...P(i)))); mctx.stroke();
+      }
+      mctx.beginPath(); [0, 1, 2, 5, 9, 13, 17].forEach((i, j) => (j ? mctx.lineTo(...P(i)) : mctx.moveTo(...P(i)))); mctx.closePath(); mctx.fill(); mctx.stroke();
+      const [wx, wy] = P(0), [mx, my] = P(9), len = Math.hypot(wx - mx, wy - my) || 1;
+      mctx.lineWidth = size * 0.85;
+      mctx.beginPath(); mctx.moveTo(wx, wy); mctx.lineTo(wx + (wx - mx) / len * size * 3.5, wy + (wy - my) / len * size * 3.5); mctx.stroke();
+    }
+    mctx.filter = 'none';
+  }
+  maskTex.needsUpdate = true;
+}
+
+// ---------------------------------------------------------------- interaction
+let pr = 1;
+function project(v) { const p = v.clone().project(camera), { W, H } = stageSize(); return { x: (p.x + 1) / 2 * W, y: (1 - p.y) / 2 * H }; }
+function projRadius(wp, r) { return Math.abs(project(wp.clone().add(new V3(r, 0, 0))).x - project(wp).x); }
+const grab = { mode: 'none', handId: 0, last: null, axis: null, speed0: 1, y0: 0 };
+function overMoon(pt) {
+  const { W, H } = stageSize(), wp = moon.getWorldPosition(new V3()), sp = project(wp);
+  return Math.hypot(sp.x - pt.x * W, sp.y - pt.y * H) < Math.max(30, projRadius(wp, MOON_R * sys.root.scale.x) * 2.4);
+}
+function updateInteraction(dt) {
+  if (!sys.alive) { grab.mode = 'none'; moonState.grabbed = false; return; }
+  const byId = (id) => hands.find((h) => h.id === id && h.pinch);
+  if (grab.mode === 'moon') {
+    const h = byId(grab.handId);
+    if (!h) { grab.mode = 'none'; moonState.grabbed = false; sfx('drop'); return; }
+    const a = orbitAngleAt(h.pt);
+    if (a !== null) {
+      let d = a - moonState.a; d = Math.atan2(Math.sin(d), Math.cos(d));
+      moonState.a += d * follow(0.0005, dt);
+    }
+    return;
+  }
+  if (grab.mode === 'empty') {
+    const h = byId(grab.handId);
+    if (!h) { grab.mode = 'none'; return; }
+    const dx = h.pt.x - grab.last.x, dy = h.pt.y - grab.y0;
+    if (!grab.axis && (Math.abs(h.pt.x - grab.x0) > 0.03 || Math.abs(dy) > 0.03)) grab.axis = Math.abs(h.pt.x - grab.x0) > Math.abs(dy) ? 'x' : 'y';
+    if (grab.axis === 'x') sys.yawUser += dx * 4;                                   // turn the whole view
+    if (grab.axis === 'y') { moonState.speed = clamp(grab.speed0 * Math.pow(2, -dy * 6), 0.1, 8); moonState.playing = true; } // speed
+    grab.last = { ...h.pt };
+    return;
+  }
+  for (const h of hands) {
+    if (!h.pinch) continue;
+    if (overMoon(h.pt)) { grab.mode = 'moon'; grab.handId = h.id; moonState.grabbed = true; moonState.target = null; moonState.playing = false; stopTour(); sfx('grab'); }
+    else { grab.mode = 'empty'; grab.handId = h.id; grab.last = { ...h.pt }; grab.x0 = h.pt.x; grab.y0 = h.pt.y; grab.axis = null; grab.speed0 = moonState.speed; }
+    return;
+  }
+}
+// ✊ fist → pause, ✋ palm → play, 🙌 two palms → start (or guided tour)
+const pose = { kind: 'none', hold: 0, fired: false };
+function updatePoses(dt) {
+  const opens = hands.filter((h) => h.open), fists = hands.filter((h) => h.fist);
+  const kind = opens.length >= 2 ? 'palms2' : fists.length && grab.mode === 'none' ? 'fist' : opens.length === 1 ? 'palm1' : 'none';
+  if (kind !== pose.kind) { pose.kind = kind; pose.hold = 0; pose.fired = false; }
+  if (kind === 'none' || pose.fired) return;
+  pose.hold += dt;
+  if (kind === 'fist' && pose.hold > 0.35 && sys.alive && (moonState.playing || tour.active)) { pose.fired = true; moonState.playing = false; stopTour(); sfx('stop'); banner = { t: 0, text: '⏸ रुको' }; }
+  else if (kind === 'palm1' && pose.hold > 0.45 && sys.alive && !moonState.playing && !tour.active) { pose.fired = true; moonState.playing = true; moonState.target = null; sfx('blip'); banner = { t: 0, text: '▶ चलो' }; }
+  else if (kind === 'palms2' && pose.hold > 0.5) { pose.fired = true; if (!sys.alive) spawn(); else startTour(); }
+}
+
+// ---------------------------------------------------------------- audio
+const audio = { ctx: null, bus: null, mic: null, analyser: null, buf: null, bg: 0.01, lastSpike: 0, lastClap: 0, lastTrigger: 0, busyUntil: 0, noise: null };
+function ensureAudio() {
+  if (!audio.ctx) {
+    audio.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    audio.bus = audio.ctx.createGain(); audio.bus.gain.value = 0.9; audio.bus.connect(audio.ctx.destination);
+  }
+  audio.ctx.resume?.();
+}
+function initMic(stream) {
+  ensureAudio();
+  audio.mic = audio.ctx.createMediaStreamSource(stream);
+  const an = audio.ctx.createAnalyser(); an.fftSize = 2048; an.smoothingTimeConstant = 0;
+  audio.mic.connect(an);
+  audio.analyser = an; audio.buf = new Float32Array(an.fftSize);
+}
+function updateMic(now) {
+  if (!audio.analyser) return;
+  audio.analyser.getFloatTimeDomainData(audio.buf);
+  let peak = 0, sum = 0;
+  for (const v of audio.buf) { const a = Math.abs(v); if (a > peak) peak = a; sum += v * v; }
+  const rms = Math.sqrt(sum / audio.buf.length);
+  const thr = 0.62 - S.clapSens * 0.052;
+  if (now >= audio.busyUntil && !speaking && peak > thr && rms > audio.bg * 3.5 && now - audio.lastSpike > 110) {
+    audio.lastSpike = now;
+    const f = $('#clap'); f.classList.add('on'); setTimeout(() => f.classList.remove('on'), 60);
+    if (S.clapMode === '0' || !started) return;
+    const gap = now - audio.lastClap;
+    if (S.clapMode === '1' || (gap > 140 && gap < 900)) {
+      audio.lastClap = 0;
+      if (now - audio.lastTrigger > 1500) { audio.lastTrigger = now; if (!sys.alive) spawn(); else { moonState.playing = !moonState.playing; moonState.target = null; stopTour(); } }
+    } else audio.lastClap = now;
+  } else audio.bg = audio.bg * 0.95 + rms * 0.05;
+}
+function noiseBuffer() {
+  if (audio.noise) return audio.noise;
+  const ctx = audio.ctx, b = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate), d = b.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  return (audio.noise = b);
+}
+function sfx(type) {
+  if (!S.sfx || !audio.ctx) return;
+  const ctx = audio.ctx, t = ctx.currentTime, out = audio.bus;
+  audio.busyUntil = performance.now() + ({ spawn: 1400, stop: 700 }[type] || 300);
+  const tone = (f0, f1, len, wave, peak, at = 0) => {
+    const o = ctx.createOscillator(), g = ctx.createGain(), s = t + at;
+    o.type = wave; o.frequency.setValueAtTime(f0, s); o.frequency.exponentialRampToValueAtTime(f1, s + len);
+    g.gain.setValueAtTime(0.0001, s); g.gain.exponentialRampToValueAtTime(peak, s + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, s + len);
+    o.connect(g).connect(out); o.start(s); o.stop(s + len + 0.05);
+  };
+  const noise = (f0, f1, len, peak) => {
+    const n = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+    n.buffer = noiseBuffer(); f.type = 'bandpass'; f.Q.value = 1;
+    f.frequency.setValueAtTime(f0, t); f.frequency.exponentialRampToValueAtTime(f1, t + len);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + 0.03); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+    n.connect(f).connect(g).connect(out); n.start(t); n.stop(t + len);
+  };
+  if (type === 'spawn') { noise(6000, 400, 1.1, 0.2); tone(220, 440, 1.0, 'sine', 0.15); tone(880, 880, 0.7, 'sine', 0.08, 0.9); tone(1320, 1320, 0.7, 'sine', 0.06, 0.95); }
+  else if (type === 'tick') tone(1600, 1600, 0.08, 'sine', 0.07);
+  else if (type === 'grab') tone(500, 900, 0.1, 'triangle', 0.14);
+  else if (type === 'drop') tone(900, 600, 0.1, 'triangle', 0.1);
+  else if (type === 'blip') tone(1100, 1500, 0.12, 'sine', 0.14);
+  else if (type === 'stop') { tone(440, 90, 0.5, 'sawtooth', 0.08); }
+}
+
+// ---------------------------------------------------------------- voice + subtitles
+let speaking = false;
+const sub = { text: '', last: '', a: 0 };
+function pickVoice() {
+  const vs = speechSynthesis.getVoices();
+  return vs.find((v) => /hi[-_]IN/i.test(v.lang) && /google/i.test(v.name)) || vs.find((v) => /hi[-_]IN/i.test(v.lang)) || vs.find((v) => /^hi/i.test(v.lang)) || null;
+}
+function say(text) {
+  sub.text = text;
+  if (!S.voice || !('speechSynthesis' in window)) { speaking = true; setTimeout(() => { speaking = false; if (sub.text === text) sub.text = ''; }, 900 + text.length * 55); return; }
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  const v = pickVoice(); if (v) { u.voice = v; u.lang = v.lang; } else u.lang = 'hi-IN';
+  speaking = true;
+  const done = () => { if (say.u !== u) return; speaking = false; audio.busyUntil = performance.now() + 400; setTimeout(() => { if (sub.text === text) sub.text = ''; }, 1200); };
+  u.onend = u.onerror = done;
+  say.u = u; // keep a reference so Chrome fires onend
+  speechSynthesis.speak(u);
+  // safety net if the voice never reports the end
+  setTimeout(() => { if (say.u === u && speaking && !speechSynthesis.speaking) done(); }, 1500 + text.length * 120);
+}
+
+// ---------------------------------------------------------------- overlay (recorded): labels, phase card, "seen from Earth" box
+let banner = null;
+function insetRect() {
+  const { W, H } = stageSize();
+  if (W < H) { const s = Math.round(W * 0.46); return { x: W - s - 12, y: 64, w: s, h: s }; }
+  const s = Math.round(Math.min(W, H) * 0.36); return { x: W - s - 20, y: 20, w: s, h: s };
+}
+function pill(x, y, text, fs, color, alpha = 0.9, bg = 'rgba(6,10,22,.72)') {
+  fx.font = `700 ${fs}px Rajdhani, sans-serif`;
+  const { W } = stageSize(), w = fx.measureText(text).width + fs * 0.9, h = fs * 1.35;
+  x = clamp(x, w / 2 + 4, W - w / 2 - 4);
+  fx.globalAlpha = alpha;
+  fx.fillStyle = bg; fx.beginPath(); fx.roundRect(x - w / 2, y - h / 2, w, h, h / 2); fx.fill();
+  fx.fillStyle = color; fx.textAlign = 'center'; fx.textBaseline = 'middle'; fx.fillText(text, x, y + 1);
+  fx.globalAlpha = 1;
+}
+function wrapText(text, maxW) {
+  const words = text.split(/\s+/), lines = [];
+  let cur = '';
+  for (const w of words) { const t = cur ? cur + ' ' + w : w; if (fx.measureText(t).width > maxW && cur) { lines.push(cur); cur = w; } else cur = t; }
+  if (cur) lines.push(cur);
+  return lines;
+}
+function drawFx(dt) {
+  const { W, H } = stageSize();
+  fx.setTransform(pr, 0, 0, pr, 0, 0);
+  fx.clearRect(0, 0, W, H);
+  const fs = Math.max(12, Math.min(W * 0.03, H * 0.021));
+  if (sys.alive && sys.t > 0.5) {
+    const phi = phaseAngle(), idx = phaseIndex(), P = PHASES[idx];
+    if (S.labels) {
+      // phase markers around the orbit
+      for (let k = 0; k < 8; k++) {
+        const wp = orbit.localToWorld(moonPos(Math.PI + k * TAU / 8).multiplyScalar(1.22)), sp = project(wp);
+        fx.globalAlpha = k === idx ? 1 : 0.55;
+        fx.font = `${k === idx ? fs * 1.9 : fs * 1.3}px sans-serif`; fx.textAlign = 'center'; fx.textBaseline = 'middle';
+        fx.fillText(PHASES[k].emoji, sp.x, sp.y);
+      }
+      fx.globalAlpha = 1;
+      const sw = sunGroup.getWorldPosition(new V3()), ew = earth.getWorldPosition(new V3()), mw = moon.getWorldPosition(new V3());
+      const ss = project(sw), es = project(ew), msp = project(mw);
+      pill(ss.x, ss.y + projRadius(sw, 0.22 * sys.root.scale.x) + fs * 1.4, '☀️ सूरज · Sun', fs, '#ffd27a');
+      pill(es.x, es.y + projRadius(ew, EARTH_R * sys.root.scale.x) + fs * 1.2, '🌍 पृथ्वी · Earth', fs, '#9fd0ff');
+      pill(msp.x, msp.y - projRadius(mw, MOON_R * sys.root.scale.x) - fs * 1.2, moonState.grabbed ? '🤏 चाँद' : '🌙 चाँद · Moon', fs, '#ffffff');
+      if (showShadow) {
+        const shp = project(earth.localToWorld(new V3(1.0, 0, 0)));
+        pill(shp.x, shp.y, 'पृथ्वी की परछाई (सिर्फ़ ग्रहण में)', fs * 0.9, '#c9c9d6');
+      }
+    }
+    // "seen from Earth" box frame + phase card
+    const r = insetRect();
+    fx.strokeStyle = 'rgba(207,227,255,.8)'; fx.lineWidth = 2; fx.shadowColor = '#cfe3ff'; fx.shadowBlur = 10;
+    fx.beginPath(); fx.roundRect(r.x, r.y, r.w, r.h, 14); fx.stroke(); fx.shadowBlur = 0;
+    pill(r.x + r.w / 2, r.y + fs * 1.1, '👀 पृथ्वी से ऐसा दिखता है', fs * 0.95, '#ffffff', 0.95);
+    const lit = Math.round((1 - Math.cos(phi)) / 2 * 100), day = (phi / TAU * 29.5).toFixed(1);
+    const paksh = idx === 0 ? 'अमावस्या' : idx === 4 ? 'पूर्णिमा' : idx < 4 ? 'शुक्ल पक्ष (बढ़ता)' : 'कृष्ण पक्ष (घटता)';
+    // phase card: under the box on portrait reels, top-left on wide screens (away from the orbit)
+    const cx = W < H ? r.x + r.w / 2 : Math.max(150, W * 0.16), cy = W < H ? r.y + r.h + fs * 2 : 70 + fs * 1.5;
+    pill(cx, cy, `${P.emoji} ${P.hi}`, fs * 1.45, '#ffd27a', 0.97, 'rgba(6,10,22,.85)');
+    pill(cx, cy + fs * 2, `${P.en} · ${paksh}`, fs * 0.95, '#cfe3ff', 0.95);
+    pill(cx, cy + fs * 3.7, `रोशन: ${lit}% · दिन ${day} / 29.5`, fs * 0.95, '#ffffff', 0.95);
+    // speed / state
+    pill(fs * 4, H - fs * 4.5, tour.active ? `🎓 टूर ${Math.min(8, tour.i + 1)}/8` : moonState.grabbed ? '🤏 हाथ से' : moonState.playing ? `▶ ${moonState.speed.toFixed(1)}×` : '⏸ रुका', fs * 1.1, '#ffd27a');
+  }
+  // pointers + hold rings
+  if (S.dots) {
+    for (const h of hands) {
+      const p = h.pinch ? h.pt : h.tip, x = p.x * W, y = p.y * H;
+      fx.shadowColor = '#cfe3ff'; fx.shadowBlur = 10; fx.lineWidth = 2;
+      fx.strokeStyle = h.pinch ? '#ffffff' : '#cfe3ff';
+      if (!h.fist && !h.open) { fx.beginPath(); fx.arc(x, y, h.pinch ? 10 : 8, 0, TAU); fx.stroke(); }
+      if ((h.fist || h.open) && pose.hold > 0 && !pose.fired && pose.kind !== 'none') {
+        const need = pose.kind === 'fist' ? 0.35 : pose.kind === 'palm1' ? 0.45 : 0.5;
+        fx.strokeStyle = '#ffd27a'; fx.lineWidth = 3;
+        fx.beginPath(); fx.arc(h.palm.x * W, h.palm.y * H, 30, -Math.PI / 2, -Math.PI / 2 + TAU * Math.min(1, pose.hold / need)); fx.stroke();
+      }
+      fx.shadowBlur = 0;
+    }
+  }
+  if (banner) {
+    banner.t += dt;
+    const a = banner.t < 0.7 ? 1 : Math.max(0, 1 - (banner.t - 0.7) / 0.4);
+    fx.globalAlpha = a; fx.font = `900 ${Math.min(W * 0.06, H * 0.05)}px Rajdhani, sans-serif`; fx.textAlign = 'center'; fx.textBaseline = 'middle';
+    fx.shadowColor = '#ffd27a'; fx.shadowBlur = 20; fx.fillStyle = '#fff'; fx.fillText(banner.text, W / 2, H * 0.1);
+    fx.shadowBlur = 0; fx.globalAlpha = 1;
+    if (banner.t > 1.1) banner = null;
+  }
+  // subtitles
+  sub.a += ((sub.text ? 1 : 0) - sub.a) * follow(0.001, dt);
+  if (sub.text) sub.last = sub.text;
+  if (sub.a > 0.01 && sub.last) {
+    const ss = Math.max(18, Math.min(W * 0.048, H * 0.032));
+    fx.font = `700 ${ss}px Rajdhani, sans-serif`;
+    const lines = wrapText(sub.last, W * 0.86);
+    fx.globalAlpha = sub.a; fx.textAlign = 'center'; fx.textBaseline = 'middle';
+    lines.forEach((l, i) => {
+      const y = H * 0.88 - (lines.length - 1 - i) * ss * 1.25;
+      fx.lineWidth = 5; fx.strokeStyle = 'rgba(0,0,0,.85)'; fx.strokeText(l, W / 2, y);
+      fx.fillStyle = '#ffffff'; fx.fillText(l, W / 2, y);
+    });
+    fx.globalAlpha = 1;
+  }
+}
+
+// ---------------------------------------------------------------- recording
+const recState = { mr: null, c: null, ctx: null, chunks: [], t0: 0, dest: null, ext: 'webm', mime: '' };
+function startRecord() {
+  if (!window.MediaRecorder) { toast('Is browser me recording nahi chalegi. Chrome use karo.'); return; }
+  ensureAudio();
+  const c = document.createElement('canvas'); c.width = glc.width; c.height = glc.height;
+  recState.c = c; recState.ctx = c.getContext('2d');
+  recordFrame();
+  const tracks = [...c.captureStream(30).getVideoTracks()];
+  recState.dest = audio.ctx.createMediaStreamDestination();
+  audio.bus.connect(recState.dest);
+  audio.mic?.connect(recState.dest);
+  tracks.push(...recState.dest.stream.getAudioTracks());
+  recState.mime = MIMES.find((m) => MediaRecorder.isTypeSupported(m)) || '';
+  recState.ext = recState.mime.startsWith('video/mp4') ? 'mp4' : 'webm';
+  const mr = new MediaRecorder(new MediaStream(tracks), recState.mime ? { mimeType: recState.mime, videoBitsPerSecond: 8_000_000 } : undefined);
+  recState.chunks = [];
+  mr.ondataavailable = (e) => { if (e.data.size) recState.chunks.push(e.data); };
+  mr.onstop = saveRecording;
+  mr.start(1000);
+  recState.mr = mr; recState.t0 = performance.now();
+  $('#btnRec').classList.add('on');
+}
+function stopRecord() { recState.mr?.stop(); recState.mr = null; $('#btnRec').classList.remove('on'); $('#btnRec').textContent = '⏺ REC'; }
+function saveRecording() {
+  try { audio.bus.disconnect(recState.dest); } catch {}
+  try { audio.mic?.disconnect(recState.dest); } catch {}
+  recState.c = null;
+  const blob = new Blob(recState.chunks, { type: recState.mime || 'video/webm' });
+  const a = document.createElement('a');
+  const d = new Date(), stamp = `${d.getHours()}${String(d.getMinutes()).padStart(2, '0')}${String(d.getSeconds()).padStart(2, '0')}`;
+  a.href = URL.createObjectURL(blob); a.download = `moon-phases-${stamp}.${recState.ext}`;
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+  toast(`Video save ho gaya: Downloads me ${a.download}`, 5000);
+}
+function recordFrame() {
+  if (!recState.c) return;
+  const c = recState.c;
+  if (c.width !== glc.width || c.height !== glc.height) { c.width = glc.width; c.height = glc.height; }
+  recState.ctx.drawImage(glc, 0, 0);
+  recState.ctx.drawImage(fxc, 0, 0, c.width, c.height);
+  if (recState.mr) {
+    const s = Math.floor((performance.now() - recState.t0) / 1000);
+    $('#btnRec').textContent = `■ ${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+  }
+}
+
+// ---------------------------------------------------------------- main loop
+let T = 0, lastRender = 0, started = false;
+function tick(dt, now) {
+  T += dt;
+  updateMic(now);
+  trackHands(now);
+  updatePoses(dt);
+  updateInteraction(dt);
+  updateTour(dt);
+  updateScene(dt);
+  updateParts(dt);
+  flash *= Math.pow(0.006, dt);
+  flashPlane.material.opacity = flash;
+  drawMask();
+}
+function render(dt) {
+  const { W, H } = stageSize();
+  renderer.setScissorTest(false);
+  renderer.setViewport(0, 0, W, H);
+  renderer.clear();
+  renderer.render(scene, camera);
+  if (sys.alive && sys.t > 0.3) {
+    // the moon as seen from Earth's surface
+    const r = insetRect();
+    const ew = earth.getWorldPosition(new V3()), mw = moon.getWorldPosition(new V3()), s = sys.root.scale.x;
+    const dir = mw.clone().sub(ew).normalize();
+    insetCam.position.copy(ew).addScaledVector(dir, EARTH_R * s * 1.05);
+    insetCam.up.set(0, 1, 0).applyQuaternion(orbit.getWorldQuaternion(new THREE.Quaternion()));
+    insetCam.lookAt(mw);
+    const dist = insetCam.position.distanceTo(mw);
+    insetCam.fov = THREE.MathUtils.radToDeg(2 * Math.atan((MOON_R * s) / dist)) * 1.9;
+    insetCam.aspect = 1; insetCam.updateProjectionMatrix();
+    renderer.setScissorTest(true);
+    renderer.setScissor(r.x, H - r.y - r.h, r.w, r.h);
+    renderer.setViewport(r.x, H - r.y - r.h, r.w, r.h);
+    renderer.setClearColor(0x02030a, 1);
+    renderer.clear();
+    renderer.render(scene, insetCam);
+    renderer.setScissorTest(false);
+    renderer.setClearColor(0x000000, 1);
+  }
+  drawFx(dt);
+  recordFrame();
+}
+function frame(now) {
+  requestAnimationFrame(frame);
+  if (now - lastRender < 1000 / Number(S.fps) - 2) return;
+  const dt = Math.min(0.06, (now - lastRender) / 1000);
+  lastRender = now;
+  if (glc.width === 0 || Math.abs(camera.aspect - stage.clientWidth / Math.max(1, stage.clientHeight)) > 1e-3) onResize();
+  tick(dt, now);
+  render(dt);
+}
+function onResize() {
+  const { W, H } = stageSize();
+  if (!W || !H) return;
+  pr = Math.min(devicePixelRatio || 1, 1.5);
+  renderer.setPixelRatio(pr); renderer.setSize(W, H, false);
+  fxc.width = Math.round(W * pr); fxc.height = Math.round(H * pr);
+  camera.aspect = W / H; camera.updateProjectionMatrix();
+  pointsMat.uniforms.uPx.value = pr;
+  layoutPlanes();
+}
+addEventListener('resize', onResize);
+
+// ---------------------------------------------------------------- UI
+function setLoad(id, st) {
+  const el = document.getElementById(id), icon = { wait: '◌', ok: '✓', fail: '✕', warn: '!' }[st];
+  el.className = st; el.textContent = `${icon} ${el.textContent.replace(/^\S+\s/, '')}`;
+}
+function updateHint() {
+  $('#hint').innerHTML = sys.alive
+    ? '<b>🤏</b> chaand pakad ke ghumao · <b>🤏↔</b> view ghumao · <b>🤏↕</b> speed · <b>✊</b> roko · <b>✋</b> chalao · <b>🙌</b> guided tour'
+    : '<b>👏👏</b> taali · <b>🙌</b> dono hatheliyan · <b>Space</b> → shuru karo';
+}
+function toggleReel() {
+  document.body.classList.toggle('reel');
+  $('#btnReel').classList.toggle('on', document.body.classList.contains('reel'));
+  onResize();
+}
+for (const el of document.querySelectorAll('[data-s]')) {
+  const k = el.dataset.s;
+  if (el.type === 'checkbox') el.checked = !!S[k]; else el.value = S[k];
+  el.addEventListener(el.type === 'range' ? 'input' : 'change', () => {
+    S[k] = el.type === 'checkbox' ? el.checked : el.type === 'range' ? parseFloat(el.value) : el.value;
+    saveSettings();
+  });
+}
+$('#btnSettings').addEventListener('click', () => $('#settings').classList.toggle('open'));
+$('#btnClose').addEventListener('click', () => $('#settings').classList.remove('open'));
+$('#btnReel').addEventListener('click', toggleReel);
+$('#btnShadow').addEventListener('click', toggleShadow);
+$('#btnRec').addEventListener('click', () => (recState.mr ? stopRecord() : startRecord()));
+const toggleFull = () => (document.fullscreenElement ? document.exitFullscreen?.() : document.documentElement.requestFullscreen?.().catch(() => {}));
+$('#btnFull').addEventListener('click', toggleFull);
+addEventListener('keydown', (e) => {
+  if (e.target.matches('input, select')) return;
+  const k = e.key.toLowerCase();
+  if (e.code === 'Space') { e.preventDefault(); if (!started) return; if (!sys.alive) spawn(); else { moonState.playing = !moonState.playing; moonState.target = null; stopTour(); } }
+  else if (e.key === 'ArrowRight' && sys.alive) { e.preventDefault(); stopTour(); goToPhase(phaseIndex() + 1); }
+  else if (e.key === 'ArrowLeft' && sys.alive) { e.preventDefault(); stopTour(); goToPhase(phaseIndex() - 1); }
+  else if (/^[1-8]$/.test(e.key) && sys.alive) { stopTour(); goToPhase(Number(e.key) - 1); }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); moonState.speed = clamp(moonState.speed * 1.5, 0.1, 8); moonState.playing = true; }
+  else if (e.key === 'ArrowDown') { e.preventDefault(); moonState.speed = clamp(moonState.speed / 1.5, 0.1, 8); }
+  else if (k === 't' && sys.alive) startTour();
+  else if (k === 'e') toggleShadow();
+  else if (k === 'l') { S.labels = !S.labels; saveSettings(); }
+  else if (k === 'r' && started) (recState.mr ? stopRecord() : startRecord());
+  else if (k === 'v') toggleReel();
+  else if (k === 'h') document.body.classList.toggle('clean');
+  else if (k === 'f') toggleFull();
+  else if (e.key === 'Escape') $('#settings').classList.remove('open');
+});
+
+async function start() {
+  const btn = $('#btnStart');
+  btn.disabled = true; btn.textContent = 'STARTING…';
+  ensureAudio();
+  setLoad('ldCam', 'wait');
+  const md = navigator.mediaDevices;
+  const noMedia = new URLSearchParams(location.search).has('nomedia');
+  let vStream = null, aStream = null;
+  if (md?.getUserMedia && !noMedia) {
+    try {
+      const s = await md.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' }, audio: AUDIO_CONSTRAINTS });
+      vStream = aStream = s;
+    } catch {
+      try { vStream = await md.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 } } }); } catch {}
+      try { aStream = await md.getUserMedia({ audio: AUDIO_CONSTRAINTS }); } catch {}
+    }
+  }
+  if (aStream) initMic(new MediaStream(aStream.getAudioTracks()));
+  if (vStream) {
+    cam.srcObject = new MediaStream(vStream.getVideoTracks());
+    try { await cam.play(); } catch {}
+    bgPlane.visible = handLayer.visible = true;
+    layoutPlanes();
+  }
+  setLoad('ldCam', vStream && aStream ? 'ok' : vStream || aStream ? 'warn' : 'fail');
+  if (!vStream) toast('Camera nahi mila. Keyboard (Space, ← →, T) se chala sakte ho.', 5000);
+  started = true;
+  updateHint();
+  $('#start').classList.add('gone');
+  if (vStream) initHands().catch((e) => { console.error(e); setLoad('ldHand', 'fail'); toast('Hand tracking load nahi hua.'); });
+}
+$('#btnStart').addEventListener('click', start);
+
+// ---------------------------------------------------------------- boot
+setLoad('ldTex', 'wait');
+Promise.all([loadTex('earth_atmos_2048.jpg'), loadTex('earth_clouds_1024.png'), loadTex('moon_1024.jpg')]).then(([e, c, m]) => {
+  buildTextures({ earth: e, clouds: c, moon: m });
+  setLoad('ldTex', e && m ? 'ok' : 'warn');
+});
+updateHint();
+onResize();
+requestAnimationFrame(frame);
+// Console hooks for testing without a camera.
+window.__moon = {
+  step(sec) { for (let i = 0; i < Math.max(1, Math.round(sec * 30)); i++) tick(1 / 30, performance.now()); render(sec); },
+  ingestHands, spawn, goToPhase, startTour, toggleShadow, moonState, tour, sys, phaseIndex, phaseAngle, project, moon, get hands() { return hands; },
+};
+</script>
+</body>
+</html>

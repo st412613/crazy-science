@@ -1,0 +1,715 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📐</text></svg>">
+<title>Finger Trigonometry · Crazy Science</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --c: #ffd27a;
+    --c-rgb: 255, 210, 122;
+    --text: #f6f3ea;
+    --dim: rgba(246, 243, 234, .62);
+    --panel: rgba(10, 10, 16, .84);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #000; color: var(--text); font-family: 'Rajdhani', system-ui, sans-serif; overflow: hidden; }
+  #stage { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 100vw; height: 100vh; overflow: hidden; background: #000; }
+  body.reel #stage { width: min(100vw, calc(100vh * 9 / 16)); height: min(100vh, calc(100vw * 16 / 9)); }
+  #c { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+  #cam { position: fixed; width: 2px; height: 2px; opacity: 0; pointer-events: none; }
+
+  #ui { position: fixed; inset: 0; pointer-events: none; z-index: 5; }
+  #ui button { pointer-events: auto; }
+  .top { position: absolute; top: 14px; left: 14px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; max-width: calc(100% - 28px); }
+  button.icon { height: 38px; min-width: 38px; padding: 0 12px; border-radius: 10px; border: 1px solid rgba(var(--c-rgb), .45); background: rgba(10, 10, 16, .65); color: var(--c); font: 700 13px 'Orbitron', sans-serif; letter-spacing: .06em; cursor: pointer; }
+  button.icon:hover { background: rgba(var(--c-rgb), .16); }
+  button.icon.on { background: var(--c); color: #160f00; }
+  #btnRec.on { background: #ff2d4a; border-color: #ff2d4a; color: #fff; animation: blink 1s infinite; }
+  #hint { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); background: var(--panel); border: 1px solid rgba(var(--c-rgb), .3); border-radius: 12px; padding: 8px 14px; font-size: 15px; color: var(--dim); text-align: center; width: max-content; max-width: calc(100% - 32px); line-height: 1.5; }
+  #hint b { color: var(--c); }
+  #toast { position: absolute; top: 64px; left: 50%; transform: translateX(-50%); background: var(--panel); border: 1px solid rgba(var(--c-rgb), .4); padding: 10px 16px; border-radius: 10px; font-size: 16px; opacity: 0; transition: opacity .3s; max-width: calc(100% - 32px); text-align: center; z-index: 6; }
+  #toast.on { opacity: 1; }
+  body.clean #hint, body.clean .top button:not(#btnRec) { display: none; }
+
+  #settings { position: fixed; top: 0; left: 0; height: 100%; width: min(360px, 100%); background: rgba(10, 9, 14, .96); border-right: 1px solid rgba(var(--c-rgb), .3); z-index: 10; transform: translateX(-100%); transition: transform .3s; overflow-y: auto; padding: 20px; }
+  #settings.open { transform: none; }
+  #settings h2 { font-family: 'Orbitron', sans-serif; font-size: 14px; letter-spacing: .25em; color: var(--c); margin: 4px 0 12px; display: flex; justify-content: space-between; align-items: center; }
+  .row { display: flex; flex-direction: column; gap: 5px; margin: 12px 0; font-size: 16px; }
+  .row.inline { flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; }
+  .keys { color: var(--dim); font-size: 13px; line-height: 1.6; }
+  .row select { padding: 9px 10px; border-radius: 8px; border: 1px solid rgba(var(--c-rgb), .35); background: #14121a; color: var(--text); font: 600 15px 'Rajdhani', sans-serif; }
+  input[type=checkbox] { width: 18px; height: 18px; flex: none; accent-color: var(--c); }
+
+  #start { position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; background: radial-gradient(ellipse at center, rgba(30, 22, 6, .7), #000); padding: 16px; transition: opacity .6s; }
+  #start.gone { opacity: 0; pointer-events: none; }
+  #start .card { max-width: 580px; text-align: center; }
+  #start h1 { font-family: 'Orbitron', sans-serif; font-weight: 900; letter-spacing: .14em; font-size: clamp(24px, 5.5vw, 44px); color: var(--c); text-shadow: 0 0 24px rgba(var(--c-rgb), .7); margin: 0 0 6px; }
+  #start h2 { font-size: 26px; margin: 0 0 14px; }
+  #start p { font-size: 19px; line-height: 1.5; margin: 0 0 22px; }
+  #start .note { font-size: 14px; color: var(--dim); margin-top: 16px; }
+  .btn { padding: 14px 30px; border-radius: 12px; border: 1px solid rgba(var(--c-rgb), .6); background: rgba(var(--c-rgb), .14); color: var(--c); font: 700 16px 'Orbitron', sans-serif; letter-spacing: .14em; cursor: pointer; }
+  .btn:disabled { opacity: .5; cursor: wait; }
+  #loadList { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; margin-top: 18px; font-size: 15px; color: var(--dim); }
+  #loadList .ok { color: #3dff8b; } #loadList .fail { color: #ff5b6b; } #loadList .warn { color: #ffd23d; }
+  @keyframes blink { 50% { opacity: .55; } }
+</style>
+</head>
+<body>
+<div id="stage"><canvas id="c"></canvas></div>
+<video id="cam" playsinline muted></video>
+
+<div id="ui">
+  <div class="top">
+    <button class="icon" id="btnHome" title="Crazy Science: saare labs" onclick="location.href='../'">🏠</button>
+    <button class="icon" id="btnSettings" title="Settings">⚙</button>
+    <button class="icon" id="btnRec" title="Video record (R)">⏺ REC</button>
+    <button class="icon" id="btnReel" title="Reel frame 9:16 (V)">9:16</button>
+    <button class="icon" id="btnQuiz" title="Quiz (Q)">🎯 QUIZ</button>
+    <button class="icon" id="btnLock" title="Angle lock (Space)">🔒</button>
+    <button class="icon" id="btnUnit" title="Degree / Radian (D)">DEG</button>
+    <button class="icon" id="btnFull" title="Fullscreen (F)">⛶</button>
+  </div>
+  <div id="hint"></div>
+  <div id="toast" role="status"></div>
+</div>
+
+<aside id="settings" aria-label="Settings">
+  <h2>SETTINGS <button class="icon" id="btnClose" title="Band karo (Esc)">✕</button></h2>
+  <label class="row inline">Haath par tribhuj (कर्ण, लंब, आधार) <input type="checkbox" data-s="triangle"></label>
+  <label class="row inline">sin / cos graph <input type="checkbox" data-s="graph"></label>
+  <label class="row inline">Hindi aawaz <input type="checkbox" data-s="voice"></label>
+  <label class="row inline">Sound effects <input type="checkbox" data-s="sfx"></label>
+  <label class="row">Smoothness
+    <select data-s="fps">
+      <option value="30">30 FPS (Mac ke liye halka)</option>
+      <option value="60">60 FPS (smooth, zyada load)</option>
+    </select>
+  </label>
+  <div class="keys">Gesture: angutha + tarjani (index) khol kar angle banao. Dusre haath ki ✊ mutthi = angle lock/unlock.<br>Shortcuts: Space = lock · Q = quiz · D = degree/radian · ← → = angle (bina camera) · R = record · V = 9:16 · H = clean · Esc = band<br>Bina camera ke: unit circle par mouse se kheencho.</div>
+</aside>
+
+<div id="start">
+  <div class="card">
+    <h1>FINGER·TRIG</h1>
+    <h2>📐 ungliyon se trigonometry</h2>
+    <p>Angutha aur ungli khol kar angle banao. Haath par tribhuj banega, aur sin, cos, tan live badalte dikhenge. Haath paas-door karke dekho, anupaat (ratio) wahi rehta hai!</p>
+    <button class="btn" id="btnStart">▶ START</button>
+    <div id="loadList"><div id="ldCam">◌ Camera + mic</div><div id="ldHand">◌ Hand tracking</div></div>
+    <p class="note">Chrome me best chalta hai. Haath ki hatheli camera ki taraf rakho.</p>
+    <p class="note"><a href="../" style="color:inherit">← Crazy Science: saare labs</a></p>
+  </div>
+</div>
+
+<script type="module">
+// ---------------------------------------------------------------- config
+const MP_BASE = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14';
+const HAND_MODEL = 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
+const AUDIO_CONSTRAINTS = { echoCancellation: false, noiseSuppression: false, autoGainControl: false };
+const MIMES = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4;codecs=avc1,opus', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
+const COL = { sin: '#ff5a6e', cos: '#4aa8ff', tan: '#3dff8b', ang: '#ffd27a', hyp: '#ffffff' };
+// Exact values at the special angles, and what the narrator says there (edit freely).
+const SPECIAL = [
+  { d: 0, sin: '0', cos: '1', tan: '0', line: 'शून्य डिग्री! साइन शून्य, और कॉस एक।' },
+  { d: 30, sin: '1/2', cos: '√3/2', tan: '1/√3', line: 'तीस डिग्री! साइन तीस बराबर एक बटा दो। यानी लंब, कर्ण का ठीक आधा।' },
+  { d: 45, sin: '1/√2', cos: '1/√2', tan: '1', line: 'पैंतालीस डिग्री! यहाँ साइन और कॉस बराबर हैं, और टैन एक।' },
+  { d: 60, sin: '√3/2', cos: '1/2', tan: '√3', line: 'साठ डिग्री! अब कॉस साठ बराबर एक बटा दो।' },
+  { d: 90, sin: '1', cos: '0', tan: '∞', line: 'नब्बे डिग्री! साइन एक, कॉस शून्य, और टैन अपरिभाषित।' },
+  { d: 120, sin: '√3/2', cos: '−1/2', tan: '−√3', line: 'एक सौ बीस डिग्री! नब्बे के बाद कॉस ऋणात्मक हो जाता है।' },
+  { d: 135, sin: '1/√2', cos: '−1/√2', tan: '−1', line: 'एक सौ पैंतीस डिग्री! साइन धनात्मक, कॉस ऋणात्मक।' },
+  { d: 150, sin: '1/2', cos: '−√3/2', tan: '−1/√3', line: 'एक सौ पचास डिग्री! साइन फिर से एक बटा दो।' },
+  { d: 180, sin: '0', cos: '−1', tan: '0', line: 'एक सौ अस्सी डिग्री! सीधी रेखा। साइन शून्य, कॉस माइनस एक।' },
+];
+const LINES = {
+  intro: 'अंगूठे और उंगली से कोण बनाइए। उंगली कर्ण है, अंगूठा आधार।',
+  ratio: 'देखिए! हाथ पास या दूर करने पर त्रिभुज बड़ा-छोटा होता है, पर अनुपात वही रहता है। यही है त्रिकोणमिति का जादू।',
+  quizStart: 'क्विज़ शुरू! जो कोण कहूँ, वो उंगलियों से बनाइए।',
+  correct: ['शाबाश!', 'बिल्कुल सही!', 'कमाल कर दिया!', 'एकदम परफ़ेक्ट!'],
+};
+const QUIZ = [30, 45, 60, 90, 15, 75, 120, 37, 53, 10, 150, 80];
+
+// ---------------------------------------------------------------- settings
+const DEFAULTS = { triangle: true, graph: true, voice: true, sfx: true, fps: '30' };
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+};
+const S = { ...DEFAULTS, ...(() => { try { return JSON.parse(store.get('trig.settings')) || {}; } catch { return {}; } })() };
+const saveSettings = () => store.set('trig.settings', JSON.stringify(S));
+
+// ---------------------------------------------------------------- utils
+const $ = (s) => document.querySelector(s);
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const RAD = Math.PI / 180;
+let toastTimer;
+function toast(msg, ms = 3200) {
+  const el = $('#toast'); el.textContent = msg; el.classList.add('on');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('on'), ms);
+}
+const stage = $('#stage'), cv = $('#c'), g = cv.getContext('2d'), cam = $('#cam');
+let pr = 1;
+const size = () => ({ W: stage.clientWidth || innerWidth, H: stage.clientHeight || innerHeight });
+
+// ---------------------------------------------------------------- state
+const st = {
+  deg: 45, shown: 45, lock: false, radians: false, tri: null, lastTri: null, source: 'none',
+  special: -1, spokenSpecial: -1, past90: false, ratioSaid: false, hist: [],
+  quiz: { on: false, i: 0, target: 0, hold: 0, score: 0, done: 0, cele: 0 },
+  confetti: [],
+};
+
+// ---------------------------------------------------------------- hands
+let handLM = null, hands = [], lastVT = -1, lastDetect = 0, nextHandId = 1;
+async function initHands() {
+  setLoad('ldHand', 'wait');
+  const { FilesetResolver, HandLandmarker } = await import(`${MP_BASE}/vision_bundle.mjs`);
+  const fileset = await FilesetResolver.forVisionTasks(`${MP_BASE}/wasm`);
+  const opts = (delegate) => ({
+    baseOptions: { modelAssetPath: HAND_MODEL, delegate },
+    runningMode: 'VIDEO', numHands: 2,
+    minHandDetectionConfidence: 0.6, minHandPresenceConfidence: 0.5, minTrackingConfidence: 0.5,
+  });
+  try { handLM = await HandLandmarker.createFromOptions(fileset, opts('GPU')); }
+  catch { handLM = await HandLandmarker.createFromOptions(fileset, opts('CPU')); }
+  setLoad('ldHand', 'ok');
+  toast('Hand tracking ready ✓');
+}
+// Video landmark (0..1) → stage pixels, mirrored and cover-fitted like the drawn video.
+function toPx(p) {
+  const { W, H } = size(), vw = cam.videoWidth || 1280, vh = cam.videoHeight || 720;
+  const s = Math.max(W / vw, H / vh), dw = vw * s, dh = vh * s;
+  return { x: (1 - p.x) * dw + (W - dw) / 2, y: p.y * dh + (H - dh) / 2 };
+}
+function trackHands(now) {
+  if (!handLM || cam.readyState < 2 || cam.currentTime === lastVT || now - lastDetect < 30) return;
+  lastVT = cam.currentTime; lastDetect = now;
+  let res;
+  try { res = handLM.detectForVideo(cam, now); } catch { return; }
+  ingestHands(res.landmarks || [], now);
+}
+function ingestHands(list, now = performance.now()) {
+  const next = list.map((lm) => {
+    const P = lm.map(toPx);
+    const d = (a, b) => Math.hypot(P[a].x - P[b].x, P[a].y - P[b].y);
+    const fist = [[8, 5], [12, 9], [16, 13], [20, 17]].every(([t, m]) => d(0, t) < d(0, m) * 1.25);
+    // an "angle hand": index straight and thumb out
+    const angleHand = !fist && d(0, 8) > d(0, 6) * 1.1 && d(4, 2) > d(0, 9) * 0.45;
+    return { lm, P, fist, angleHand, wrist: lm[0], id: 0, t: now };
+  });
+  for (const h of next) {
+    let prev = null, best = 0.25;
+    for (const p of hands) { const dd = Math.hypot(p.wrist.x - h.wrist.x, p.wrist.y - h.wrist.y); if (dd < best) { best = dd; prev = p; } }
+    h.id = prev ? prev.id : nextHandId++;
+    if (prev) h.P = h.P.map((p, i) => ({ x: prev.P[i].x + (p.x - prev.P[i].x) * 0.7, y: prev.P[i].y + (p.y - prev.P[i].y) * 0.7 }));
+  }
+  hands = next;
+}
+// Triangle on the hand: vertex where the thumb line and index line meet, adjacent along the thumb,
+// hypotenuse along the index finger, opposite = drop from the index tip onto the thumb line.
+function handTriangle(h) {
+  const P = h.P, t0 = P[2], t1 = P[4], i0 = P[5], i1 = P[8];
+  const d1 = { x: t1.x - t0.x, y: t1.y - t0.y }, d2 = { x: i1.x - i0.x, y: i1.y - i0.y };
+  const l1 = Math.hypot(d1.x, d1.y), l2 = Math.hypot(d2.x, d2.y);
+  if (l1 < 8 || l2 < 8) return null;
+  const u = { x: d1.x / l1, y: d1.y / l1 }, w = { x: d2.x / l2, y: d2.y / l2 };
+  const deg = Math.acos(clamp(u.x * w.x + u.y * w.y, -1, 1)) / RAD;
+  // intersection of the two lines, kept close to the hand
+  const den = u.x * w.y - u.y * w.x;
+  let A = { x: (t0.x + i0.x) / 2, y: (t0.y + i0.y) / 2 };
+  if (Math.abs(den) > 0.08) {
+    const s = ((i0.x - t0.x) * w.y - (i0.y - t0.y) * w.x) / den;
+    const X = { x: t0.x + u.x * s, y: t0.y + u.y * s };
+    const handSize = Math.hypot(P[0].x - P[9].x, P[0].y - P[9].y);
+    if (Math.hypot(X.x - i0.x, X.y - i0.y) < handSize * 1.2) A = X;
+  }
+  const C = i1;
+  const proj = (C.x - A.x) * u.x + (C.y - A.y) * u.y;
+  const B = { x: A.x + u.x * proj, y: A.y + u.y * proj };
+  const hyp = Math.hypot(C.x - A.x, C.y - A.y), opp = Math.hypot(C.x - B.x, C.y - B.y), adj = proj;
+  return { A, B, C, u, w, deg, hyp, opp, adj };
+}
+
+// ---------------------------------------------------------------- update
+function setAngle(d, src) { st.deg = clamp(d, 0, 180); st.source = src; }
+function update(dt) {
+  // the other hand: ✊ toggles the lock
+  const angleH = hands.find((h) => h.angleHand);
+  const other = hands.find((h) => h !== angleH && h.fist);
+  lockPose.hold = other ? lockPose.hold + dt : 0;
+  if (!other) lockPose.fired = false;
+  if (other && lockPose.hold > 0.35 && !lockPose.fired) { lockPose.fired = true; toggleLock(); }
+  if (!st.lock) {
+    if (angleH) {
+      const t = handTriangle(angleH);
+      if (t) { st.tri = t; st.lastTri = t; setAngle(t.deg, 'hand'); }
+    } else st.tri = null;
+  }
+  st.shown += (st.deg - st.shown) * Math.min(1, dt * (st.source === 'hand' ? 14 : 20));
+  const D = Math.round(st.shown);
+  // special angles: exact values + narration (once per visit)
+  const sp = SPECIAL.findIndex((s) => Math.abs(st.shown - s.d) < 1.6);
+  if (sp !== st.special) {
+    st.special = sp;
+    if (sp >= 0) { sfx('ding'); specialT = 0; }
+  }
+  if (st.special >= 0) {
+    specialT += dt;
+    if (specialT > 0.5 && st.spokenSpecial !== st.special && !st.quiz.on) { st.spokenSpecial = st.special; say(SPECIAL[st.special].line); }
+  } else if (Math.abs(st.shown - SPECIAL[Math.max(0, st.spokenSpecial)].d) > 6) st.spokenSpecial = -1;
+  // the size-vs-ratio insight: same angle, much bigger/smaller triangle
+  if (st.tri && !st.ratioSaid && !st.quiz.on) {
+    st.hist.push({ t: T, deg: st.tri.deg, hyp: st.tri.hyp });
+    st.hist = st.hist.filter((e) => T - e.t < 2.2);
+    const steady = st.hist.every((e) => Math.abs(e.deg - st.tri.deg) < 5);
+    const hs = st.hist.map((e) => e.hyp), r = Math.max(...hs) / Math.max(1, Math.min(...hs));
+    if (steady && r > 1.45 && st.hist.length > 8) { st.ratioSaid = true; say(LINES.ratio); banner = { t: 0, text: '📏 अनुपात वही!' }; }
+  }
+  // quiz: hold the asked angle for a moment
+  const q = st.quiz;
+  if (q.on) {
+    q.cele = Math.max(0, q.cele - dt);
+    if (q.cele <= 0) {
+      if (Math.abs(st.shown - q.target) <= 2 && st.source !== 'none') {
+        q.hold += dt;
+        if (q.hold >= 0.7) {
+          q.score++; q.done++; q.cele = 1.6; q.hold = 0;
+          sfx('win'); burst(); say(LINES.correct[q.score % LINES.correct.length]);
+          setTimeout(nextQuestion, 1600);
+        }
+      } else q.hold = Math.max(0, q.hold - dt * 2);
+    }
+  }
+  for (const c of st.confetti) { c.vy += 900 * dt; c.x += c.vx * dt; c.y += c.vy * dt; c.r += c.vr * dt; c.life -= dt; }
+  st.confetti = st.confetti.filter((c) => c.life > 0);
+  return D;
+}
+const lockPose = { hold: 0, fired: false };
+let specialT = 0;
+function toggleLock() {
+  st.lock = !st.lock;
+  $('#btnLock').classList.toggle('on', st.lock);
+  sfx('blip');
+  banner = { t: 0, text: st.lock ? '🔒 LOCK' : '🔓 UNLOCK' };
+}
+function nextQuestion() {
+  const q = st.quiz;
+  if (!q.on) return;
+  q.target = QUIZ[q.i++ % QUIZ.length];
+  q.hold = 0;
+  say(`${q.target} डिग्री बनाइए!`);
+}
+function toggleQuiz() {
+  const q = st.quiz;
+  q.on = !q.on;
+  $('#btnQuiz').classList.toggle('on', q.on);
+  if (q.on) { q.i = 0; q.score = 0; q.done = 0; say(LINES.quizStart); setTimeout(nextQuestion, 2600); }
+  else { q.target = 0; banner = { t: 0, text: `🎯 ${q.score} सही!` }; }
+}
+function burst() {
+  const { W, H } = size(), cols = [COL.sin, COL.cos, COL.tan, COL.ang, '#ffffff', '#b46bff'];
+  for (let i = 0; i < 140; i++) st.confetti.push({ x: W / 2, y: H * 0.35, vx: (Math.random() - 0.5) * 900, vy: -300 - Math.random() * 600, r: Math.random() * 6, vr: (Math.random() - 0.5) * 12, s: 5 + Math.random() * 7, c: cols[i % cols.length], life: 1.4 + Math.random() * 0.8 });
+}
+
+// ---------------------------------------------------------------- drawing helpers
+function glowText(text, x, y, fs, color, align = 'center', weight = 700, font = 'Rajdhani') {
+  g.font = `${weight} ${fs}px ${font}, sans-serif`;
+  g.textAlign = align; g.textBaseline = 'middle';
+  g.lineWidth = Math.max(3, fs * 0.14); g.strokeStyle = 'rgba(0,0,0,.75)'; g.strokeText(text, x, y);
+  g.shadowColor = color; g.shadowBlur = fs * 0.35; g.fillStyle = color; g.fillText(text, x, y); g.shadowBlur = 0;
+}
+function line(a, b, color, w = 3, dash = null) {
+  g.strokeStyle = color; g.lineWidth = w; g.shadowColor = color; g.shadowBlur = 10;
+  if (dash) g.setLineDash(dash);
+  g.beginPath(); g.moveTo(a.x, a.y); g.lineTo(b.x, b.y); g.stroke();
+  g.setLineDash([]); g.shadowBlur = 0;
+}
+function roundBox(x, y, w, h, r = 16, fill = 'rgba(10,10,16,.72)', stroke = 'rgba(255,210,122,.35)') {
+  g.fillStyle = fill; g.strokeStyle = stroke; g.lineWidth = 1.5;
+  g.beginPath(); g.roundRect(x, y, w, h, r); g.fill(); g.stroke();
+}
+const fmt = (v) => (Math.abs(v) > 99 ? (v > 0 ? '∞' : '−∞') : (v < 0 ? '−' : '') + Math.abs(v).toFixed(2));
+const angleText = (d) => (st.radians ? `${(d * RAD).toFixed(2)} rad` : `${Math.round(d)}°`);
+function drawVideo(W, H) {
+  if (cam.readyState >= 2 && cam.videoWidth) {
+    const vw = cam.videoWidth, vh = cam.videoHeight, s = Math.max(W / vw, H / vh), dw = vw * s, dh = vh * s;
+    g.save(); g.translate(W, 0); g.scale(-1, 1);
+    g.drawImage(cam, (W - dw) / 2, (H - dh) / 2, dw, dh);
+    g.restore();
+    g.fillStyle = 'rgba(0,0,0,.18)'; g.fillRect(0, 0, W, H);
+  } else {
+    const gr = g.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, Math.max(W, H) * 0.7);
+    gr.addColorStop(0, '#1a1622'); gr.addColorStop(1, '#050408');
+    g.fillStyle = gr; g.fillRect(0, 0, W, H);
+  }
+}
+// The triangle drawn on your hand, with labelled sides.
+function drawHandTriangle(t, fs, faded) {
+  const { A, B, C, u, deg } = t;
+  g.globalAlpha = faded ? 0.55 : 1;
+  // shaded triangle
+  g.fillStyle = 'rgba(255,210,122,.14)';
+  g.beginPath(); g.moveTo(A.x, A.y); g.lineTo(B.x, B.y); g.lineTo(C.x, C.y); g.closePath(); g.fill();
+  if (S.triangle) {
+    line(A, B, COL.cos, 4);
+    line(B, C, COL.sin, 4);
+    line(A, C, COL.hyp, 4);
+    // the thumb line beyond B (dashed) when the angle is obtuse
+    if (deg > 90) line(A, { x: A.x + u.x * 60, y: A.y + u.y * 60 }, 'rgba(255,255,255,.5)', 2, [6, 6]);
+    // right-angle mark at B
+    const n = { x: C.x - B.x, y: C.y - B.y }, nl = Math.hypot(n.x, n.y) || 1, m = 12;
+    const ux = deg > 90 ? -u.x : u.x, uy = deg > 90 ? -u.y : u.y;
+    if (nl > 20) {
+      g.strokeStyle = 'rgba(255,255,255,.8)'; g.lineWidth = 2;
+      g.beginPath(); g.moveTo(B.x - ux * m, B.y - uy * m); g.lineTo(B.x - ux * m + n.x / nl * m, B.y - uy * m + n.y / nl * m); g.lineTo(B.x + n.x / nl * m, B.y + n.y / nl * m); g.stroke();
+    }
+    const mid = (p, q) => ({ x: (p.x + q.x) / 2, y: (p.y + q.y) / 2 });
+    const lab = (p, text, color, dx = 0, dy = 0) => glowText(text, p.x + dx, p.y + dy, fs * 0.95, color);
+    lab(mid(A, C), 'कर्ण', COL.hyp, -fs * 1.1, -fs * 0.5);
+    lab(mid(B, C), 'लंब', COL.sin, fs * 1.4, 0);
+    lab(mid(A, B), 'आधार', COL.cos, 0, fs * 1.1);
+  }
+  // angle arc at the vertex
+  const a0 = Math.atan2(u.y, u.x), a1 = Math.atan2(C.y - A.y, C.x - A.x);
+  let da = a1 - a0; da = Math.atan2(Math.sin(da), Math.cos(da));
+  const rr = Math.min(70, t.hyp * 0.35);
+  g.strokeStyle = COL.ang; g.lineWidth = 4; g.shadowColor = COL.ang; g.shadowBlur = 14;
+  g.beginPath(); g.arc(A.x, A.y, rr, a0, a0 + da, da < 0); g.stroke(); g.shadowBlur = 0;
+  const am = a0 + da / 2;
+  glowText(angleText(st.shown), A.x + Math.cos(am) * (rr + fs * 1.6), A.y + Math.sin(am) * (rr + fs * 1.6), fs * 1.9, COL.ang, 'center', 900, 'Orbitron');
+  g.globalAlpha = 1;
+}
+// Unit circle with sin (red), cos (blue) and tan (green) segments.
+let circle = null;
+function drawUnitCircle(cx, cy, R, fs) {
+  circle = { cx, cy, R };
+  const th = st.shown * RAD, c = Math.cos(th), s = Math.sin(th), t = Math.tan(th);
+  roundBox(cx - R * 1.45, cy - R * 1.35, R * 2.9, R * 2.7, 18);
+  g.strokeStyle = 'rgba(255,255,255,.25)'; g.lineWidth = 1.5;
+  g.beginPath(); g.moveTo(cx - R * 1.25, cy); g.lineTo(cx + R * 1.3, cy); g.moveTo(cx, cy + R * 1.2); g.lineTo(cx, cy - R * 1.2); g.stroke();
+  g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = 2;
+  g.beginPath(); g.arc(cx, cy, R, 0, Math.PI * 2); g.stroke();
+  const P = { x: cx + c * R, y: cy - s * R }, F = { x: cx + c * R, y: cy };
+  // tan on the tangent line x = 1 (clamped so it stays on screen)
+  const tv = clamp(t, -1.25, 1.25), T1 = { x: cx + R, y: cy - tv * R };
+  if (st.shown < 89.5 || st.shown > 90.5) {
+    line({ x: cx + R, y: cy }, T1, COL.tan, 4);
+    line({ x: cx, y: cy }, T1, 'rgba(61,255,139,.45)', 2, [5, 6]);
+  }
+  g.fillStyle = 'rgba(255,210,122,.16)';
+  g.beginPath(); g.moveTo(cx, cy); g.lineTo(F.x, F.y); g.lineTo(P.x, P.y); g.closePath(); g.fill();
+  line({ x: cx, y: cy }, F, COL.cos, 5);
+  line(F, P, COL.sin, 5);
+  line({ x: cx, y: cy }, P, COL.hyp, 3);
+  g.strokeStyle = COL.ang; g.lineWidth = 3;
+  g.beginPath(); g.arc(cx, cy, R * 0.22, 0, -th, true); g.stroke();
+  g.fillStyle = '#fff'; g.shadowColor = '#fff'; g.shadowBlur = 12;
+  g.beginPath(); g.arc(P.x, P.y, 7, 0, Math.PI * 2); g.fill(); g.shadowBlur = 0;
+  glowText('sin', (F.x + P.x) / 2 + (c >= 0 ? fs * 1.1 : -fs * 1.1), (F.y + P.y) / 2, fs * 0.9, COL.sin);
+  glowText('cos', (cx + F.x) / 2, cy + fs * 1.0, fs * 0.9, COL.cos);
+  if (st.shown < 85 || st.shown > 95) glowText('tan', T1.x + fs * 1.3, (cy + T1.y) / 2, fs * 0.9, COL.tan);
+  glowText(angleText(st.shown), cx - R * 1.2, cy - R * 1.12, fs * 1.3, COL.ang, 'left', 900, 'Orbitron');
+}
+function drawValues(x, y, w, fs) {
+  const th = st.shown * RAD, vals = { sin: Math.sin(th), cos: Math.cos(th), tan: Math.abs(st.shown - 90) < 0.5 ? Infinity : Math.tan(th) };
+  const sp = st.special >= 0 ? SPECIAL[st.special] : null;
+  const tri = st.tri || st.lastTri;
+  const units = (v) => Math.round(v / 6);
+  const rows = [
+    ['sin', 'लंब ÷ कर्ण', tri ? `${units(tri.opp)} ÷ ${units(tri.hyp)}` : ''],
+    ['cos', 'आधार ÷ कर्ण', tri ? `${units(tri.adj)} ÷ ${units(tri.hyp)}` : ''],
+    ['tan', 'लंब ÷ आधार', tri ? `${units(tri.opp)} ÷ ${units(tri.adj)}` : ''],
+  ];
+  const rh = fs * 2.25;
+  roundBox(x, y, w, rh * 3 + fs * 0.6, 16);
+  rows.forEach(([k, ratio, nums], i) => {
+    const ry = y + fs * 0.3 + i * rh, v = vals[k];
+    glowText(`${k} θ`, x + fs * 0.8, ry + fs * 0.75, fs * 1.15, COL[k], 'left', 900, 'Orbitron');
+    g.font = `600 ${fs * 0.82}px Rajdhani, sans-serif`; g.fillStyle = 'rgba(246,243,234,.75)'; g.textAlign = 'left';
+    g.fillText(`= ${ratio}${S.triangle && nums ? `  (${nums})` : ''}`, x + fs * 4.6, ry + fs * 0.75);
+    const valText = sp ? `${sp[k]}` : fmt(v);
+    glowText(valText, x + w - fs * 0.8, ry + fs * 0.75, fs * 1.25, sp ? '#ffffff' : COL[k], 'right', 900, 'Rajdhani');
+    // bar from -1..1 (tan clamped)
+    const bx = x + fs * 0.8, bw = w - fs * 1.6, by = ry + fs * 1.55, mid = bx + bw / 2;
+    g.fillStyle = 'rgba(255,255,255,.1)'; g.fillRect(bx, by, bw, 5);
+    const vv = clamp(Number.isFinite(v) ? v : 2, -1.5, 1.5) / 1.5;
+    g.fillStyle = COL[k]; g.fillRect(Math.min(mid, mid + vv * bw / 2), by, Math.abs(vv * bw / 2), 5);
+  });
+  return y + rh * 3 + fs * 0.6;
+}
+function drawGraph(x, y, w, h, fs) {
+  roundBox(x, y, w, h, 14);
+  const px = (d) => x + fs * 0.8 + (d / 180) * (w - fs * 1.6), py = (v) => y + h / 2 - v * (h / 2 - fs * 0.9);
+  g.strokeStyle = 'rgba(255,255,255,.2)'; g.lineWidth = 1;
+  g.beginPath(); g.moveTo(px(0), py(0)); g.lineTo(px(180), py(0)); g.stroke();
+  for (const d of [90]) { g.beginPath(); g.moveTo(px(d), y + 6); g.lineTo(px(d), y + h - 6); g.stroke(); }
+  for (const [k, f] of [['sin', Math.sin], ['cos', Math.cos]]) {
+    g.strokeStyle = COL[k]; g.lineWidth = 2.5; g.beginPath();
+    for (let d = 0; d <= 180; d += 3) { const X = px(d), Y = py(f(d * RAD)); d ? g.lineTo(X, Y) : g.moveTo(X, Y); }
+    g.stroke();
+  }
+  const d = st.shown;
+  g.strokeStyle = COL.ang; g.setLineDash([4, 5]); g.beginPath(); g.moveTo(px(d), y + 6); g.lineTo(px(d), y + h - 6); g.stroke(); g.setLineDash([]);
+  for (const [k, f] of [['sin', Math.sin], ['cos', Math.cos]]) { g.fillStyle = COL[k]; g.beginPath(); g.arc(px(d), py(f(d * RAD)), 6, 0, Math.PI * 2); g.fill(); }
+  g.font = `600 ${fs * 0.75}px Rajdhani, sans-serif`; g.fillStyle = 'rgba(246,243,234,.6)'; g.textAlign = 'center';
+  g.fillText('0°', px(0), y + h - fs * 0.45); g.fillText('90°', px(90), y + h - fs * 0.45); g.fillText('180°', px(180), y + h - fs * 0.45);
+}
+let banner = null;
+const sub = { text: '', last: '', a: 0 };
+function draw(dt) {
+  const { W, H } = size();
+  g.setTransform(pr, 0, 0, pr, 0, 0);
+  drawVideo(W, H);
+  const portrait = W < H;
+  const fs = Math.max(13, Math.min(W * (portrait ? 0.042 : 0.018), H * (portrait ? 0.03 : 0.026)));
+  // triangle on the hand (or the locked one)
+  const tri = st.lock ? st.lastTri : st.tri;
+  if (tri) drawHandTriangle(tri, fs, st.lock && !st.tri);
+  else if (!st.lock && started && hands.length === 0 && cam.readyState >= 2) glowText('✋ अंगूठा और उंगली खोलकर कोण बनाइए', W / 2, H * 0.5, fs * 1.4, '#ffffff');
+  // panel: right column on wide screens, top band on portrait reels
+  if (portrait) {
+    const R = W * 0.17, cx = W * 0.27, cy = 70 + R * 1.35;
+    drawUnitCircle(cx, cy, R, fs * 0.85);
+    drawValues(W * 0.53, 70, W * 0.45, fs * 0.9);
+  } else {
+    const pw = Math.min(W * 0.32, 430), x = W - pw - 16, R = pw * 0.3;
+    drawUnitCircle(x + pw / 2, 16 + R * 1.35, R, fs);
+    const vy = drawValues(x, 16 + R * 2.7 + 10, pw, fs);
+    if (S.graph) drawGraph(x, vy + 10, pw, Math.min(150, H - vy - 80), fs);
+  }
+  // special angle badge
+  if (st.special >= 0) {
+    const sp = SPECIAL[st.special];
+    glowText(`✨ ${sp.d}° : sin = ${sp.sin}, cos = ${sp.cos}, tan = ${sp.tan}`, portrait ? W / 2 : W * 0.34, portrait ? H * 0.47 : 34, fs * 1.15, '#ffffff');
+  }
+  // quiz
+  const q = st.quiz;
+  if (q.on && q.target) {
+    const bx = portrait ? W / 2 : W * 0.34, by = portrait ? H * 0.53 : H * 0.14;
+    glowText(q.cele > 0 ? `✅ ${q.target}°  ${LINES.correct[q.score % LINES.correct.length]}` : `🎯 ${q.target}° बनाइए!`, bx, by, fs * 2, q.cele > 0 ? COL.tan : COL.ang, 'center', 900);
+    glowText(`स्कोर: ${q.score}`, bx, by + fs * 2.1, fs * 1.1, '#ffffff');
+    if (q.hold > 0 && q.cele <= 0) {
+      g.strokeStyle = COL.tan; g.lineWidth = 6; g.beginPath(); g.arc(bx, by + fs * 4.2, fs * 1.2, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.min(1, q.hold / 0.7)); g.stroke();
+    }
+  }
+  if (st.lock && !banner) glowText('🔒 LOCK', portrait ? W / 2 : W * 0.34, portrait ? H * 0.42 : 70, fs * 1.2, '#ffffff');
+  // confetti
+  for (const c of st.confetti) { g.save(); g.translate(c.x, c.y); g.rotate(c.r); g.globalAlpha = Math.min(1, c.life); g.fillStyle = c.c; g.fillRect(-c.s / 2, -c.s / 4, c.s, c.s / 2); g.restore(); }
+  if (banner) {
+    banner.t += dt;
+    const a = banner.t < 0.9 ? 1 : Math.max(0, 1 - (banner.t - 0.9) / 0.4);
+    g.globalAlpha = a; glowText(banner.text, portrait ? W / 2 : W * 0.34, portrait ? H * 0.4 : H * 0.22, fs * 2, COL.ang, 'center', 900); g.globalAlpha = 1;
+    if (banner.t > 1.3) banner = null;
+  }
+  // subtitles
+  sub.a += ((sub.text ? 1 : 0) - sub.a) * Math.min(1, dt * 6);
+  if (sub.text) sub.last = sub.text;
+  if (sub.a > 0.01 && sub.last) {
+    const ss = Math.max(18, Math.min(W * 0.045, H * 0.032));
+    g.font = `700 ${ss}px Rajdhani, sans-serif`;
+    const words = sub.last.split(/\s+/), lines = []; let cur = '';
+    for (const w of words) { const t = cur ? cur + ' ' + w : w; if (g.measureText(t).width > (portrait ? W * 0.9 : W * 0.6) && cur) { lines.push(cur); cur = w; } else cur = t; }
+    if (cur) lines.push(cur);
+    g.globalAlpha = sub.a;
+    lines.forEach((l, i) => glowText(l, portrait ? W / 2 : W * 0.34, H * 0.86 - (lines.length - 1 - i) * ss * 1.25, ss, '#ffffff'));
+    g.globalAlpha = 1;
+  }
+}
+
+// ---------------------------------------------------------------- audio + voice
+const audio = { ctx: null, bus: null, mic: null };
+function ensureAudio() {
+  if (!audio.ctx) {
+    audio.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    audio.bus = audio.ctx.createGain(); audio.bus.gain.value = 0.9; audio.bus.connect(audio.ctx.destination);
+  }
+  audio.ctx.resume?.();
+}
+function sfx(type) {
+  if (!S.sfx || !audio.ctx) return;
+  const ctx = audio.ctx, t = ctx.currentTime;
+  const tone = (f, len, peak, at = 0, wave = 'sine') => {
+    const o = ctx.createOscillator(), gg = ctx.createGain(), s = t + at;
+    o.type = wave; o.frequency.value = f;
+    gg.gain.setValueAtTime(0.0001, s); gg.gain.exponentialRampToValueAtTime(peak, s + 0.01); gg.gain.exponentialRampToValueAtTime(0.0001, s + len);
+    o.connect(gg).connect(audio.bus); o.start(s); o.stop(s + len + 0.05);
+  };
+  if (type === 'ding') { tone(1320, 0.35, 0.12); tone(1980, 0.3, 0.06, 0.04); }
+  else if (type === 'blip') tone(1100, 0.12, 0.12);
+  else if (type === 'win') { [660, 880, 1100, 1320].forEach((f, i) => tone(f, 0.25, 0.14, i * 0.08, 'triangle')); }
+}
+let speaking = false;
+function pickVoice() {
+  const vs = speechSynthesis.getVoices();
+  return vs.find((v) => /hi[-_]IN/i.test(v.lang) && /google/i.test(v.name)) || vs.find((v) => /hi[-_]IN/i.test(v.lang)) || vs.find((v) => /^hi/i.test(v.lang)) || null;
+}
+function say(text) {
+  sub.text = text;
+  if (!S.voice || !('speechSynthesis' in window)) { setTimeout(() => { if (sub.text === text) sub.text = ''; }, 900 + text.length * 55); return; }
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  const v = pickVoice(); if (v) { u.voice = v; u.lang = v.lang; } else u.lang = 'hi-IN';
+  speaking = true;
+  u.onend = u.onerror = () => { if (say.u !== u) return; speaking = false; setTimeout(() => { if (sub.text === text) sub.text = ''; }, 1200); };
+  say.u = u; // keep a reference so Chrome fires onend
+  speechSynthesis.speak(u);
+}
+
+// ---------------------------------------------------------------- recording (the canvas already holds everything)
+const recState = { mr: null, chunks: [], t0: 0, dest: null, ext: 'webm', mime: '' };
+function startRecord() {
+  if (!window.MediaRecorder) { toast('Is browser me recording nahi chalegi. Chrome use karo.'); return; }
+  ensureAudio();
+  const tracks = [...cv.captureStream(30).getVideoTracks()];
+  recState.dest = audio.ctx.createMediaStreamDestination();
+  audio.bus.connect(recState.dest);
+  audio.mic?.connect(recState.dest);
+  tracks.push(...recState.dest.stream.getAudioTracks());
+  recState.mime = MIMES.find((m) => MediaRecorder.isTypeSupported(m)) || '';
+  recState.ext = recState.mime.startsWith('video/mp4') ? 'mp4' : 'webm';
+  const mr = new MediaRecorder(new MediaStream(tracks), recState.mime ? { mimeType: recState.mime, videoBitsPerSecond: 8_000_000 } : undefined);
+  recState.chunks = [];
+  mr.ondataavailable = (e) => { if (e.data.size) recState.chunks.push(e.data); };
+  mr.onstop = saveRecording;
+  mr.start(1000);
+  recState.mr = mr; recState.t0 = performance.now();
+  $('#btnRec').classList.add('on');
+}
+function stopRecord() { recState.mr?.stop(); recState.mr = null; $('#btnRec').classList.remove('on'); $('#btnRec').textContent = '⏺ REC'; }
+function saveRecording() {
+  try { audio.bus.disconnect(recState.dest); } catch {}
+  try { audio.mic?.disconnect(recState.dest); } catch {}
+  const blob = new Blob(recState.chunks, { type: recState.mime || 'video/webm' });
+  const a = document.createElement('a');
+  const d = new Date(), stamp = `${d.getHours()}${String(d.getMinutes()).padStart(2, '0')}${String(d.getSeconds()).padStart(2, '0')}`;
+  a.href = URL.createObjectURL(blob); a.download = `finger-trig-${stamp}.${recState.ext}`;
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+  toast(`Video save ho gaya: Downloads me ${a.download}`, 5000);
+}
+
+// ---------------------------------------------------------------- main loop
+let T = 0, lastRender = 0, started = false;
+function tick(dt, now) {
+  T += dt;
+  trackHands(now);
+  update(dt);
+}
+function frame(now) {
+  requestAnimationFrame(frame);
+  if (now - lastRender < 1000 / Number(S.fps) - 2) return;
+  const dt = Math.min(0.06, (now - lastRender) / 1000);
+  lastRender = now;
+  const { W, H } = size();
+  if (cv.width !== Math.round(W * pr) || cv.height !== Math.round(H * pr)) onResize();
+  tick(dt, now);
+  draw(dt);
+  if (recState.mr) {
+    const s = Math.floor((performance.now() - recState.t0) / 1000);
+    $('#btnRec').textContent = `■ ${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+  }
+}
+function onResize() {
+  const { W, H } = size();
+  pr = Math.min(devicePixelRatio || 1, 1.5);
+  cv.width = Math.round(W * pr); cv.height = Math.round(H * pr);
+}
+addEventListener('resize', onResize);
+
+// ---------------------------------------------------------------- UI
+function setLoad(id, s) {
+  const el = document.getElementById(id), icon = { wait: '◌', ok: '✓', fail: '✕', warn: '!' }[s];
+  el.className = s; el.textContent = `${icon} ${el.textContent.replace(/^\S+\s/, '')}`;
+}
+function updateHint() {
+  $('#hint').innerHTML = '<b>👍</b> angutha + ungli = angle · haath <b>paas-door</b> karo, ratio wahi · dusre haath ka <b>✊</b> = lock · <b>🎯</b> quiz';
+}
+function toggleReel() {
+  document.body.classList.toggle('reel');
+  $('#btnReel').classList.toggle('on', document.body.classList.contains('reel'));
+  onResize();
+}
+for (const el of document.querySelectorAll('[data-s]')) {
+  const k = el.dataset.s;
+  if (el.type === 'checkbox') el.checked = !!S[k]; else el.value = S[k];
+  el.addEventListener('change', () => { S[k] = el.type === 'checkbox' ? el.checked : el.value; saveSettings(); });
+}
+$('#btnSettings').addEventListener('click', () => $('#settings').classList.toggle('open'));
+$('#btnClose').addEventListener('click', () => $('#settings').classList.remove('open'));
+$('#btnReel').addEventListener('click', toggleReel);
+$('#btnQuiz').addEventListener('click', toggleQuiz);
+$('#btnLock').addEventListener('click', toggleLock);
+$('#btnUnit').addEventListener('click', () => { st.radians = !st.radians; $('#btnUnit').textContent = st.radians ? 'RAD' : 'DEG'; });
+$('#btnRec').addEventListener('click', () => (recState.mr ? stopRecord() : startRecord()));
+const toggleFull = () => (document.fullscreenElement ? document.exitFullscreen?.() : document.documentElement.requestFullscreen?.().catch(() => {}));
+$('#btnFull').addEventListener('click', toggleFull);
+addEventListener('keydown', (e) => {
+  if (e.target.matches('input, select')) return;
+  const k = e.key.toLowerCase();
+  if (e.code === 'Space') { e.preventDefault(); toggleLock(); }
+  else if (e.key === 'ArrowRight') { e.preventDefault(); setAngle(Math.round(st.deg) + (e.shiftKey ? 15 : 1), 'key'); }
+  else if (e.key === 'ArrowLeft') { e.preventDefault(); setAngle(Math.round(st.deg) - (e.shiftKey ? 15 : 1), 'key'); }
+  else if (k === 'q') toggleQuiz();
+  else if (k === 'd') $('#btnUnit').click();
+  else if (k === 'r' && started) (recState.mr ? stopRecord() : startRecord());
+  else if (k === 'v') toggleReel();
+  else if (k === 'h') document.body.classList.toggle('clean');
+  else if (k === 'f') toggleFull();
+  else if (e.key === 'Escape') $('#settings').classList.remove('open');
+});
+// Without a camera: drag on the unit circle to set the angle.
+let dragging = false;
+function pointerAngle(e) {
+  if (!circle) return;
+  const r = cv.getBoundingClientRect(), x = e.clientX - r.left - circle.cx, y = circle.cy - (e.clientY - r.top);
+  if (!dragging && Math.hypot(x, y) > circle.R * 1.4) return;
+  dragging = true;
+  let a = Math.atan2(y, x) / RAD; if (a < 0) a = a < -90 ? 180 : 0;
+  setAngle(a, 'mouse');
+}
+cv.addEventListener('pointerdown', pointerAngle);
+cv.addEventListener('pointermove', (e) => { if (e.buttons) pointerAngle(e); });
+addEventListener('pointerup', () => { dragging = false; });
+
+async function start() {
+  const btn = $('#btnStart');
+  btn.disabled = true; btn.textContent = 'STARTING…';
+  ensureAudio();
+  setLoad('ldCam', 'wait');
+  const md = navigator.mediaDevices;
+  const noMedia = new URLSearchParams(location.search).has('nomedia');
+  let vStream = null, aStream = null;
+  if (md?.getUserMedia && !noMedia) {
+    try {
+      const s = await md.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' }, audio: AUDIO_CONSTRAINTS });
+      vStream = aStream = s;
+    } catch {
+      try { vStream = await md.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 } } }); } catch {}
+      try { aStream = await md.getUserMedia({ audio: AUDIO_CONSTRAINTS }); } catch {}
+    }
+  }
+  if (aStream) audio.mic = audio.ctx.createMediaStreamSource(new MediaStream(aStream.getAudioTracks()));
+  if (vStream) { cam.srcObject = new MediaStream(vStream.getVideoTracks()); try { await cam.play(); } catch {} }
+  setLoad('ldCam', vStream && aStream ? 'ok' : vStream || aStream ? 'warn' : 'fail');
+  if (!vStream) toast('Camera nahi mila. Unit circle par mouse se kheench kar ya ← → se angle badlo.', 5000);
+  started = true;
+  $('#start').classList.add('gone');
+  setTimeout(() => say(LINES.intro), 600);
+  if (vStream) initHands().catch((e) => { console.error(e); setLoad('ldHand', 'fail'); toast('Hand tracking load nahi hua.'); });
+}
+$('#btnStart').addEventListener('click', start);
+
+updateHint();
+onResize();
+requestAnimationFrame(frame);
+// Console hooks for testing without a camera.
+window.__trig = {
+  step(sec) { for (let i = 0; i < Math.max(1, Math.round(sec * 30)); i++) tick(1 / 30, performance.now()); draw(sec); },
+  ingestHands, setAngle, toggleQuiz, toggleLock, st, get hands() { return hands; },
+};
+</script>
+</body>
+</html>

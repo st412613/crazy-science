@@ -1,0 +1,1052 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💧</text></svg>">
+<title>Molecule Builder · Crazy Science</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --c: #7dffb0;
+    --c-rgb: 125, 255, 176;
+    --text: #effff5;
+    --dim: rgba(239, 255, 245, .62);
+    --panel: rgba(4, 14, 10, .84);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #000; color: var(--text); font-family: 'Rajdhani', system-ui, sans-serif; overflow: hidden; }
+  #stage { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 100vw; height: 100vh; overflow: hidden; background: #000; }
+  body.reel #stage { width: min(100vw, calc(100vh * 9 / 16)); height: min(100vh, calc(100vw * 16 / 9)); }
+  #gl, #fx { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  #cam { position: fixed; width: 2px; height: 2px; opacity: 0; pointer-events: none; }
+
+  #ui { position: fixed; inset: 0; pointer-events: none; z-index: 5; }
+  #ui button { pointer-events: auto; }
+  .top { position: absolute; top: 14px; left: 14px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; max-width: calc(100% - 28px); }
+  button.icon { height: 38px; min-width: 38px; padding: 0 12px; border-radius: 10px; border: 1px solid rgba(var(--c-rgb), .45); background: rgba(4, 14, 10, .65); color: var(--c); font: 700 13px 'Orbitron', sans-serif; letter-spacing: .06em; cursor: pointer; }
+  button.icon:hover { background: rgba(var(--c-rgb), .16); }
+  button.icon.on { background: var(--c); color: #00140a; }
+  #btnRec.on { background: #ff2d4a; border-color: #ff2d4a; color: #fff; animation: blink 1s infinite; }
+  #hint { position: absolute; left: 50%; top: 60px; transform: translateX(-50%); background: var(--panel); border: 1px solid rgba(var(--c-rgb), .3); border-radius: 12px; padding: 7px 14px; font-size: 15px; color: var(--dim); text-align: center; width: max-content; max-width: calc(100% - 32px); line-height: 1.5; }
+  #hint b { color: var(--c); }
+  #toast { position: absolute; top: 108px; left: 50%; transform: translateX(-50%); background: var(--panel); border: 1px solid rgba(var(--c-rgb), .4); padding: 10px 16px; border-radius: 10px; font-size: 16px; opacity: 0; transition: opacity .3s; max-width: calc(100% - 32px); text-align: center; z-index: 6; }
+  #toast.on { opacity: 1; }
+  body.clean #hint, body.clean .top button:not(#btnRec) { display: none; }
+
+  #settings { position: fixed; top: 0; left: 0; height: 100%; width: min(360px, 100%); background: rgba(3, 12, 8, .96); border-right: 1px solid rgba(var(--c-rgb), .3); z-index: 10; transform: translateX(-100%); transition: transform .3s; overflow-y: auto; padding: 20px; }
+  #settings.open { transform: none; }
+  #settings h2 { font-family: 'Orbitron', sans-serif; font-size: 14px; letter-spacing: .25em; color: var(--c); margin: 4px 0 12px; display: flex; justify-content: space-between; align-items: center; }
+  .row { display: flex; flex-direction: column; gap: 5px; margin: 12px 0; font-size: 16px; }
+  .row.inline { flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; }
+  .keys { color: var(--dim); font-size: 13px; line-height: 1.6; }
+  .row select { padding: 9px 10px; border-radius: 8px; border: 1px solid rgba(var(--c-rgb), .35); background: #071610; color: var(--text); font: 600 15px 'Rajdhani', sans-serif; }
+  input[type=checkbox] { width: 18px; height: 18px; flex: none; accent-color: var(--c); }
+
+  #start { position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; background: radial-gradient(ellipse at center, rgba(6, 30, 18, .7), #000); padding: 16px; transition: opacity .6s; }
+  #start.gone { opacity: 0; pointer-events: none; }
+  #start .card { max-width: 580px; text-align: center; }
+  #start h1 { font-family: 'Orbitron', sans-serif; font-weight: 900; letter-spacing: .14em; font-size: clamp(24px, 5.5vw, 44px); color: var(--c); text-shadow: 0 0 24px rgba(var(--c-rgb), .7); margin: 0 0 6px; }
+  #start h2 { font-size: 26px; margin: 0 0 14px; }
+  #start p { font-size: 19px; line-height: 1.5; margin: 0 0 22px; }
+  #start .note { font-size: 14px; color: var(--dim); margin-top: 16px; }
+  .btn { padding: 14px 30px; border-radius: 12px; border: 1px solid rgba(var(--c-rgb), .6); background: rgba(var(--c-rgb), .14); color: var(--c); font: 700 16px 'Orbitron', sans-serif; letter-spacing: .14em; cursor: pointer; }
+  .btn:disabled { opacity: .5; cursor: wait; }
+  #loadList { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; margin-top: 18px; font-size: 15px; color: var(--dim); }
+  #loadList .ok { color: #3dff8b; } #loadList .fail { color: #ff5b6b; } #loadList .warn { color: #ffd23d; }
+  @keyframes blink { 50% { opacity: .55; } }
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="gl"></canvas>
+  <canvas id="fx"></canvas>
+</div>
+<video id="cam" playsinline muted></video>
+
+<div id="ui">
+  <div class="top">
+    <button class="icon" id="btnHome" title="Crazy Science: saare labs" onclick="location.href='../'">🏠</button>
+    <button class="icon" id="btnSettings" title="Settings">⚙</button>
+    <button class="icon" id="btnRec" title="Video record (R)">⏺ REC</button>
+    <button class="icon" id="btnReel" title="Reel frame 9:16 (V)">9:16</button>
+    <button class="icon" id="btnChallenge" title="Challenge (Q)">🎯 चैलेंज</button>
+    <button class="icon" id="btnBond" title="Double/triple bond poore karo (B)">＝ BOND</button>
+    <button class="icon" id="btnClear" title="Sab saaf (C)">🧹</button>
+    <button class="icon" id="btnFull" title="Fullscreen (F)">⛶</button>
+  </div>
+  <div id="hint"></div>
+  <div id="toast" role="status"></div>
+</div>
+
+<aside id="settings" aria-label="Settings">
+  <h2>SETTINGS <button class="icon" id="btnClose" title="Band karo (Esc)">✕</button></h2>
+  <label class="row inline">Khaali haath (valency) dikhao <input type="checkbox" data-s="slots"></label>
+  <label class="row inline">Lone pair (अकेले इलेक्ट्रॉन जोड़े) dikhao <input type="checkbox" data-s="lone"></label>
+  <label class="row inline">Hindi aawaz <input type="checkbox" data-s="voice"></label>
+  <label class="row inline">Sound effects <input type="checkbox" data-s="sfx"></label>
+  <label class="row inline">Haath atoms ke aage dikhe <input type="checkbox" data-s="occlude"></label>
+  <label class="row">Smoothness
+    <select data-s="fps">
+      <option value="30">30 FPS (Mac ke liye halka)</option>
+      <option value="60">60 FPS (smooth, zyada load)</option>
+    </select>
+  </label>
+  <div class="keys">Gestures: 🤏 neeche tray se atom uthao · dusre atom ke paas chhodo = bond · jude atom ko dobara chhuao = double bond · tez kheencho = bond toot · 🗑 par chhodo = hatao · 🤏 khaali jagah = ghumao · 🙌 = bond poore + samjhao · ✊ = sab saaf<br>Shortcuts: 1–6 = H O N C Cl Na · B = bond · C = saaf · Q = challenge · R = record · V = 9:16 · H = clean · Esc = band</div>
+</aside>
+
+<div id="start">
+  <div class="card">
+    <h1>MOLECULE·AR</h1>
+    <h2>⚗️ अणु बनाओ, संयोजकता समझो</h2>
+    <p>Har atom ke chamakte "haath" uski valency hain. Haath se atom uthao, jodo, aur paani, CO₂, methane jaise molecule banao 💧</p>
+    <button class="btn" id="btnStart">▶ START</button>
+    <div id="loadList"><div id="ldCam">◌ Camera + mic</div><div id="ldHand">◌ Hand tracking</div></div>
+    <p class="note">Chrome me best chalta hai. Recording ke liye headphone mat lagana, taaki Hindi aawaz bhi video me aaye.</p>
+    <p class="note"><a href="../" style="color:inherit">← Crazy Science: saare labs</a></p>
+  </div>
+</div>
+
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ---------------------------------------------------------------- chemistry data (edit lines freely)
+const ELEM = {
+  H: { hi: 'हाइड्रोजन', en: 'Hydrogen', val: 1, lone: 0, color: 0xf4f4f4, r: 0.09 },
+  O: { hi: 'ऑक्सीजन', en: 'Oxygen', val: 2, lone: 2, color: 0xff4040, r: 0.13 },
+  N: { hi: 'नाइट्रोजन', en: 'Nitrogen', val: 3, lone: 1, color: 0x3f6bff, r: 0.13 },
+  C: { hi: 'कार्बन', en: 'Carbon', val: 4, lone: 0, color: 0x3a3a3a, r: 0.14 },
+  Cl: { hi: 'क्लोरीन', en: 'Chlorine', val: 1, lone: 3, color: 0x3dff6b, r: 0.15 },
+  Na: { hi: 'सोडियम', en: 'Sodium', val: 1, lone: 0, color: 0xb46bff, r: 0.16 },
+};
+const TRAY = ['H', 'O', 'N', 'C', 'Cl', 'Na'];
+const HANDS_WORD = { 1: 'एक', 2: 'दो', 3: 'तीन', 4: 'चार' };
+const ALL_WORD = { 1: 'इकलौता', 2: 'दोनों', 3: 'तीनों', 4: 'चारों' };
+const MOLS = {
+  H2: { f: 'H₂', hi: 'हाइड्रोजन गैस', en: 'Hydrogen', icon: '🎈', line: 'हाइड्रोजन गैस! दोनों हाइड्रोजन का एक-एक हाथ आपस में जुड़ गया। ये सबसे हल्की गैस है।' },
+  O2: { f: 'O₂', hi: 'ऑक्सीजन गैस', en: 'Oxygen', icon: '🫁', line: 'ऑक्सीजन गैस! दोनों ऑक्सीजन के बीच डबल बॉन्ड। यही हम साँस में लेते हैं।' },
+  N2: { f: 'N₂', hi: 'नाइट्रोजन गैस', en: 'Nitrogen', icon: '🌬️', line: 'नाइट्रोजन गैस! ट्रिपल बॉन्ड, यानी तीन बंधन। हवा का सबसे बड़ा हिस्सा यही है।' },
+  Cl2: { f: 'Cl₂', hi: 'क्लोरीन गैस', en: 'Chlorine', icon: '🧪', line: 'क्लोरीन गैस! इससे पानी साफ़ किया जाता है।' },
+  H2O: { f: 'H₂O', hi: 'पानी', en: 'Water', icon: '💧', line: 'पानी बन गया! ऑक्सीजन के दोनों हाथों में एक-एक हाइड्रोजन। ये मुड़ा हुआ इसलिए है, क्योंकि ऑक्सीजन के पास दो अकेले इलेक्ट्रॉन जोड़े भी हैं।' },
+  CO2: { f: 'CO₂', hi: 'कार्बन डाइऑक्साइड', en: 'Carbon dioxide', icon: '🌫️', line: 'कार्बन डाइऑक्साइड! कार्बन के चार हाथ, हर ऑक्सीजन से दो-दो, यानी डबल बॉन्ड। इसलिए ये बिल्कुल सीधा होता है।' },
+  CH4: { f: 'CH₄', hi: 'मीथेन', en: 'Methane', icon: '🔥', line: 'मीथेन! कार्बन के चारों हाथों में हाइड्रोजन। चारों एक-दूसरे से दूर भागते हैं, इसलिए ये पिरामिड जैसा आकार बनता है।' },
+  NH3: { f: 'NH₃', hi: 'अमोनिया', en: 'Ammonia', icon: '🧴', line: 'अमोनिया! नाइट्रोजन के तीनों हाथों में हाइड्रोजन, और ऊपर एक अकेला इलेक्ट्रॉन जोड़ा।' },
+  HCl: { f: 'HCl', hi: 'हाइड्रोजन क्लोराइड', en: 'Hydrogen chloride', icon: '⚗️', line: 'हाइड्रोजन क्लोराइड! पानी में घुलकर ये हाइड्रोक्लोरिक एसिड बनता है, जो हमारे पेट में भी होता है।' },
+  NaCl: { f: 'NaCl', hi: 'नमक', en: 'Salt', icon: '🧂', line: 'सोडियम क्लोराइड, यानी हमारा खाने का नमक!' },
+  H2O2: { f: 'H₂O₂', hi: 'हाइड्रोजन पेरोक्साइड', en: 'Hydrogen peroxide', icon: '🩹', line: 'हाइड्रोजन पेरोक्साइड! घाव साफ़ करने वाली दवा।' },
+  C2H6: { f: 'C₂H₆', hi: 'ईथेन', en: 'Ethane', icon: '🔥', line: 'ईथेन! दो कार्बन, और छह हाइड्रोजन।' },
+  C2H4: { f: 'C₂H₄', hi: 'एथिलीन', en: 'Ethylene', icon: '🍌', line: 'एथिलीन! दो कार्बन के बीच डबल बॉन्ड। यही गैस फलों को पकाती है।' },
+  C2H2: { f: 'C₂H₂', hi: 'एसिटिलीन', en: 'Acetylene', icon: '🔧', line: 'एसिटिलीन! दो कार्बन के बीच ट्रिपल बॉन्ड। वेल्डिंग में काम आती है।' },
+  CH4O: { f: 'CH₃OH', hi: 'मेथनॉल', en: 'Methanol', icon: '🧪', line: 'मेथनॉल! एक तरह का अल्कोहल।' },
+  HNaO: { f: 'NaOH', hi: 'सोडियम हाइड्रॉक्साइड', en: 'Sodium hydroxide', icon: '🧼', line: 'सोडियम हाइड्रॉक्साइड! इससे साबुन बनता है।' },
+  CCl4: { f: 'CCl₄', hi: 'कार्बन टेट्राक्लोराइड', en: 'Carbon tetrachloride', icon: '🧪', line: 'कार्बन टेट्राक्लोराइड! कार्बन के चारों हाथों में क्लोरीन।' },
+};
+const CHALLENGES = ['H2O', 'CO2', 'CH4', 'NH3', 'O2', 'NaCl', 'HCl', 'N2', 'C2H4'];
+const LINES = {
+  intro: 'नीचे से कोई भी परमाणु उठाइए। उसके चमकते हाथ उसकी संयोजकता हैं।',
+  bonds: 'बॉन्ड पूरे कर दिए!',
+  cleared: 'सब साफ़!',
+  challengeStart: 'चैलेंज शुरू!',
+  win: ['शाबाश!', 'बिल्कुल सही!', 'कमाल कर दिया!'],
+};
+
+// ---------------------------------------------------------------- config + settings
+const MP_BASE = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14';
+const HAND_MODEL = 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
+const AUDIO_CONSTRAINTS = { echoCancellation: false, noiseSuppression: false, autoGainControl: false };
+const MIMES = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4;codecs=avc1,opus', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
+const DEFAULTS = { slots: true, lone: true, voice: true, sfx: true, occlude: true, fps: '30' };
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+};
+const S = { ...DEFAULTS, ...(() => { try { return JSON.parse(store.get('mol.settings')) || {}; } catch { return {}; } })() };
+const saveSettings = () => store.set('mol.settings', JSON.stringify(S));
+
+// ---------------------------------------------------------------- utils
+const $ = (s) => document.querySelector(s);
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const V3 = THREE.Vector3;
+const randUnit = (v = new V3()) => { const u = Math.random() * 2 - 1, a = Math.random() * Math.PI * 2, r = Math.sqrt(1 - u * u); return v.set(r * Math.cos(a), r * Math.sin(a), u); };
+const pick = (a) => a[Math.floor(Math.random() * a.length)];
+let toastTimer;
+function toast(msg, ms = 3200) {
+  const el = $('#toast'); el.textContent = msg; el.classList.add('on');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('on'), ms);
+}
+
+// ---------------------------------------------------------------- renderer + camera layers
+const stage = $('#stage'), glc = $('#gl'), fxc = $('#fx'), fx = fxc.getContext('2d');
+const cam = $('#cam');
+const renderer = new THREE.WebGLRenderer({ canvas: glc, antialias: true, powerPreference: 'high-performance' });
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x000000);
+const camera = new THREE.PerspectiveCamera(50, 1, 0.05, 100);
+camera.position.set(0, 0, 3);
+scene.add(camera);
+scene.add(new THREE.HemisphereLight(0xffffff, 0x223322, 1.4));
+const key = new THREE.DirectionalLight(0xffffff, 2.2);
+key.position.set(1.5, 2, 3);
+scene.add(key);
+const camTex = new THREE.VideoTexture(cam);
+camTex.colorSpace = THREE.SRGBColorSpace;
+const maskCanvas = document.createElement('canvas');
+maskCanvas.width = 320; maskCanvas.height = 180;
+const mctx = maskCanvas.getContext('2d');
+const maskTex = new THREE.CanvasTexture(maskCanvas);
+const bgPlane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: camTex, depthTest: false, depthWrite: false, toneMapped: false }));
+bgPlane.renderOrder = -10; bgPlane.frustumCulled = false; bgPlane.position.z = -40; bgPlane.visible = false;
+const handLayer = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: camTex, alphaMap: maskTex, transparent: true, depthTest: false, depthWrite: false, toneMapped: false }));
+handLayer.renderOrder = 50; handLayer.frustumCulled = false; handLayer.position.z = -0.5; handLayer.visible = false;
+camera.add(bgPlane, handLayer);
+function layoutPlanes() {
+  for (const [m, d] of [[bgPlane, 40], [handLayer, 0.5]]) {
+    const h = 2 * d * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+    m.scale.set(-h * camera.aspect, h, 1);
+  }
+  const vw = cam.videoWidth || 1280, vh = cam.videoHeight || 720, va = vw / vh, sa = camera.aspect;
+  for (const t of [camTex, maskTex]) {
+    if (sa > va) { t.repeat.set(1, va / sa); t.offset.set(0, (1 - va / sa) / 2); }
+    else { t.repeat.set(sa / va, 1); t.offset.set((1 - sa / va) / 2, 0); }
+  }
+  maskCanvas.width = 320; maskCanvas.height = Math.round(320 * vh / vw);
+}
+cam.addEventListener('loadedmetadata', layoutPlanes);
+
+// ---------------------------------------------------------------- shared textures
+function radialTex(stops) {
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const g = c.getContext('2d'), gr = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+  stops.forEach(([p, a]) => gr.addColorStop(p, `rgba(255,255,255,${a})`));
+  g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+const GLOW = radialTex([[0, 1], [0.25, 0.6], [0.55, 0.15], [1, 0]]);
+const symbolTex = {};
+function symbolSprite(el) {
+  if (!symbolTex[el]) {
+    const c = document.createElement('canvas'); c.width = c.height = 128;
+    const g = c.getContext('2d');
+    g.font = `900 ${el.length > 1 ? 58 : 72}px Orbitron, sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.lineWidth = 10; g.strokeStyle = 'rgba(0,0,0,.75)'; g.strokeText(el, 64, 68);
+    g.fillStyle = '#ffffff'; g.fillText(el, 64, 68);
+    symbolTex[el] = new THREE.CanvasTexture(c); symbolTex[el].colorSpace = THREE.SRGBColorSpace;
+  }
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: symbolTex[el], transparent: true, depthTest: false, depthWrite: false }));
+  s.renderOrder = 20;
+  return s;
+}
+
+// ---------------------------------------------------------------- world: atoms, bonds, virtual electron domains
+const world = new THREE.Group();
+scene.add(world);
+const sphereGeo = new THREE.SphereGeometry(1, 40, 28);
+const bondGeo = new THREE.CylinderGeometry(1, 1, 1, 14, 1, true);
+const bondMat = new THREE.MeshStandardMaterial({ color: 0xdfe8e4, roughness: 0.4, metalness: 0.2 });
+const loneMat = new THREE.MeshBasicMaterial({ color: 0xfff2a6, transparent: true, opacity: 0.75 });
+const dotGeo = new THREE.SphereGeometry(1, 10, 8);
+const atoms = [];
+let nextId = 1;
+const bondPool = [];
+function bondMesh(i) {
+  if (!bondPool[i]) { bondPool[i] = new THREE.Mesh(bondGeo, bondMat); world.add(bondPool[i]); }
+  return bondPool[i];
+}
+function free(a) { let used = 0; for (const o of a.bonds.values()) used += o; return a.E.val - used; }
+function addAtom(el, pos) {
+  const E = ELEM[el];
+  const mesh = new THREE.Mesh(sphereGeo, new THREE.MeshStandardMaterial({ color: E.color, roughness: 0.32, metalness: 0.08, emissive: E.color, emissiveIntensity: 0.12 }));
+  mesh.scale.setScalar(E.r);
+  const label = symbolSprite(el);
+  label.scale.setScalar(E.r * 1.5);
+  const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW, color: E.color, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending }));
+  halo.scale.setScalar(E.r * 5);
+  world.add(mesh, label, halo);
+  const a = { id: nextId++, el, E, pos: pos.clone(), vel: new V3(), f: new V3(), bonds: new Map(), virt: [], mesh, label, halo, grabbed: false, born: T, glow: 0 };
+  syncVirt(a);
+  atoms.push(a);
+  if (!spokenEl.has(el)) { spokenEl.add(el); say(`${E.hi}! इसके ${HANDS_WORD[E.val]} हाथ ${E.val === 1 ? 'है' : 'हैं'}, यानी संयोजकता ${HANDS_WORD[E.val]}।`); }
+  sfx('pop');
+  return a;
+}
+const spokenEl = new Set();
+// Lone pairs and free bonding slots ("hands") are virtual points that also repel, which bends the shapes correctly.
+function syncVirt(a) {
+  const need = a.E.lone + Math.max(0, free(a));
+  while (a.virt.length < need) {
+    const v = { pos: a.pos.clone().add(randUnit().multiplyScalar(0.25)), vel: new V3(), f: new V3(), kind: 'slot', meshes: [] };
+    a.virt.push(v);
+  }
+  while (a.virt.length > need) { const v = a.virt.pop(); v.meshes.forEach((m) => world.remove(m)); }
+  a.virt.forEach((v, i) => {
+    const kind = i < a.E.lone ? 'lone' : 'slot';
+    if (v.kind !== kind || !v.meshes.length) {
+      v.meshes.forEach((m) => world.remove(m));
+      v.kind = kind;
+      v.meshes = kind === 'lone'
+        ? [new THREE.Mesh(dotGeo, loneMat), new THREE.Mesh(dotGeo, loneMat)]
+        : [new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW, color: a.E.color === 0x3a3a3a ? 0x9ad4ff : a.E.color, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }))];
+      v.meshes.forEach((m) => { if (kind === 'lone') m.scale.setScalar(0.014); world.add(m); });
+    }
+  });
+}
+function removeAtom(a) {
+  for (const id of a.bonds.keys()) { const b = atoms.find((x) => x.id === id); if (b) { b.bonds.delete(a.id); syncVirt(b); } }
+  a.virt.forEach((v) => v.meshes.forEach((m) => world.remove(m)));
+  world.remove(a.mesh, a.label, a.halo);
+  a.mesh.material.dispose(); a.label.material.dispose(); a.halo.material.dispose();
+  atoms.splice(atoms.indexOf(a), 1);
+}
+const byId = (id) => atoms.find((x) => x.id === id);
+function bondLen(a, b, order) { return (a.E.r + b.E.r) * 1.35 * (order === 3 ? 0.86 : order === 2 ? 0.92 : 1); }
+function setBond(a, b, order) {
+  if (order <= 0) { a.bonds.delete(b.id); b.bonds.delete(a.id); }
+  else { a.bonds.set(b.id, order); b.bonds.set(a.id, order); }
+  syncVirt(a); syncVirt(b);
+  dirtyMolecules = true;
+}
+
+// ---------------------------------------------------------------- physics: springs + electron-domain repulsion (VSEPR)
+const _d = new V3(), _u1 = new V3(), _u2 = new V3();
+function physics(dt) {
+  for (const a of atoms) { a.f.set(0, 0, 0); for (const v of a.virt) v.f.set(0, 0, 0); }
+  // bond springs
+  for (const a of atoms) for (const [id, order] of a.bonds) {
+    if (id < a.id) continue;
+    const b = byId(id); if (!b) continue;
+    _d.subVectors(b.pos, a.pos); const L = _d.length() || 1e-4, F = 60 * (L - bondLen(a, b, order));
+    _d.multiplyScalar(F / L); a.f.add(_d); b.f.sub(_d);
+  }
+  // virtual points held at a fixed distance from their atom
+  for (const a of atoms) for (const v of a.virt) {
+    const r = v.kind === 'lone' ? a.E.r + 0.08 : a.E.r + 0.12;
+    _d.subVectors(v.pos, a.pos); const L = _d.length() || 1e-4, F = 60 * (L - r);
+    _d.multiplyScalar(F / L); v.f.sub(_d); a.f.add(_d); // full reaction keeps momentum balanced (otherwise molecules bend on their own)
+  }
+  // electron domains around each atom push each other apart (bonds, lone pairs, free hands)
+  for (const c of atoms) {
+    const D = [];
+    for (const id of c.bonds.keys()) { const n = byId(id); if (n) D.push({ p: n.pos, f: n.f, w: 1 }); }
+    for (const v of c.virt) D.push({ p: v.pos, f: v.f, w: v.kind === 'lone' ? 1.35 : 0.9 }); // lone pairs push harder (water bends to ~105°)
+    for (let i = 0; i < D.length; i++) for (let j = i + 1; j < D.length; j++) {
+      _u1.subVectors(D[i].p, c.pos).normalize(); _u2.subVectors(D[j].p, c.pos).normalize();
+      _d.subVectors(_u2, _u1); const L = Math.max(0.12, _d.length());
+      const k = 4 * D[i].w * D[j].w / (L * L);
+      _d.normalize().multiplyScalar(k);
+      D[j].f.add(_d); D[i].f.sub(_d);
+    }
+  }
+  // atoms that are not bonded keep their distance
+  for (let i = 0; i < atoms.length; i++) for (let j = i + 1; j < atoms.length; j++) {
+    const a = atoms[i], b = atoms[j];
+    if (a.bonds.has(b.id)) continue;
+    _d.subVectors(b.pos, a.pos); const L = _d.length() || 1e-4, min = (a.E.r + b.E.r) * 1.9;
+    if (L < min) { _d.multiplyScalar(((min - L) * 30) / L); a.f.sub(_d); b.f.add(_d); }
+  }
+  const damp = Math.pow(0.0005, dt);
+  for (const a of atoms) {
+    if (a.grabbed) { a.vel.set(0, 0, 0); continue; }
+    a.vel.addScaledVector(a.f, dt).multiplyScalar(damp);
+    a.pos.addScaledVector(a.vel, dt);
+    a.pos.z = clamp(a.pos.z, -0.8, 0.8);
+  }
+  for (const a of atoms) for (const v of a.virt) {
+    v.vel.addScaledVector(v.f, dt * 3).multiplyScalar(damp);
+    v.vel.x += (Math.random() - 0.5) * 0.03; v.vel.y += (Math.random() - 0.5) * 0.03; v.vel.z += (Math.random() - 0.5) * 0.03; // tiny jitter so shapes never get stuck flat
+    v.pos.addScaledVector(v.vel, dt);
+  }
+}
+function syncMeshes() {
+  let bi = 0;
+  const camLocal = world.worldToLocal(camera.position.clone());
+  for (const a of atoms) {
+    const pop = clamp((T - a.born) / 0.25, 0, 1);
+    a.mesh.position.copy(a.pos); a.mesh.scale.setScalar(a.E.r * (0.4 + 0.6 * pop) * (1 + a.glow * 0.15));
+    a.label.position.copy(a.pos).addScaledVector(_d.subVectors(camLocal, a.pos).normalize(), a.E.r * 1.05);
+    a.halo.position.copy(a.pos); a.halo.material.opacity = 0.15 + a.glow * 0.6 + (a.grabbed ? 0.35 : 0);
+    a.glow *= 0.94;
+    for (const v of a.virt) {
+      const show = v.kind === 'lone' ? S.lone : S.slots;
+      v.meshes.forEach((m) => { m.visible = show; });
+      if (!show) continue;
+      if (v.kind === 'lone') {
+        _u1.subVectors(v.pos, a.pos).normalize(); _u2.crossVectors(_u1, new V3(0, 0, 1)).normalize().multiplyScalar(0.022);
+        v.meshes[0].position.copy(v.pos).add(_u2); v.meshes[1].position.copy(v.pos).sub(_u2);
+      } else {
+        v.meshes[0].position.copy(v.pos);
+        v.meshes[0].scale.setScalar(0.11 * (1 + 0.25 * Math.sin(T * 6 + a.id)));
+      }
+    }
+    for (const [id, order] of a.bonds) {
+      if (id < a.id) continue;
+      const b = byId(id); if (!b) continue;
+      _d.subVectors(b.pos, a.pos); const L = _d.length();
+      const mid = a.pos.clone().add(b.pos).multiplyScalar(0.5);
+      const q = new THREE.Quaternion().setFromUnitVectors(new V3(0, 1, 0), _d.clone().normalize());
+      // parallel sticks for double / triple bonds, spread sideways to the viewer
+      const side = _u1.crossVectors(_d, _u2.subVectors(camLocal, mid)).normalize().multiplyScalar(0.035);
+      const offs = order === 1 ? [0] : order === 2 ? [-0.5, 0.5] : [-1, 0, 1];
+      for (const o of offs) {
+        const m = bondMesh(bi++);
+        m.visible = true; m.position.copy(mid).addScaledVector(side, o); m.quaternion.copy(q);
+        m.scale.set(order === 1 ? 0.028 : 0.018, L, order === 1 ? 0.028 : 0.018);
+      }
+    }
+  }
+  for (let i = bi; i < bondPool.length; i++) bondPool[i].visible = false;
+}
+
+// ---------------------------------------------------------------- molecules: find, name, celebrate
+let dirtyMolecules = false;
+const announced = new Set();
+let mols = [];
+function components() {
+  const seen = new Set(), out = [];
+  for (const a of atoms) {
+    if (seen.has(a.id)) continue;
+    const comp = [], stack = [a]; seen.add(a.id);
+    while (stack.length) { const x = stack.pop(); comp.push(x); for (const id of x.bonds.keys()) if (!seen.has(id)) { seen.add(id); stack.push(byId(id)); } }
+    out.push(comp);
+  }
+  return out;
+}
+function formulaKey(comp) {
+  const n = {}; comp.forEach((a) => { n[a.el] = (n[a.el] || 0) + 1; });
+  const order = Object.keys(n).sort((x, y) => (x === 'C' ? -1 : y === 'C' ? 1 : x === 'H' ? -1 : y === 'H' ? 1 : x.localeCompare(y)));
+  return order.map((e) => e + (n[e] > 1 ? n[e] : '')).join('');
+}
+const SUB = { 0: '₀', 1: '₁', 2: '₂', 3: '₃', 4: '₄', 5: '₅', 6: '₆', 7: '₇', 8: '₈', 9: '₉' };
+const pretty = (k) => k.replace(/\d/g, (d) => SUB[d]);
+function updateMolecules() {
+  if (!dirtyMolecules) return;
+  dirtyMolecules = false;
+  mols = [];
+  const live = new Set();
+  for (const comp of components()) {
+    if (comp.length < 2) continue;
+    const done = comp.every((a) => free(a) === 0);
+    const k = formulaKey(comp), info = MOLS[k], sig = comp.map((a) => a.id).sort((x, y) => x - y).join(',') + '|' + k;
+    mols.push({ comp, done, key: k, info, sig });
+    if (!done) continue;
+    live.add(sig);
+    if (!announced.has(sig)) {
+      announced.add(sig);
+      comp.forEach((a) => { a.glow = 1; });
+      const c = comp.reduce((s, a) => s.add(a.pos), new V3()).multiplyScalar(1 / comp.length);
+      burst(world.localToWorld(c.clone()), info ? 0x7dffb0 : 0xffffff);
+      sfx('win');
+      const ch = challenge;
+      if (ch.on && ch.target === k) {
+        ch.score++; ch.cele = 2;
+        say(`${pick(LINES.win)} ${info.line}`);
+        setTimeout(nextChallenge, 4500);
+      } else say(info ? info.line : `शाबाश! सारे हाथ भर गए। ये है ${pretty(k)}।`);
+      banner = { t: 0, text: info ? `${info.icon} ${info.hi} · ${info.f}` : `✨ ${pretty(k)}` };
+    }
+  }
+  for (const s of [...announced]) if (!live.has(s)) announced.delete(s);
+}
+// Fill remaining free hands with double / triple bonds where both ends still have room (O=O, O=C=O, N≡N).
+function completeBonds() {
+  let changed = false, again = true;
+  while (again) {
+    again = false;
+    for (const a of atoms) for (const [id, order] of a.bonds) {
+      const b = byId(id);
+      if (order < 3 && free(a) > 0 && free(b) > 0) { setBond(a, b, order + 1); changed = again = true; sfx('snap'); break; }
+    }
+  }
+  if (changed) banner = { t: 0, text: '＝ डबल / ट्रिपल बॉन्ड!' };
+  return changed;
+}
+function explainCurrent() {
+  const m = mols.find((x) => x.done && x.info) || mols[0];
+  if (!m) { say(LINES.intro); return; }
+  if (m.done) { say(m.info ? m.info.line : `ये है ${pretty(m.key)}।`); return; }
+  const need = m.comp.filter((a) => free(a) > 0).map((a) => `${a.E.hi} के ${HANDS_WORD[free(a)]}`).join(', ');
+  say(`अभी ${need} हाथ खाली हैं। इनमें और परमाणु जोड़िए।`);
+}
+function clearAll() {
+  if (!atoms.length) return;
+  for (const a of [...atoms]) { burst(world.localToWorld(a.pos.clone()), a.E.color, 30); removeAtom(a); }
+  announced.clear(); mols = []; banner = { t: 0, text: '🧹 ' + LINES.cleared }; sfx('clear');
+}
+
+// ---------------------------------------------------------------- challenge
+const challenge = { on: false, i: 0, target: '', score: 0, cele: 0 };
+function nextChallenge() {
+  if (!challenge.on) return;
+  challenge.target = CHALLENGES[challenge.i++ % CHALLENGES.length];
+  const info = MOLS[challenge.target];
+  say(`${info.hi} बनाइए! यानी ${info.f.replace(/[₀-₉]/g, (d) => ' ' + '₀₁₂₃₄₅₆₇₈₉'.indexOf(d))}।`);
+}
+function toggleChallenge() {
+  challenge.on = !challenge.on;
+  $('#btnChallenge').classList.toggle('on', challenge.on);
+  if (challenge.on) { challenge.i = 0; challenge.score = 0; clearAll(); say(LINES.challengeStart); setTimeout(nextChallenge, 1600); }
+  else banner = { t: 0, text: `🎯 ${challenge.score} सही!` };
+}
+
+// ---------------------------------------------------------------- sparkles
+const PN = 700;
+const parts = { pos: new Float32Array(PN * 3), vel: new Float32Array(PN * 3), al: new Float32Array(PN), size: new Float32Array(PN), col: new Float32Array(PN * 3), age: new Float32Array(PN), life: new Float32Array(PN), live: 0, cursor: 0 };
+const pointsMat = new THREE.ShaderMaterial({
+  uniforms: { uPx: { value: 1 } },
+  vertexShader: `
+    attribute float aAlpha; attribute float aSize; attribute vec3 aCol;
+    uniform float uPx; varying float vA; varying vec3 vC;
+    void main() { vA = aAlpha; vC = aCol; vec4 mv = modelViewMatrix * vec4(position, 1.0); gl_PointSize = min(aSize * uPx * (3.0 / -mv.z), 40.0); gl_Position = projectionMatrix * mv; }`,
+  fragmentShader: `
+    varying float vA; varying vec3 vC;
+    void main() { float d = length(gl_PointCoord - 0.5); float core = 1.0 - smoothstep(0.0, 0.2, d);
+      gl_FragColor = vec4(vC * (1.0 + core), (1.0 - smoothstep(0.05, 0.5, d)) * vA);
+      #include <colorspace_fragment>
+    }`,
+  transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+});
+{
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(parts.pos, 3).setUsage(THREE.DynamicDrawUsage));
+  g.setAttribute('aAlpha', new THREE.BufferAttribute(parts.al, 1).setUsage(THREE.DynamicDrawUsage));
+  g.setAttribute('aSize', new THREE.BufferAttribute(parts.size, 1).setUsage(THREE.DynamicDrawUsage));
+  g.setAttribute('aCol', new THREE.BufferAttribute(parts.col, 3).setUsage(THREE.DynamicDrawUsage));
+  parts.points = new THREE.Points(g, pointsMat);
+  parts.points.frustumCulled = false; parts.points.renderOrder = 30;
+  scene.add(parts.points);
+}
+function burst(c, color, n = 160) {
+  const col = new THREE.Color(color), w = new THREE.Color(0xffffff), d = new V3();
+  for (let i = 0; i < n; i++) {
+    const j = parts.cursor, cc = i % 3 ? col : w;
+    parts.cursor = (parts.cursor + 1) % PN;
+    randUnit(d); const sp = 0.3 + Math.random() * 1.6;
+    parts.pos.set([c.x, c.y, c.z], j * 3); parts.vel.set([d.x * sp, d.y * sp, d.z * sp], j * 3);
+    parts.col.set([cc.r, cc.g, cc.b], j * 3); parts.size[j] = 2 + Math.random() * 4; parts.age[j] = 0; parts.life[j] = 0.5 + Math.random() * 0.9;
+  }
+  const a = parts.points.geometry.attributes; a.aCol.needsUpdate = a.aSize.needsUpdate = true;
+}
+function updateParts(dt) {
+  let live = 0;
+  const drag = Math.pow(0.3, dt);
+  for (let i = 0; i < PN; i++) {
+    if (parts.life[i] <= 0) { parts.al[i] = 0; continue; }
+    parts.age[i] += dt;
+    const k = parts.age[i] / parts.life[i];
+    if (k >= 1) { parts.life[i] = 0; parts.al[i] = 0; continue; }
+    live++;
+    for (let a = 0; a < 3; a++) { parts.vel[i * 3 + a] *= drag; parts.pos[i * 3 + a] += parts.vel[i * 3 + a] * dt; }
+    parts.al[i] = Math.pow(1 - k, 1.4);
+  }
+  if (live || parts.live) { const a = parts.points.geometry.attributes; a.position.needsUpdate = a.aAlpha.needsUpdate = true; }
+  parts.live = live;
+}
+
+// ---------------------------------------------------------------- hands
+let handLM = null, hands = [], lastVT = -1, lastDetect = 0, nextHandId = 1;
+async function initHands() {
+  setLoad('ldHand', 'wait');
+  const { FilesetResolver, HandLandmarker } = await import(`${MP_BASE}/vision_bundle.mjs`);
+  const fileset = await FilesetResolver.forVisionTasks(`${MP_BASE}/wasm`);
+  const opts = (delegate) => ({
+    baseOptions: { modelAssetPath: HAND_MODEL, delegate },
+    runningMode: 'VIDEO', numHands: 2,
+    minHandDetectionConfidence: 0.6, minHandPresenceConfidence: 0.5, minTrackingConfidence: 0.5,
+  });
+  try { handLM = await HandLandmarker.createFromOptions(fileset, opts('GPU')); }
+  catch { handLM = await HandLandmarker.createFromOptions(fileset, opts('CPU')); }
+  setLoad('ldHand', 'ok');
+  toast('Hand tracking ready ✓');
+}
+function stageSize() { return { W: stage.clientWidth || innerWidth, H: stage.clientHeight || innerHeight }; }
+function toStage(p) {
+  const { W, H } = stageSize(), vw = cam.videoWidth || 1280, vh = cam.videoHeight || 720;
+  const s = Math.max(W / vw, H / vh), dw = vw * s, dh = vh * s;
+  return { x: ((1 - p.x) * dw + (W - dw) / 2) / W, y: (p.y * dh + (H - dh) / 2) / H };
+}
+const raycaster = new THREE.Raycaster(), zPlane = new THREE.Plane(new V3(0, 0, 1), 0);
+function toWorldPlane(pt) {
+  raycaster.setFromCamera({ x: pt.x * 2 - 1, y: -(pt.y * 2 - 1) }, camera);
+  return raycaster.ray.intersectPlane(zPlane, new V3()) || new V3();
+}
+function trackHands(now) {
+  if (!handLM || cam.readyState < 2 || cam.currentTime === lastVT || now - lastDetect < 30) return;
+  lastVT = cam.currentTime; lastDetect = now;
+  let res;
+  try { res = handLM.detectForVideo(cam, now); } catch { return; }
+  ingestHands(res.landmarks || [], now);
+}
+function ingestHands(list, now = performance.now()) {
+  const vw = cam.videoWidth || 1280, vh = cam.videoHeight || 720, asp = vw / vh;
+  const next = list.map((lm) => {
+    const d = (a, b) => Math.hypot((lm[a].x - lm[b].x) * asp, lm[a].y - lm[b].y);
+    const size = Math.max(1e-4, d(0, 9));
+    const fist = [[8, 5], [12, 9], [16, 13], [20, 17]].every(([t, m]) => d(0, t) < d(0, m) * 1.25);
+    const open = !fist && [[8, 6], [12, 10], [16, 14], [20, 18]].every(([t, p]) => d(0, t) > d(0, p) * 1.15) && d(4, 5) > size * 0.55 && d(8, 20) > size * 0.9;
+    return {
+      lm, fist, open, indexOut: d(0, 8) > d(0, 5) * 1.2, ratio: d(4, 8) / size, wrist: lm[0], t: now, pinch: false, id: 0,
+      pt: toStage({ x: (lm[4].x + lm[8].x) / 2, y: (lm[4].y + lm[8].y) / 2 }), palm: toStage(lm[9]),
+    };
+  });
+  for (const h of next) {
+    let prev = null, best = 0.25;
+    for (const p of hands) { const dd = Math.hypot(p.wrist.x - h.wrist.x, p.wrist.y - h.wrist.y); if (dd < best) { best = dd; prev = p; } }
+    h.id = prev ? prev.id : nextHandId++;
+    h.pinch = !h.fist && h.indexOut && (prev?.pinch ? h.ratio < 0.45 : h.ratio < 0.3);
+    if (h.pinch) h.open = false;
+    if (prev) for (const k of ['pt', 'palm']) { h[k].x = prev[k].x + (h[k].x - prev[k].x) * 0.75; h[k].y = prev[k].y + (h[k].y - prev[k].y) * 0.75; }
+  }
+  hands = next;
+}
+function drawMask() {
+  const w = maskCanvas.width, h = maskCanvas.height;
+  mctx.clearRect(0, 0, w, h);
+  if (S.occlude && hands.length) {
+    mctx.fillStyle = mctx.strokeStyle = '#fff';
+    mctx.lineCap = mctx.lineJoin = 'round';
+    mctx.filter = 'blur(1.5px)';
+    for (const hd of hands) {
+      const L = hd.lm, P = (i) => [L[i].x * w, L[i].y * h];
+      const size = Math.hypot((L[0].x - L[9].x) * w, (L[0].y - L[9].y) * h);
+      mctx.lineWidth = size * 0.32;
+      for (const chain of [[0, 1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16], [17, 18, 19, 20]]) {
+        mctx.beginPath(); chain.forEach((i, j) => (j ? mctx.lineTo(...P(i)) : mctx.moveTo(...P(i)))); mctx.stroke();
+      }
+      mctx.beginPath(); [0, 1, 2, 5, 9, 13, 17].forEach((i, j) => (j ? mctx.lineTo(...P(i)) : mctx.moveTo(...P(i)))); mctx.closePath(); mctx.fill(); mctx.stroke();
+      const [wx, wy] = P(0), [mx, my] = P(9), len = Math.hypot(wx - mx, wy - my) || 1;
+      mctx.lineWidth = size * 0.85;
+      mctx.beginPath(); mctx.moveTo(wx, wy); mctx.lineTo(wx + (wx - mx) / len * size * 3.5, wy + (wy - my) / len * size * 3.5); mctx.stroke();
+    }
+    mctx.filter = 'none';
+  }
+  maskTex.needsUpdate = true;
+}
+
+// ---------------------------------------------------------------- interaction: tray, grab, bond, reject, break, rotate
+let trayRects = [];
+const per = new Map(); // per hand: { wasPinch, atom, rot }
+let pr = 1;
+function project(v) { const p = v.clone().project(camera), { W, H } = stageSize(); return { x: (p.x + 1) / 2 * W, y: (1 - p.y) / 2 * H }; }
+function atomAt(pt) {
+  const { W, H } = stageSize(), x = pt.x * W, y = pt.y * H;
+  let best = null, bd = Infinity;
+  for (const a of atoms) {
+    const wp = world.localToWorld(a.pos.clone()), sp = project(wp), r = Math.abs(project(wp.clone().add(new V3(a.E.r, 0, 0))).x - sp.x);
+    const d = Math.hypot(sp.x - x, sp.y - y);
+    if (d < Math.max(24, r * 1.7) && d < bd) { bd = d; best = a; }
+  }
+  return best;
+}
+function trayAt(pt) {
+  const { W, H } = stageSize(), x = pt.x * W, y = pt.y * H;
+  return trayRects.find((r) => Math.hypot(r.x - x, r.y - y) < r.r * 1.25) || null;
+}
+// candidate partner for a dragged atom, and whether a bond is allowed
+function partnerFor(a) {
+  let best = null, bd = Infinity;
+  for (const b of atoms) {
+    if (b === a) continue;
+    const d = a.pos.distanceTo(b.pos), reach = (a.E.r + b.E.r) * 2.4;
+    if (d < reach && d < bd) { bd = d; best = b; }
+  }
+  if (!best) return null;
+  const order = a.bonds.get(best.id) || 0;
+  return { b: best, ok: free(a) > 0 && free(best) > 0 && order < 3, upgrade: order > 0 };
+}
+function reject(a, b) {
+  const full = free(b) <= 0 ? b : a;
+  const away = a.pos.clone().sub(b.pos).normalize();
+  a.vel.copy(away.multiplyScalar(2.5));
+  a.glow = 1; full.glow = 1;
+  sfx('nope');
+  banner = { t: 0, text: `❌ ${full.el} के हाथ भरे हैं!` };
+  say(full.E.val === 1 ? `${full.E.hi} का सिर्फ़ एक ही हाथ है, और वो पहले से जुड़ा है!` : `${full.E.hi} के ${ALL_WORD[full.E.val]} हाथ भर चुके हैं। संयोजकता पूरी हो गई!`);
+}
+function release(a, pt) {
+  a.grabbed = false;
+  const t = trayAt(pt);
+  if (t?.el === 'trash') { burst(world.localToWorld(a.pos.clone()), a.E.color, 60); removeAtom(a); sfx('clear'); dirtyMolecules = true; return; }
+  const p = partnerFor(a);
+  if (!p) return;
+  if (p.ok) { setBond(a, p.b, (a.bonds.get(p.b.id) || 0) + 1); a.glow = p.b.glow = 1; sfx('snap'); if (p.upgrade) banner = { t: 0, text: a.bonds.get(p.b.id) === 2 ? '＝ डबल बॉन्ड!' : '≡ ट्रिपल बॉन्ड!' }; }
+  else if (!p.upgrade) reject(a, p.b);
+}
+function updateInput(dt) {
+  const seen = new Set();
+  for (const h of hands) {
+    seen.add(h.id);
+    const st = per.get(h.id) || { wasPinch: false, atom: null, rot: null };
+    per.set(h.id, st);
+    const start = h.pinch && !st.wasPinch, end = !h.pinch && st.wasPinch;
+    if (start) {
+      const t = trayAt(h.pt), a = atomAt(h.pt);
+      if (t && t.el !== 'trash') { st.atom = addAtom(t.el, world.worldToLocal(toWorldPlane(h.pt))); st.atom.grabbed = true; dirtyMolecules = true; }
+      else if (a) { st.atom = a; a.grabbed = true; sfx('grab'); }
+      else st.rot = { x: h.pt.x, y: h.pt.y };
+    }
+    if (h.pinch && st.atom && atoms.includes(st.atom)) {
+      const a = st.atom, target = world.worldToLocal(toWorldPlane(h.pt));
+      target.z = a.pos.z * 0.9;
+      a.pos.lerp(target, 0.6);
+      // pulled hard away from a partner → the bond breaks
+      for (const [id, order] of [...a.bonds]) {
+        const b = byId(id);
+        if (b && a.pos.distanceTo(b.pos) > bondLen(a, b, order) * 2.8) { setBond(a, b, 0); sfx('break'); burst(world.localToWorld(a.pos.clone()), 0xffffff, 40); banner = { t: 0, text: '💥 बॉन्ड टूटा' }; }
+      }
+    }
+    if (h.pinch && st.rot) {
+      world.rotation.y += (h.pt.x - st.rot.x) * 5;
+      world.rotation.x = clamp(world.rotation.x + (h.pt.y - st.rot.y) * 5, -1.2, 1.2);
+      st.rot = { x: h.pt.x, y: h.pt.y };
+    }
+    if (end) {
+      if (st.atom && atoms.includes(st.atom)) release(st.atom, h.pt);
+      st.atom = null; st.rot = null;
+    }
+    st.wasPinch = h.pinch;
+  }
+  for (const [id, st] of per) if (!seen.has(id)) { if (st.atom && atoms.includes(st.atom)) release(st.atom, { x: -1, y: -1 }); per.delete(id); }
+}
+// ✊ hold = clear all, 🙌 hold = complete bonds + explain
+const pose = { kind: 'none', hold: 0, fired: false };
+function updatePoses(dt) {
+  const busy = [...per.values()].some((s) => s.atom);
+  const opens = hands.filter((h) => h.open).length, fists = hands.filter((h) => h.fist).length;
+  const kind = busy ? 'none' : opens >= 2 ? 'palms2' : fists ? 'fist' : 'none';
+  if (kind !== pose.kind) { pose.kind = kind; pose.hold = 0; pose.fired = false; }
+  if (kind === 'none' || pose.fired) return;
+  pose.hold += dt;
+  if (kind === 'fist' && pose.hold > 0.7) { pose.fired = true; clearAll(); }
+  if (kind === 'palms2' && pose.hold > 0.5) { pose.fired = true; completeBonds(); updateMolecules(); setTimeout(explainCurrent, 300); }
+}
+
+// ---------------------------------------------------------------- audio + voice
+const audio = { ctx: null, bus: null, mic: null };
+function ensureAudio() {
+  if (!audio.ctx) {
+    audio.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    audio.bus = audio.ctx.createGain(); audio.bus.gain.value = 0.9; audio.bus.connect(audio.ctx.destination);
+  }
+  audio.ctx.resume?.();
+}
+function sfx(type) {
+  if (!S.sfx || !audio.ctx) return;
+  const ctx = audio.ctx, t = ctx.currentTime;
+  const tone = (f0, f1, len, peak, at = 0, wave = 'sine') => {
+    const o = ctx.createOscillator(), gg = ctx.createGain(), s = t + at;
+    o.type = wave; o.frequency.setValueAtTime(f0, s); o.frequency.exponentialRampToValueAtTime(f1, s + len);
+    gg.gain.setValueAtTime(0.0001, s); gg.gain.exponentialRampToValueAtTime(peak, s + 0.01); gg.gain.exponentialRampToValueAtTime(0.0001, s + len);
+    o.connect(gg).connect(audio.bus); o.start(s); o.stop(s + len + 0.05);
+  };
+  if (type === 'pop') tone(500, 900, 0.12, 0.14);
+  else if (type === 'grab') tone(600, 800, 0.08, 0.1, 0, 'triangle');
+  else if (type === 'snap') { tone(1200, 1800, 0.07, 0.16); tone(1800, 1800, 0.12, 0.06, 0.05); }
+  else if (type === 'nope') { tone(300, 180, 0.18, 0.18, 0, 'square'); tone(250, 150, 0.2, 0.12, 0.15, 'square'); }
+  else if (type === 'break') tone(900, 200, 0.2, 0.15, 0, 'sawtooth');
+  else if (type === 'clear') tone(1400, 120, 0.4, 0.1, 0, 'sawtooth');
+  else if (type === 'win') [660, 880, 1100, 1320].forEach((f, i) => tone(f, f, 0.25, 0.13, i * 0.08, 'triangle'));
+}
+let speaking = false;
+const sub = { text: '', last: '', a: 0 };
+function pickVoice() {
+  const vs = speechSynthesis.getVoices();
+  return vs.find((v) => /hi[-_]IN/i.test(v.lang) && /google/i.test(v.name)) || vs.find((v) => /hi[-_]IN/i.test(v.lang)) || vs.find((v) => /^hi/i.test(v.lang)) || null;
+}
+function say(text) {
+  sub.text = text;
+  if (!S.voice || !('speechSynthesis' in window)) { setTimeout(() => { if (sub.text === text) sub.text = ''; }, 1000 + text.length * 55); return; }
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  const v = pickVoice(); if (v) { u.voice = v; u.lang = v.lang; } else u.lang = 'hi-IN';
+  speaking = true;
+  u.onend = u.onerror = () => { if (say.u !== u) return; speaking = false; setTimeout(() => { if (sub.text === text) sub.text = ''; }, 1200); };
+  say.u = u; // keep a reference so Chrome fires onend
+  speechSynthesis.speak(u);
+}
+
+// ---------------------------------------------------------------- overlay (recorded): tray, labels, molecule names, banner, subtitles
+let banner = null;
+function pill(x, y, text, fs, color, alpha = 0.92, bg = 'rgba(4,14,10,.75)') {
+  fx.font = `700 ${fs}px Rajdhani, sans-serif`;
+  const { W } = stageSize(), w = fx.measureText(text).width + fs * 0.9, h = fs * 1.35;
+  x = clamp(x, w / 2 + 4, W - w / 2 - 4);
+  fx.globalAlpha = alpha;
+  fx.fillStyle = bg; fx.beginPath(); fx.roundRect(x - w / 2, y - h / 2, w, h, h / 2); fx.fill();
+  fx.fillStyle = color; fx.textAlign = 'center'; fx.textBaseline = 'middle'; fx.fillText(text, x, y + 1);
+  fx.globalAlpha = 1;
+}
+const hex = (n) => '#' + n.toString(16).padStart(6, '0');
+function drawFx(dt) {
+  const { W, H } = stageSize();
+  fx.setTransform(pr, 0, 0, pr, 0, 0);
+  fx.clearRect(0, 0, W, H);
+  const fs = Math.max(13, Math.min(W * 0.032, H * 0.022));
+  // tray of elements (each shows its "hands")
+  const items = [...TRAY, 'trash'], n = items.length, r = Math.min(W / n * 0.36, H * 0.05), y = H - r * 1.9;
+  trayRects = items.map((el, i) => ({ el, x: W / 2 + (i - (n - 1) / 2) * r * 2.6, y, r }));
+  fx.fillStyle = 'rgba(4,14,10,.6)'; fx.beginPath(); fx.roundRect(trayRects[0].x - r * 1.5, y - r * 1.5, r * 2.6 * (n - 1) + r * 3, r * 3, r); fx.fill();
+  for (const t of trayRects) {
+    const hot = hands.some((h) => Math.hypot(h.pt.x * W - t.x, h.pt.y * H - t.y) < t.r * 1.25);
+    if (t.el === 'trash') { fx.font = `${r * 1.1}px sans-serif`; fx.textAlign = 'center'; fx.textBaseline = 'middle'; fx.fillText('🗑️', t.x, t.y); continue; }
+    const E = ELEM[t.el];
+    fx.shadowColor = hex(E.color); fx.shadowBlur = hot ? 24 : 10;
+    fx.fillStyle = hex(E.color); fx.beginPath(); fx.arc(t.x, t.y, r * (hot ? 0.82 : 0.72), 0, Math.PI * 2); fx.fill();
+    fx.shadowBlur = 0;
+    for (let k = 0; k < E.val; k++) { const ang = -Math.PI / 2 + k * Math.PI * 2 / E.val; fx.fillStyle = '#ffffff'; fx.beginPath(); fx.arc(t.x + Math.cos(ang) * r * 1.05, t.y + Math.sin(ang) * r * 1.05, r * 0.14, 0, Math.PI * 2); fx.fill(); }
+    fx.font = `900 ${r * (t.el.length > 1 ? 0.62 : 0.78)}px Orbitron, sans-serif`; fx.fillStyle = t.el === 'H' ? '#111' : '#fff'; fx.textAlign = 'center'; fx.textBaseline = 'middle';
+    fx.fillText(t.el, t.x, t.y + 1);
+    fx.font = `700 ${r * 0.42}px Rajdhani, sans-serif`; fx.fillStyle = 'rgba(239,255,245,.85)';
+    fx.fillText(`${E.hi} · ${E.val}`, t.x, t.y - r * 1.38);
+  }
+  // molecule names / what is still missing
+  for (const m of mols) {
+    const top = m.comp.reduce((best, a) => { const p = project(world.localToWorld(a.pos.clone())); return p.y < best.y ? p : best; }, { x: 0, y: Infinity });
+    const cx = m.comp.reduce((s, a) => s + project(world.localToWorld(a.pos.clone())).x, 0) / m.comp.length;
+    if (m.done) pill(cx, top.y - fs * 2.6, m.info ? `${m.info.icon} ${m.info.hi} · ${m.info.f}` : `✨ ${pretty(m.key)}`, fs * 1.35, '#7dffb0', 0.97, 'rgba(4,20,12,.85)');
+    else pill(cx, top.y - fs * 2.2, `${pretty(m.key)} · ${m.comp.reduce((s, a) => s + Math.max(0, free(a)), 0)} हाथ खाली`, fs, '#ffe08a');
+  }
+  // dragging: show whether the bond is allowed
+  for (const st of per.values()) {
+    const a = st.atom;
+    if (!a || !atoms.includes(a)) continue;
+    const p = partnerFor(a);
+    if (!p) continue;
+    const pa = project(world.localToWorld(a.pos.clone())), pb = project(world.localToWorld(p.b.pos.clone()));
+    fx.strokeStyle = p.ok ? '#7dffb0' : '#ff5a6e'; fx.lineWidth = 3; fx.setLineDash([6, 6]);
+    fx.beginPath(); fx.moveTo(pa.x, pa.y); fx.lineTo(pb.x, pb.y); fx.stroke(); fx.setLineDash([]);
+    pill((pa.x + pb.x) / 2, (pa.y + pb.y) / 2 - fs * 1.2, p.ok ? (p.upgrade ? '＝ और बॉन्ड' : '✓ जुड़ेगा') : '✗ हाथ भरे', fs * 0.9, p.ok ? '#7dffb0' : '#ff5a6e');
+  }
+  // pinch pointers
+  for (const h of hands) {
+    const x = h.pt.x * W, y = h.pt.y * H;
+    fx.strokeStyle = h.pinch ? '#ffffff' : '#7dffb0'; fx.lineWidth = 2.5; fx.shadowColor = '#7dffb0'; fx.shadowBlur = 10;
+    if (!h.open && !h.fist) { fx.beginPath(); fx.arc(x, y, h.pinch ? 9 : 12, 0, Math.PI * 2); fx.stroke(); }
+    if ((h.open || h.fist) && pose.hold > 0 && !pose.fired && pose.kind !== 'none') {
+      fx.strokeStyle = h.fist ? '#ff6a6a' : '#7dffb0'; fx.lineWidth = 3;
+      fx.beginPath(); fx.arc(h.palm.x * W, h.palm.y * H, 30, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.min(1, pose.hold / (pose.kind === 'fist' ? 0.7 : 0.5))); fx.stroke();
+    }
+    fx.shadowBlur = 0;
+  }
+  // challenge
+  if (challenge.on && challenge.target) {
+    const info = MOLS[challenge.target];
+    challenge.cele = Math.max(0, challenge.cele - dt);
+    pill(W / 2, 112, challenge.cele > 0 ? `✅ ${info.hi} बन गया!  स्कोर ${challenge.score}` : `🎯 ${info.icon} ${info.hi} (${info.f}) बनाइए!  स्कोर ${challenge.score}`, fs * 1.4, challenge.cele > 0 ? '#7dffb0' : '#ffe08a', 0.97, 'rgba(4,14,10,.88)');
+  }
+  if (banner) {
+    banner.t += dt;
+    const a = banner.t < 1.2 ? 1 : Math.max(0, 1 - (banner.t - 1.2) / 0.5);
+    fx.globalAlpha = a; fx.font = `900 ${Math.min(W * 0.065, H * 0.05)}px Rajdhani, sans-serif`; fx.textAlign = 'center'; fx.textBaseline = 'middle';
+    fx.lineWidth = 6; fx.strokeStyle = 'rgba(0,0,0,.7)'; fx.strokeText(banner.text, W / 2, H * 0.24);
+    fx.shadowColor = '#7dffb0'; fx.shadowBlur = 22; fx.fillStyle = '#fff'; fx.fillText(banner.text, W / 2, H * 0.24);
+    fx.shadowBlur = 0; fx.globalAlpha = 1;
+    if (banner.t > 1.8) banner = null;
+  }
+  if (!atoms.length && started) pill(W / 2, H * 0.45, '👇 नीचे से कोई परमाणु पिंच करके उठाइए', fs * 1.25, '#ffffff');
+  sub.a += ((sub.text ? 1 : 0) - sub.a) * Math.min(1, dt * 6);
+  if (sub.text) sub.last = sub.text;
+  if (sub.a > 0.01 && sub.last) {
+    const ss = Math.max(17, Math.min(W * 0.044, H * 0.03));
+    fx.font = `700 ${ss}px Rajdhani, sans-serif`;
+    const words = sub.last.split(/\s+/), lines = []; let cur = '';
+    for (const w of words) { const t = cur ? cur + ' ' + w : w; if (fx.measureText(t).width > W * 0.86 && cur) { lines.push(cur); cur = w; } else cur = t; }
+    if (cur) lines.push(cur);
+    fx.globalAlpha = sub.a; fx.textAlign = 'center'; fx.textBaseline = 'middle';
+    const base = trayRects[0].y - trayRects[0].r * 2.2;
+    lines.forEach((l, i) => {
+      const yy = base - (lines.length - 1 - i) * ss * 1.25;
+      fx.lineWidth = 5; fx.strokeStyle = 'rgba(0,0,0,.85)'; fx.strokeText(l, W / 2, yy);
+      fx.fillStyle = '#ffffff'; fx.fillText(l, W / 2, yy);
+    });
+    fx.globalAlpha = 1;
+  }
+}
+
+// ---------------------------------------------------------------- recording
+const recState = { mr: null, c: null, ctx: null, chunks: [], t0: 0, dest: null, ext: 'webm', mime: '' };
+function startRecord() {
+  if (!window.MediaRecorder) { toast('Is browser me recording nahi chalegi. Chrome use karo.'); return; }
+  ensureAudio();
+  const c = document.createElement('canvas'); c.width = glc.width; c.height = glc.height;
+  recState.c = c; recState.ctx = c.getContext('2d');
+  recordFrame();
+  const tracks = [...c.captureStream(30).getVideoTracks()];
+  recState.dest = audio.ctx.createMediaStreamDestination();
+  audio.bus.connect(recState.dest);
+  audio.mic?.connect(recState.dest);
+  tracks.push(...recState.dest.stream.getAudioTracks());
+  recState.mime = MIMES.find((m) => MediaRecorder.isTypeSupported(m)) || '';
+  recState.ext = recState.mime.startsWith('video/mp4') ? 'mp4' : 'webm';
+  const mr = new MediaRecorder(new MediaStream(tracks), recState.mime ? { mimeType: recState.mime, videoBitsPerSecond: 8_000_000 } : undefined);
+  recState.chunks = [];
+  mr.ondataavailable = (e) => { if (e.data.size) recState.chunks.push(e.data); };
+  mr.onstop = saveRecording;
+  mr.start(1000);
+  recState.mr = mr; recState.t0 = performance.now();
+  $('#btnRec').classList.add('on');
+}
+function stopRecord() { recState.mr?.stop(); recState.mr = null; $('#btnRec').classList.remove('on'); $('#btnRec').textContent = '⏺ REC'; }
+function saveRecording() {
+  try { audio.bus.disconnect(recState.dest); } catch {}
+  try { audio.mic?.disconnect(recState.dest); } catch {}
+  recState.c = null;
+  const blob = new Blob(recState.chunks, { type: recState.mime || 'video/webm' });
+  const a = document.createElement('a');
+  const d = new Date(), stamp = `${d.getHours()}${String(d.getMinutes()).padStart(2, '0')}${String(d.getSeconds()).padStart(2, '0')}`;
+  a.href = URL.createObjectURL(blob); a.download = `molecule-${stamp}.${recState.ext}`;
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+  toast(`Video save ho gaya: Downloads me ${a.download}`, 5000);
+}
+function recordFrame() {
+  if (!recState.c) return;
+  const c = recState.c;
+  if (c.width !== glc.width || c.height !== glc.height) { c.width = glc.width; c.height = glc.height; }
+  recState.ctx.drawImage(glc, 0, 0);
+  recState.ctx.drawImage(fxc, 0, 0, c.width, c.height);
+  if (recState.mr) {
+    const s = Math.floor((performance.now() - recState.t0) / 1000);
+    $('#btnRec').textContent = `■ ${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+  }
+}
+
+// ---------------------------------------------------------------- main loop
+let T = 0, lastRender = 0, started = false;
+function tick(dt, now) {
+  T += dt;
+  trackHands(now);
+  updatePoses(dt);
+  updateInput(dt);
+  for (let i = 0; i < 4; i++) physics(dt / 4);
+  updateMolecules();
+  syncMeshes();
+  updateParts(dt);
+  drawMask();
+}
+function render(dt) {
+  renderer.render(scene, camera);
+  drawFx(dt);
+  recordFrame();
+}
+function frame(now) {
+  requestAnimationFrame(frame);
+  if (now - lastRender < 1000 / Number(S.fps) - 2) return;
+  const dt = Math.min(0.05, (now - lastRender) / 1000);
+  lastRender = now;
+  if (glc.width === 0 || Math.abs(camera.aspect - stage.clientWidth / Math.max(1, stage.clientHeight)) > 1e-3) onResize();
+  tick(dt, now);
+  render(dt);
+}
+function onResize() {
+  const { W, H } = stageSize();
+  if (!W || !H) return;
+  pr = Math.min(devicePixelRatio || 1, 1.5);
+  renderer.setPixelRatio(pr); renderer.setSize(W, H, false);
+  fxc.width = Math.round(W * pr); fxc.height = Math.round(H * pr);
+  camera.aspect = W / H; camera.updateProjectionMatrix();
+  pointsMat.uniforms.uPx.value = pr;
+  // keep molecules readable on narrow reels
+  camera.position.z = W < H ? 3.6 : 3;
+  layoutPlanes();
+}
+addEventListener('resize', onResize);
+
+// ---------------------------------------------------------------- UI
+function setLoad(id, s) {
+  const el = document.getElementById(id), icon = { wait: '◌', ok: '✓', fail: '✕', warn: '!' }[s];
+  el.className = s; el.textContent = `${icon} ${el.textContent.replace(/^\S+\s/, '')}`;
+}
+function updateHint() {
+  $('#hint').innerHTML = '<b>🤏</b> tray se atom uthao · paas chhodo = <b>bond</b> · dobara chhuao = <b>double</b> · tez kheencho = <b>todo</b> · <b>🙌</b> bond poore · <b>✊</b> saaf';
+}
+function toggleReel() {
+  document.body.classList.toggle('reel');
+  $('#btnReel').classList.toggle('on', document.body.classList.contains('reel'));
+  onResize();
+}
+// spawn an element near the middle (keyboard / buttons), placed next to an atom that still has room
+function spawnNear(el) {
+  if (!started) return;
+  const host = atoms.find((a) => free(a) > 0 && !a.grabbed);
+  const pos = host ? host.pos.clone().add(randUnit().multiplyScalar(0.55)).setZ(0) : new V3((Math.random() - 0.5) * 0.8, 0.15 + (Math.random() - 0.5) * 0.4, 0);
+  const a = addAtom(el, pos);
+  dirtyMolecules = true;
+  return a;
+}
+for (const el of document.querySelectorAll('[data-s]')) {
+  const k = el.dataset.s;
+  if (el.type === 'checkbox') el.checked = !!S[k]; else el.value = S[k];
+  el.addEventListener('change', () => { S[k] = el.type === 'checkbox' ? el.checked : el.value; saveSettings(); });
+}
+$('#btnSettings').addEventListener('click', () => $('#settings').classList.toggle('open'));
+$('#btnClose').addEventListener('click', () => $('#settings').classList.remove('open'));
+$('#btnReel').addEventListener('click', toggleReel);
+$('#btnChallenge').addEventListener('click', toggleChallenge);
+$('#btnBond').addEventListener('click', () => { completeBonds(); updateMolecules(); });
+$('#btnClear').addEventListener('click', clearAll);
+$('#btnRec').addEventListener('click', () => (recState.mr ? stopRecord() : startRecord()));
+const toggleFull = () => (document.fullscreenElement ? document.exitFullscreen?.() : document.documentElement.requestFullscreen?.().catch(() => {}));
+$('#btnFull').addEventListener('click', toggleFull);
+addEventListener('keydown', (e) => {
+  if (e.target.matches('input, select')) return;
+  const k = e.key.toLowerCase();
+  if (/^[1-6]$/.test(e.key)) spawnNear(TRAY[Number(e.key) - 1]);
+  else if (k === 'b') { completeBonds(); updateMolecules(); }
+  else if (k === 'c') clearAll();
+  else if (k === 'q') toggleChallenge();
+  else if (k === 'r' && started) (recState.mr ? stopRecord() : startRecord());
+  else if (k === 'v') toggleReel();
+  else if (k === 'h') document.body.classList.toggle('clean');
+  else if (k === 'f') toggleFull();
+  else if (e.key === 'Escape') $('#settings').classList.remove('open');
+});
+
+async function start() {
+  const btn = $('#btnStart');
+  btn.disabled = true; btn.textContent = 'STARTING…';
+  ensureAudio();
+  setLoad('ldCam', 'wait');
+  const md = navigator.mediaDevices;
+  const noMedia = new URLSearchParams(location.search).has('nomedia');
+  let vStream = null, aStream = null;
+  if (md?.getUserMedia && !noMedia) {
+    try {
+      const s = await md.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' }, audio: AUDIO_CONSTRAINTS });
+      vStream = aStream = s;
+    } catch {
+      try { vStream = await md.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 } } }); } catch {}
+      try { aStream = await md.getUserMedia({ audio: AUDIO_CONSTRAINTS }); } catch {}
+    }
+  }
+  if (aStream) audio.mic = audio.ctx.createMediaStreamSource(new MediaStream(aStream.getAudioTracks()));
+  if (vStream) {
+    cam.srcObject = new MediaStream(vStream.getVideoTracks());
+    try { await cam.play(); } catch {}
+    bgPlane.visible = handLayer.visible = true;
+    layoutPlanes();
+  }
+  setLoad('ldCam', vStream && aStream ? 'ok' : vStream || aStream ? 'warn' : 'fail');
+  if (!vStream) toast('Camera nahi mila. Keyboard 1–6 se atom daalo, B se bond poore karo.', 5000);
+  started = true;
+  $('#start').classList.add('gone');
+  setTimeout(() => say(LINES.intro), 600);
+  if (vStream) initHands().catch((e) => { console.error(e); setLoad('ldHand', 'fail'); toast('Hand tracking load nahi hua.'); });
+}
+$('#btnStart').addEventListener('click', start);
+
+updateHint();
+onResize();
+requestAnimationFrame(frame);
+// Console hooks for testing without a camera.
+window.__mol = {
+  step(sec) { for (let i = 0; i < Math.max(1, Math.round(sec * 30)); i++) tick(1 / 30, performance.now()); render(sec); },
+  ingestHands, spawnNear, addAtom, setBond, completeBonds, clearAll, toggleChallenge, release, partnerFor, free,
+  atoms, challenge, project, world, get mols() { return mols; }, get trayRects() { return trayRects; },
+};
+</script>
+</body>
+</html>
