@@ -1,0 +1,898 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌀</text></svg>">
+<title data-en="Fourier Drawing · Crazy Science">फूरियर ड्रॉइंग · Crazy Science</title>
+<script src="../lang.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --c: #c792ff;
+    --c-rgb: 199, 146, 255;
+    --text: #f4eeff;
+    --dim: rgba(244, 238, 255, .62);
+    --panel: rgba(10, 6, 22, .84);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #000; color: var(--text); font-family: 'Rajdhani', system-ui, sans-serif; overflow: hidden; }
+  #stage { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 100vw; height: 100vh; overflow: hidden; background: #000; touch-action: none; }
+  body.reel #stage { width: min(100vw, calc(100vh * 9 / 16)); height: min(100vh, calc(100vw * 16 / 9)); }
+  #c { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: crosshair; }
+  #cam { position: fixed; width: 2px; height: 2px; opacity: 0; pointer-events: none; }
+
+  #ui { position: fixed; inset: 0; pointer-events: none; z-index: 5; }
+  #ui button, #ui input { pointer-events: auto; }
+  .top { position: absolute; top: 16px; right: 16px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end; max-width: calc(100% - 32px); }
+  button.icon { height: 38px; min-width: 38px; padding: 0 12px; border-radius: 10px; border: 1px solid rgba(var(--c-rgb), .45); background: rgba(10, 6, 22, .65); color: var(--c); font: 700 13px 'Orbitron', sans-serif; letter-spacing: .08em; cursor: pointer; }
+  button.icon:hover { background: rgba(var(--c-rgb), .16); }
+  button.icon.on { background: var(--c); color: #12021f; }
+  #btnRec.on { background: #ff2d4a; border-color: #ff2d4a; color: #fff; animation: blink 1s infinite; }
+  #hint { position: absolute; left: 50%; bottom: 20px; transform: translateX(-50%); background: var(--panel); border: 1px solid rgba(var(--c-rgb), .3); border-radius: 12px; padding: 9px 16px; font-size: 16px; color: var(--dim); text-align: center; width: max-content; max-width: calc(100% - 32px); line-height: 1.5; }
+  #hint b { color: var(--c); }
+  #toast { position: absolute; top: 66px; left: 50%; transform: translateX(-50%); background: var(--panel); border: 1px solid rgba(var(--c-rgb), .4); padding: 10px 16px; border-radius: 10px; font-size: 16px; opacity: 0; transition: opacity .3s; max-width: calc(100% - 32px); text-align: center; }
+  #toast.on { opacity: 1; }
+  #nameBar { position: absolute; left: 50%; bottom: 84px; transform: translateX(-50%); display: none; gap: 8px; width: min(440px, calc(100% - 32px)); }
+  #nameBar.on { display: flex; }
+  #nameBar input { flex: 1; min-width: 0; height: 44px; border-radius: 12px; border: 1px solid rgba(var(--c-rgb), .6); background: rgba(10, 6, 22, .92); color: var(--text); font: 700 20px 'Rajdhani', sans-serif; padding: 0 14px; outline: none; }
+  #nameBar button { height: 44px; }
+  body.clean #hint, body.clean .top button:not(#btnRec), body.clean #nameBar { display: none; }
+
+  #settings { position: fixed; top: 0; right: 0; height: 100%; width: min(360px, 100%); background: rgba(8, 4, 18, .96); border-left: 1px solid rgba(var(--c-rgb), .3); z-index: 10; transform: translateX(100%); transition: transform .3s; overflow-y: auto; padding: 20px; }
+  #settings.open { transform: none; }
+  #settings h2 { font-family: 'Orbitron', sans-serif; font-size: 14px; letter-spacing: .25em; color: var(--c); margin: 4px 0 12px; display: flex; justify-content: space-between; align-items: center; }
+  .row { display: flex; flex-direction: column; gap: 5px; margin: 12px 0; font-size: 16px; }
+  .row.inline { flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; }
+  .row output { color: var(--c); font-weight: 700; }
+  .keys { color: var(--dim); font-size: 13px; line-height: 1.5; }
+  .row select { padding: 9px 10px; border-radius: 8px; border: 1px solid rgba(var(--c-rgb), .35); background: #120a22; color: var(--text); font: 600 15px 'Rajdhani', sans-serif; }
+  input[type=range], input[type=checkbox] { accent-color: var(--c); }
+  input[type=checkbox] { width: 18px; height: 18px; flex: none; }
+
+  #start { position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; background: radial-gradient(ellipse at center, rgba(22, 8, 40, .75), #000); padding: 16px; transition: opacity .6s; }
+  #start.gone { opacity: 0; pointer-events: none; }
+  #start .card { max-width: 600px; text-align: center; }
+  #start h1 { font-family: 'Orbitron', sans-serif; font-weight: 900; letter-spacing: .22em; font-size: clamp(28px, 7vw, 50px); color: var(--c); text-shadow: 0 0 24px rgba(var(--c-rgb), .8); margin: 0 0 6px; padding-left: .22em; }
+  #start h2 { font-size: 22px; margin: 0 0 12px; font-weight: 700; }
+  #start p { font-size: 19px; line-height: 1.5; margin: 0 0 22px; }
+  #start .note { font-size: 14px; color: var(--dim); margin-top: 16px; }
+  .btn { padding: 14px 30px; border-radius: 12px; border: 1px solid rgba(var(--c-rgb), .6); background: rgba(var(--c-rgb), .14); color: var(--c); font: 700 16px 'Orbitron', sans-serif; letter-spacing: .14em; cursor: pointer; }
+  .btn:disabled { opacity: .5; cursor: wait; }
+  #loadList { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; margin-top: 18px; font-size: 15px; color: var(--dim); }
+  #loadList .ok { color: #3dff8b; } #loadList .fail { color: #ff5b6b; } #loadList .warn { color: #ffd23d; }
+  @keyframes blink { 50% { opacity: .55; } }
+</style>
+</head>
+<body>
+<div id="stage"><canvas id="c"></canvas></div>
+<video id="cam" playsinline muted></video>
+
+<div id="ui">
+  <div class="top">
+    <button class="icon" id="btnHome" title="Crazy Science: saare labs" data-en-title="Crazy Science: all labs" onclick="location.href='../'">🏠</button>
+    <button class="icon" id="btnLang" data-lang-toggle>🌐 EN</button>
+    <button class="icon" id="btnRec" title="Video record (R)">⏺ REC</button>
+    <button class="icon" id="btnReel" title="Reel frame 9:16 (V)">9:16</button>
+    <button class="icon" id="btnName" title="Apna naam likhwao (N)" data-en-title="Write your name (N)">✍️</button>
+    <button class="icon" id="btnPreset" title="Taiyar shape (P)" data-en-title="Ready-made shape (P)">⭐</button>
+    <button class="icon" id="btnSweep" title="Gole badhao: 1 se sab tak (S)" data-en-title="Grow the circles: 1 to all (S)">📈</button>
+    <button class="icon" id="btnFs" title="Fullscreen (F)">⛶</button>
+    <button class="icon" id="btnSettings" title="Settings">⚙</button>
+  </div>
+  <form id="nameBar" autocomplete="off">
+    <input id="nameIn" maxlength="24" placeholder="Apna naam likho…" data-en-ph="Type your name…" aria-label="Name">
+    <button class="icon" type="submit">✍️ GO</button>
+  </form>
+  <div id="hint"></div>
+  <div id="toast" role="status"></div>
+</div>
+
+<aside id="settings" aria-label="Settings">
+  <h2>SETTINGS <button class="icon" id="btnClose" title="Band karo (Esc)" data-en-title="Close (Esc)">✕</button></h2>
+  <label class="row"><span><span data-en="One full round takes">Ek chakkar me samay</span> · <output id="speedOut">9 s</output></span> <input type="range" min="4" max="24" step="1" data-s="cycle"></label>
+  <label class="row inline"><span data-en="Show the circles">Gole dikhao</span> <input type="checkbox" data-s="circles"></label>
+  <label class="row inline"><span data-en="Show your original drawing">Asli drawing halki dikhe</span> <input type="checkbox" data-s="ghost"></label>
+  <label class="row inline"><span data-en="Camera in the background">Peeche camera dikhe</span> <input type="checkbox" data-s="camBg"></label>
+  <label class="row inline"><span data-en="Voice (speaks the lines)">Aawaz (bolne wali lines)</span> <input type="checkbox" data-s="voice"></label>
+  <label class="row inline"><span data-en="Sound effects">Sound effects</span> <input type="checkbox" data-s="sfx"></label>
+  <label class="row">Smoothness
+    <select data-s="fps">
+      <option value="30" data-en="30 FPS (light, good for laptops)">30 FPS (Mac ke liye halka)</option>
+      <option value="60" data-en="60 FPS (smoother, more load)">60 FPS (smooth, zyada load)</option>
+    </select>
+  </label>
+  <div class="keys" data-en="Gestures: 🤏 pinch and move = draw in the air · ✊ fist up / down = more / fewer circles · ✌️ V sign = grow circles 1 → all · 🙌 both palms = clear<br>Mouse: drag = draw, wheel = circles<br>Shortcuts: ↑ ↓ = circles · Space = pause · S = grow · P = shape · N = name · C = clear · R = record · V = 9:16 · H = clean · Esc = close">Gestures: 🤏 pinch karke chalao = hawa me drawing · ✊ mutthi upar / neeche = zyada / kam gole · ✌️ V sign = gole 1 se sab tak · 🙌 dono hatheliyan = saaf<br>Mouse: kheencho = drawing, wheel = gole<br>Shortcuts: ↑ ↓ = gole · Space = roko · S = gole badhao · P = shape · N = naam · C = saaf · R = record · V = 9:16 · H = clean · Esc = band</div>
+</aside>
+
+<div id="start">
+  <div class="card">
+    <h1>FOURIER·DRAW</h1>
+    <h2 data-en="🌀 spinning circles that draw anything">🌀 घूमते गोले, जो कुछ भी बना दें</h2>
+    <p data-en="Draw anything in the air with a pinch, or type your name. A real Fourier transform turns it into spinning circles that draw it again. Add or remove circles and watch the drawing get sharper ✨">Pinch karke hawa me kuch bhi banao, ya apna naam likho. Asli Fourier transform use ghoomte golon me badal dega, jo wahi drawing dobara banayenge. Gole badhao-ghatao aur dekho drawing kaise saaf hoti hai ✨</p>
+    <button class="btn" id="btnStart">▶ START</button>
+    <div id="loadList"><div id="ldCam">◌ Camera + mic</div><div id="ldHand">◌ Hand tracking</div></div>
+    <p class="note" data-en="Works best in Chrome. No camera? Draw with the mouse or a finger on the screen.">Chrome me best chalta hai. Camera nahi hai? Mouse ya touch screen par ungli se banao.</p>
+    <div class="cs-lang"><button data-setlang="hi">हिंदी</button><button data-setlang="en">English</button></div>
+    <p class="note"><a href="../" style="color:inherit" data-en="← Crazy Science: all labs">← Crazy Science: saare labs</a></p>
+  </div>
+</div>
+
+<script type="module">
+// ---------------------------------------------------------------- config
+const MP_BASE = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14';
+const HAND_MODEL = 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
+const AUDIO_CONSTRAINTS = { echoCancellation: false, noiseSuppression: false, autoGainControl: false };
+const MIMES = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4;codecs=avc1,opus', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
+// Jo lines bolega (hi = Hindi, en = English): yahan badal sakte ho. {n} = number of circles.
+const LINES = {
+  hi: {
+    intro: 'अंगूठा और उंगली मिलाकर हवा में कुछ भी बनाइए। फिर घूमते हुए गोले उसे दोबारा बनाएँगे। इसे फूरियर सीरीज़ कहते हैं।',
+    introMouse: 'माउस से कुछ भी बनाइए, या अपना नाम लिखिए। फिर घूमते हुए गोले उसे दोबारा बनाएँगे। इसे फूरियर सीरीज़ कहते हैं।',
+    computed: '{n} घूमते गोले मिलकर आपकी ड्रॉइंग बना रहे हैं। हर गोला अपनी अलग रफ़्तार से घूमता है।',
+    name: 'देखिए, फूरियर सीरीज़ आपका नाम लिख रही है! इसमें {n} गोले लगे हैं।',
+    sweep: 'अब एक गोले से शुरू करते हैं। एक गोला सिर्फ़ गोल घेरा बना सकता है।',
+    sweepEnd: 'जितने ज़्यादा गोले, उतनी सटीक ड्रॉइंग! यही आइडिया JPEG फ़ोटो और MP3 गानों को छोटा करने में काम आता है।',
+    bigSmall: 'बड़े गोले आकार की मोटी रूपरेखा बनाते हैं, और छोटे गोले बारीक डिटेल जोड़ते हैं।',
+    small: 'ये ड्रॉइंग बहुत छोटी है, थोड़ा बड़ा बनाइए।',
+  },
+  en: {
+    intro: 'Pinch your thumb and finger and draw anything in the air. Then spinning circles will draw it again. This is called a Fourier series.',
+    introMouse: 'Draw anything with the mouse, or type your name. Then spinning circles will draw it again. This is called a Fourier series.',
+    computed: '{n} spinning circles are drawing your shape together. Each circle spins at its own speed.',
+    name: 'Look, the Fourier series is writing your name! It uses {n} circles.',
+    sweep: "Let's start with just one circle. One circle can only draw a round loop.",
+    sweepEnd: 'The more circles, the sharper the drawing! The same idea helps shrink JPEG photos and MP3 songs.',
+    bigSmall: 'Big circles draw the rough outline, and small circles add the fine details.',
+    small: 'That drawing is too small, try drawing it bigger.',
+  },
+};
+const ln = (k, n) => LINES[CS.lang][k].replace('{n}', n);
+const PRESETS = [
+  { key: 'heart', hi: 'दिल ❤️', en: 'Heart ❤️' },
+  { key: 'star', hi: 'तारा ⭐', en: 'Star ⭐' },
+  { key: 'pi', text: 'π', hi: 'पाई π', en: 'Pi π' },
+  { key: 'inf', hi: 'अनंत ∞', en: 'Infinity ∞' },
+  { key: 'om', text: 'ॐ', hi: 'ॐ', en: 'Om ॐ' },
+];
+
+// ---------------------------------------------------------------- settings
+const DEFAULTS = { cycle: 9, circles: true, ghost: true, camBg: true, voice: true, sfx: true, fps: '30' };
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+};
+const S = { ...DEFAULTS, ...(() => { try { return JSON.parse(store.get('fourier.settings')) || {}; } catch { return {}; } })() };
+const saveSettings = () => store.set('fourier.settings', JSON.stringify(S));
+
+// ---------------------------------------------------------------- utils
+const $ = (s) => document.querySelector(s);
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const follow = (rate, dt) => 1 - Math.pow(rate, dt);
+const TAU = Math.PI * 2;
+let toastTimer;
+function toast(msg, ms = 3200) {
+  const el = $('#toast'); el.textContent = msg; el.classList.add('on');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('on'), ms);
+}
+
+// ---------------------------------------------------------------- canvas
+// Drawings are stored in "stage units": (0, 0) = stage centre, 1 unit = stage height, so they survive resizing.
+const stage = $('#stage'), cv = $('#c'), g = cv.getContext('2d'), cam = $('#cam');
+let W = 1, H = 1, pr = 1, camOK = false;
+const toPx = (x, y) => [W / 2 + x * H, H / 2 + y * H];
+const toUnits = (px, py) => [(px - W / 2) / H, (py - H / 2) / H];
+function onResize() {
+  W = Math.max(1, stage.clientWidth || innerWidth); H = Math.max(1, stage.clientHeight || innerHeight);
+  pr = Math.min(devicePixelRatio || 1, 1.5);
+  cv.width = Math.round(W * pr); cv.height = Math.round(H * pr);
+  layoutUI();
+}
+addEventListener('resize', onResize);
+function drawVideo() {
+  const vw = cam.videoWidth, vh = cam.videoHeight;
+  if (!camOK || !S.camBg || !vw || cam.readyState < 2) return false;
+  const s = Math.max(W / vw, H / vh), dw = vw * s, dh = vh * s;
+  g.save(); g.translate(W, 0); g.scale(-1, 1); g.drawImage(cam, (W - dw) / 2, (H - dh) / 2, dw, dh); g.restore();
+  return true;
+}
+function toStage(p) {
+  const vw = cam.videoWidth || 1280, vh = cam.videoHeight || 720, s = Math.max(W / vw, H / vh), dw = vw * s, dh = vh * s;
+  return { x: (1 - p.x) * dw + (W - dw) / 2, y: p.y * dh + (H - dh) / 2 };
+}
+
+// ---------------------------------------------------------------- the Fourier maths
+// A closed path of N points z_k = x_k + i·y_k (k = 0 … N−1).
+// Discrete Fourier transform:  c_n = (1/N) · Σ_k z_k · e^(−2πi·n·k/N)
+// Fourier series:              z(t) = Σ_n c_n · e^(2πi·n·t),  t from 0 to 1
+// Each term is one circle: radius |c_n|, starting angle arg(c_n), turning n times per round.
+// Chain the circles tip-to-tail and the last tip traces the original path.
+function dft(xs, ys) {
+  const N = xs.length, cos = new Float64Array(N), sin = new Float64Array(N), out = [];
+  for (let m = 0; m < N; m++) { cos[m] = Math.cos(TAU * m / N); sin[m] = Math.sin(TAU * m / N); } // e^(−2πi·m/N) = cos − i·sin
+  for (let n = -Math.floor(N / 2); n < Math.ceil(N / 2); n++) {
+    let re = 0, im = 0;
+    for (let k = 0; k < N; k++) {
+      const m = ((n * k) % N + N) % N;
+      re += xs[k] * cos[m] + ys[k] * sin[m];
+      im += ys[k] * cos[m] - xs[k] * sin[m];
+    }
+    re /= N; im /= N;
+    out.push({ n, re, im, amp: Math.hypot(re, im), phase: Math.atan2(im, re) });
+  }
+  // c_0 (the centre) first, then the biggest circles: they carry most of the shape
+  return out.sort((a, b) => (a.n === 0 ? -1 : b.n === 0 ? 1 : b.amp - a.amp));
+}
+// Parseval: Σ|c_n|² equals the average |z_k|², so the share of Σ|c_n|² in the first K circles
+// says how much of the drawing they capture.
+const fz = { terms: [], energy: [], K: 0, t: 0, rounds: 0, playing: true, src: null, kind: '', label: '', curve: null, curveK: 0, M: 0, hop: Infinity };
+function setShape(xs, ys, kind, label) {
+  const terms = dft(xs, ys);
+  const total = terms.slice(1).reduce((s, c) => s + c.amp * c.amp, 0) || 1;
+  let acc = 0;
+  fz.energy = terms.map((c, i) => { if (i) acc += c.amp * c.amp; return acc / total; });
+  Object.assign(fz, { terms, K: terms.length - 1, t: 0, rounds: 0, playing: true, src: { xs, ys }, kind, label });
+  // Trace exactly at the N input times t = k/N: there the series equals the drawing. In between, a path with jumps
+  // (hops between letters) rings back and forth (the Gibbs effect), which would show up as a zigzag.
+  fz.M = xs.length;
+  const steps = xs.map((x, i) => Math.hypot(x - xs[(i + 1) % xs.length], ys[i] - ys[(i + 1) % xs.length])).sort((p, q) => p - q);
+  fz.hop = Math.max(0.02, steps[Math.floor(steps.length / 2)] * 8); // longer than this = a jump, not part of the shape
+  fz.curve = new Float64Array(fz.M * 2); fz.curveK = -1;
+  setK(fz.K, true);
+  sweep.on = false; $('#btnSweep').classList.remove('on');
+  sfx('compute');
+}
+// The full curve for the current K, kept up to date by adding / removing one circle's contribution at a time.
+function setK(k, rebuild = false) {
+  if (!fz.terms.length) return;
+  k = clamp(Math.round(k), 1, fz.terms.length - 1);
+  const M = fz.M, cur = fz.curve;
+  if (rebuild || fz.curveK < 0) { cur.fill(0); addTerm(0, 1); fz.curveK = 0; }
+  while (fz.curveK < k) addTerm(++fz.curveK, 1);
+  while (fz.curveK > k) addTerm(fz.curveK--, -1);
+  fz.K = k;
+  function addTerm(j, sign) {
+    const c = fz.terms[j];
+    for (let m = 0; m < M; m++) {
+      const a = TAU * c.n * m / M + c.phase;
+      cur[m * 2] += sign * c.amp * Math.cos(a); cur[m * 2 + 1] += sign * c.amp * Math.sin(a);
+    }
+  }
+}
+
+// ---------------------------------------------------------------- shapes in
+// Even spacing along the path so every part of the drawing gets the same share of points.
+function resample(pts, n) {
+  const d = [0];
+  for (let i = 1; i < pts.length; i++) d.push(d[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
+  const L = d[d.length - 1], xs = [], ys = [];
+  let j = 0;
+  for (let i = 0; i < n; i++) {
+    const s = (i / n) * L;
+    while (j < d.length - 2 && d[j + 1] < s) j++;
+    const f = (s - d[j]) / Math.max(1e-9, d[j + 1] - d[j]);
+    xs.push(pts[j][0] + (pts[j + 1][0] - pts[j][0]) * f); ys.push(pts[j][1] + (pts[j + 1][1] - pts[j][1]) * f);
+  }
+  return { xs, ys, L };
+}
+// Fit points into a box (stage units) centred on the stage.
+function fitBox(pts, maxW, maxH, cy = 0) {
+  let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+  for (const [x, y] of pts) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+  const s = Math.min(maxW / Math.max(1e-9, x1 - x0), maxH / Math.max(1e-9, y1 - y0)), cx = (x0 + x1) / 2, cyy = (y0 + y1) / 2;
+  return pts.map(([x, y]) => [(x - cx) * s, (y - cyy) * s + cy]);
+}
+// Text → one long path. Marching squares turns the letter shapes into clean outline loops,
+// then the loops are chained, always jumping to the nearest point of the closest loop left.
+function textPath(text) {
+  const c = document.createElement('canvas'), x = c.getContext('2d', { willReadFrequently: true });
+  const font = (s) => `700 ${s}px Rajdhani, 'Noto Sans Devanagari', 'Kohinoor Devanagari', sans-serif`;
+  x.font = font(200);
+  const fs = Math.min(200, 200 * 1400 / Math.max(1, x.measureText(text).width));
+  x.font = font(fs);
+  c.width = Math.ceil(x.measureText(text).width) + 40; c.height = Math.ceil(fs * 1.6);
+  x.font = font(fs); x.textBaseline = 'middle'; x.fillStyle = '#fff'; x.fillText(text, 20, c.height / 2);
+  const { data } = x.getImageData(0, 0, c.width, c.height), G = 2, w = Math.floor(c.width / G), h = Math.floor(c.height / G);
+  const on = (i, j) => data[((j * G) * c.width + i * G) * 4 + 3] > 128 ? 1 : 0;
+  // each cell's corners give a case 0–15; each case cuts the cell with 0, 1 or 2 segments between edge midpoints
+  // (edge ids: 0 top, 1 right, 2 bottom, 3 left)
+  const CUTS = [[], [[3, 2]], [[2, 1]], [[3, 1]], [[0, 1]], [[3, 0], [2, 1]], [[0, 2]], [[3, 0]], [[3, 0]], [[0, 2]], [[0, 1], [3, 2]], [[0, 1]], [[3, 1]], [[2, 1]], [[3, 2]], []];
+  const mid = (i, j, e) => [[2 * i + 1, 2 * j], [2 * i + 2, 2 * j + 1], [2 * i + 1, 2 * j + 2], [2 * i, 2 * j + 1]][e]; // doubled coords
+  const segs = [], at = new Map();
+  for (let j = 0; j < h - 1; j++) for (let i = 0; i < w - 1; i++) {
+    const k = on(i, j) * 8 + on(i + 1, j) * 4 + on(i + 1, j + 1) * 2 + on(i, j + 1);
+    for (const [e0, e1] of CUTS[k]) {
+      const a = mid(i, j, e0), b = mid(i, j, e1), id = segs.length;
+      segs.push([a, b]);
+      for (const p of [a, b]) { const key = p[0] * 100000 + p[1]; if (!at.has(key)) at.set(key, []); at.get(key).push(id); }
+    }
+  }
+  if (segs.length < 10) return null;
+  const used = new Uint8Array(segs.length), contours = [];
+  for (let s0 = 0; s0 < segs.length; s0++) {
+    if (used[s0]) continue;
+    used[s0] = 1;
+    const ct = [segs[s0][0], segs[s0][1]];
+    for (;;) { // follow shared endpoints until the loop closes
+      const tail = ct[ct.length - 1], next = (at.get(tail[0] * 100000 + tail[1]) || []).find((id) => !used[id]);
+      if (next === undefined) break;
+      used[next] = 1;
+      const [a, b] = segs[next];
+      ct.push(a[0] === tail[0] && a[1] === tail[1] ? b : a);
+    }
+    if (ct.length >= 6) contours.push(ct.map(([px, py]) => [px * G / 2, py * G / 2]));
+  }
+  if (!contours.length) return null;
+  const total = contours.reduce((s, ct) => s + ct.length, 0), step = Math.max(1, Math.ceil(total / 1300));
+  const left = contours.map((ct) => ct.filter((_, k) => k % step === 0));
+  const path = [];
+  let end = [0, h / 2];
+  while (left.length) {
+    let bi = 0, bk = 0, bd = Infinity;
+    left.forEach((ct, i) => ct.forEach((p, k) => { const d = (p[0] - end[0]) ** 2 + (p[1] - end[1]) ** 2; if (d < bd) { bd = d; bi = i; bk = k; } }));
+    const ct = left.splice(bi, 1)[0], loop = [...ct.slice(bk), ...ct.slice(0, bk), ct[bk]];
+    path.push(...loop);
+    end = loop[loop.length - 1];
+  }
+  return path;
+}
+function loadText(text, kind = 'name', label = text) {
+  const raw = textPath(text.trim());
+  if (!raw) { toast(CS.t('Ye text nahi ban paya, kuch aur likho.', 'Could not trace that text, try something else.')); return false; }
+  const pts = fitBox(raw, Math.min(W / H * 0.86, 1.6), 0.36, -0.02);
+  setShape(pts.map((p) => p[0]), pts.map((p) => p[1]), kind, label);
+  return true;
+}
+function loadPreset(i) {
+  const p = PRESETS[i % PRESETS.length], label = CS.en ? p.en : p.hi;
+  if (p.text) { loadText(p.text, 'preset', label); return; }
+  const n = 400, pts = [];
+  for (let k = 0; k < n; k++) {
+    const t = k / n * TAU;
+    if (p.key === 'heart') pts.push([16 * Math.sin(t) ** 3, -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t))]);
+    else if (p.key === 'inf') { const d = 1 + Math.sin(t) ** 2; pts.push([Math.cos(t) / d, Math.sin(t) * Math.cos(t) / d]); }
+  }
+  if (p.key === 'star') {
+    const corners = Array.from({ length: 11 }, (_, k) => { const a = -Math.PI / 2 + k * Math.PI / 5, r = k % 2 ? 0.42 : 1; return [Math.cos(a) * r, Math.sin(a) * r]; });
+    const r = resample(corners, n); for (let k = 0; k < n; k++) pts.push([r.xs[k], r.ys[k]]);
+  }
+  const f = fitBox(pts, Math.min(W / H * 0.7, 0.9), 0.5);
+  setShape(f.map((q) => q[0]), f.map((q) => q[1]), 'preset', label);
+}
+
+// ---------------------------------------------------------------- drawing input (pinch in the air, mouse or touch)
+const pen = { active: false, src: '', pts: [], lastSeen: 0, endT: -1e9 };
+function penStart(src, x, y) {
+  Object.assign(pen, { active: true, src, pts: [[x, y]], lastSeen: T });
+  sweep.on = false; $('#btnSweep').classList.remove('on');
+  sfx('pen');
+}
+function penMove(x, y) {
+  const l = pen.pts[pen.pts.length - 1];
+  pen.lastSeen = T;
+  if (Math.hypot(x - l[0], y - l[1]) > 0.004) pen.pts.push([x, y]);
+}
+function penEnd() {
+  if (!pen.active) return;
+  pen.active = false; pen.endT = T;
+  const pts = pen.pts;
+  let L = 0;
+  for (let i = 1; i < pts.length; i++) L += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+  if (pts.length < 12 || L < 0.25) { if (pts.length > 3) { toast(ln('small')); } return; }
+  const r = resample(pts, clamp(Math.round(L / 0.004), 160, 600));
+  setShape(r.xs, r.ys, 'draw', '');
+  if (!said.computed) { said.computed = true; say(ln('computed', fz.K)); }
+}
+
+// ---------------------------------------------------------------- hands
+let handLM = null, hands = [], lastVT = -1, lastDetect = 0, nextHandId = 1;
+async function initHands() {
+  setLoad('ldHand', 'wait');
+  const { FilesetResolver, HandLandmarker } = await import(`${MP_BASE}/vision_bundle.mjs`);
+  const fileset = await FilesetResolver.forVisionTasks(`${MP_BASE}/wasm`);
+  const opts = (delegate) => ({
+    baseOptions: { modelAssetPath: HAND_MODEL, delegate }, runningMode: 'VIDEO', numHands: 2,
+    minHandDetectionConfidence: 0.6, minHandPresenceConfidence: 0.5, minTrackingConfidence: 0.5,
+  });
+  try { handLM = await HandLandmarker.createFromOptions(fileset, opts('GPU')); }
+  catch { handLM = await HandLandmarker.createFromOptions(fileset, opts('CPU')); }
+  setLoad('ldHand', 'ok');
+  toast('Hand tracking ready ✓');
+}
+function trackHands(now) {
+  if (!handLM || cam.readyState < 2 || cam.currentTime === lastVT || now - lastDetect < 30) return;
+  lastVT = cam.currentTime; lastDetect = now;
+  let res;
+  try { res = handLM.detectForVideo(cam, now); } catch { return; }
+  ingestHands(res.landmarks || [], now);
+}
+function ingestHands(list, now = performance.now()) {
+  const vw = cam.videoWidth || 1280, vh = cam.videoHeight || 720, asp = vw / vh;
+  const next = list.map((lm) => {
+    const d = (a, b) => Math.hypot((lm[a].x - lm[b].x) * asp, lm[a].y - lm[b].y, ((lm[a].z || 0) - (lm[b].z || 0)) * asp * 0.5);
+    const size = Math.max(1e-4, d(0, 9)), ext = (t, p) => d(0, t) > d(0, p) * 1.15;
+    const curl = [[8, 5], [12, 9], [16, 13], [20, 17]].map(([t, m]) => d(0, t) / Math.max(1e-4, d(0, m)));
+    const closure = clamp((1.75 - (curl[0] + curl[1] + curl[2] + curl[3]) / 4) / 0.65, 0, 1);
+    const open = ext(8, 6) && ext(12, 10) && ext(16, 14) && ext(20, 18) && d(4, 5) > size * 0.55 && d(8, 20) > size * 0.9;
+    const peace = ext(8, 6) && ext(12, 10) && curl[2] < 1.3 && curl[3] < 1.35 && d(8, 12) > size * 0.3;
+    return {
+      lm, open, peace, fist: closure > 0.8, closure, indexOut: d(0, 8) > d(0, 5) * 1.25, ratio: d(4, 8) / size, wrist: lm[0], t: now, pinch: false, id: 0,
+      tip: toStage(lm[8]), pt: toStage({ x: (lm[4].x + lm[8].x) / 2, y: (lm[4].y + lm[8].y) / 2 }), palm: toStage(lm[9]),
+    };
+  });
+  for (const h of next) {
+    let prev = null, best = 0.25;
+    for (const p of hands) { const dd = Math.hypot(p.wrist.x - h.wrist.x, p.wrist.y - h.wrist.y); if (dd < best) { best = dd; prev = p; } }
+    h.id = prev ? prev.id : nextHandId++;
+    h.pinch = (prev?.pinch ? h.ratio < 0.45 : h.ratio < 0.3) && h.indexOut && h.closure < 0.6 && !h.peace;
+    if (h.pinch) h.open = false;
+    if (prev) for (const k of ['tip', 'pt', 'palm']) { h[k].x = prev[k].x + (h[k].x - prev[k].x) * 0.6; h[k].y = prev[k].y + (h[k].y - prev[k].y) * 0.6; }
+  }
+  hands = next;
+}
+// 🤏 draw · ✊ up/down = circles · ✌️ = grow circles · 🙌 = clear
+const palms = { count: 0, hold: 0, fired: false }, vSign = { hold: 0, fired: false }, fistCtl = { id: 0, y0: 0, k0: 0, active: false };
+function updateHands(dt) {
+  if (pen.active && pen.src.startsWith('H')) {
+    const h = hands.find((x) => 'H' + x.id === pen.src);
+    if (h?.pinch) { const [x, y] = toUnits(h.pt.x, h.pt.y); penMove(x, y); }
+    else if (T - pen.lastSeen > 0.18) penEnd(); // short grace: a pinch can flicker for a frame
+  } else if (!pen.active && !fistCtl.active) {
+    const h = hands.find((x) => x.pinch);
+    if (h) { const [x, y] = toUnits(h.pt.x, h.pt.y); penStart('H' + h.id, x, y); }
+  }
+  const f = hands.find((x) => x.fist);
+  if (f && fz.terms.length && !pen.active) {
+    if (!fistCtl.active || fistCtl.id !== f.id) Object.assign(fistCtl, { active: true, id: f.id, y0: f.palm.y, k0: fz.K });
+    const k = fistCtl.k0 * Math.pow(2, (fistCtl.y0 - f.palm.y) / (H * 0.1));
+    if (Math.round(k) !== fz.K) { sweep.on = false; setK(k); manualK(); }
+  } else fistCtl.active = false;
+  // both palms (held 1 s) = clear; ignored right after a stroke, when hands open naturally
+  const c = pen.active || T - pen.endT < 1.5 ? 0 : hands.filter((h) => h.open).length >= 2 ? 2 : 0;
+  if (c !== palms.count) { palms.count = c; palms.hold = 0; palms.fired = false; }
+  if (c && !palms.fired) { palms.hold += dt; if (palms.hold >= 1) { palms.fired = true; clearAll(); } }
+  // ✌️ (held 0.6 s) = grow the circles from 1 to all
+  if (hands.some((h) => h.peace) && !pen.active) { if (!vSign.fired) { vSign.hold += dt; if (vSign.hold >= 0.6) { vSign.fired = true; startSweep(); } } }
+  else { vSign.hold = 0; vSign.fired = false; }
+}
+function manualK() { if (!said.bigSmall && !speaking) { said.bigSmall = true; say(ln('bigSmall')); } }
+
+// ---------------------------------------------------------------- circles 1 → all
+const sweep = { on: false, t: 0, dur: 14 };
+function startSweep() {
+  if (!fz.terms.length) return;
+  Object.assign(sweep, { on: true, t: 0 });
+  $('#btnSweep').classList.add('on');
+  setK(1); fz.rounds = 1;
+  sfx('blip'); say(ln('sweep'));
+}
+function updateSweep(dt) {
+  if (!sweep.on) return;
+  sweep.t += dt;
+  const max = fz.terms.length - 1, p = clamp((sweep.t - 2) / sweep.dur, 0, 1);
+  const k = Math.round(Math.exp(Math.log(max) * p * p));
+  if (k !== fz.K) { if (Math.floor(Math.log2(k)) > Math.floor(Math.log2(fz.K))) sfx('tick', Math.log2(k)); setK(k); }
+  if (p >= 1) { sweep.on = false; $('#btnSweep').classList.remove('on'); say(ln('sweepEnd')); }
+}
+function clearAll() {
+  Object.assign(fz, { terms: [], K: 0, src: null, curve: null, kind: '' });
+  sweep.on = false; $('#btnSweep').classList.remove('on');
+  sfx('clear'); toast(CS.t('🧹 Saaf! Naya kuch banao', '🧹 Cleared! Draw something new'), 1800);
+}
+
+// ---------------------------------------------------------------- audio
+const audio = { ctx: null, bus: null, mic: null };
+function ensureAudio() {
+  if (!audio.ctx) {
+    audio.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    audio.bus = audio.ctx.createGain(); audio.bus.gain.value = 0.9; audio.bus.connect(audio.ctx.destination);
+  }
+  audio.ctx.resume?.();
+}
+function sfx(type, v = 0) {
+  if (!S.sfx || !audio.ctx) return;
+  const ctx = audio.ctx, t = ctx.currentTime, out = audio.bus;
+  const tone = (f0, f1, len, wave, peak, at0 = 0) => {
+    const o = ctx.createOscillator(), gn = ctx.createGain(), s = t + at0;
+    o.type = wave; o.frequency.setValueAtTime(f0, s); o.frequency.exponentialRampToValueAtTime(f1, s + len);
+    gn.gain.setValueAtTime(0.0001, s); gn.gain.exponentialRampToValueAtTime(peak, s + Math.min(0.03, len * 0.2)); gn.gain.exponentialRampToValueAtTime(0.0001, s + len);
+    o.connect(gn).connect(out); o.start(s); o.stop(s + len + 0.05);
+  };
+  if (type === 'compute') { [392, 523, 659, 784].forEach((f, i) => tone(f, f * 1.01, 0.25, 'triangle', 0.1, i * 0.06)); }
+  else if (type === 'tick') tone(300 + v * 90, 300 + v * 90, 0.1, 'sine', 0.12);
+  else if (type === 'pen') tone(900, 1200, 0.08, 'sine', 0.1);
+  else if (type === 'clear') tone(900, 200, 0.3, 'sawtooth', 0.06);
+  else if (type === 'blip') tone(1100, 1500, 0.12, 'sine', 0.15);
+}
+
+// ---------------------------------------------------------------- voice + subtitles
+let speaking = false;
+const sub = { text: '', last: '', a: 0 }, said = {};
+function say(text) {
+  sub.text = text;
+  clearTimeout(say.timer);
+  const finish = () => { speaking = false; setTimeout(() => { if (sub.text === text) sub.text = ''; }, 1200); };
+  speaking = true;
+  if (!S.voice || !('speechSynthesis' in window)) { say.timer = setTimeout(finish, 900 + text.length * 55); return; }
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  const v = CS.voice(); if (v) { u.voice = v; u.lang = v.lang; } else u.lang = CS.speechLang;
+  u.onend = u.onerror = () => { if (say.u === u) finish(); };
+  say.u = u; // keep a reference so Chrome fires onend
+  speechSynthesis.speak(u);
+}
+
+// ---------------------------------------------------------------- drawing
+const layout = { top: 62, bottom: 1e9, panelY: 16 };
+function layoutUI() {
+  const st = stage.getBoundingClientRect(), bar = $('.top').getBoundingClientRect(), hint = $('#hint').getBoundingClientRect();
+  layout.top = bar.bottom - st.top + 8;
+  layout.bottom = hint.height ? hint.top - st.top - 8 : H - 16;
+  layout.panelY = W < H ? Math.max(64, layout.top) : 16;
+}
+const panelW = () => (W < H ? W - 32 : Math.min(330, W * 0.4));
+function pill(x, y, lines, color, alpha, fs) {
+  g.font = `700 ${fs}px Rajdhani, sans-serif`;
+  const w = Math.max(...lines.map((l) => g.measureText(l).width)) + fs * 1.1, h = fs * 1.25 * lines.length + fs * 0.5;
+  const bx = clamp(x - w / 2, 8, W - w - 8), by = clamp(y - h / 2, 8, H - h - 8);
+  g.globalAlpha = alpha;
+  g.fillStyle = 'rgba(10,6,22,.85)'; g.strokeStyle = color; g.lineWidth = 1.5;
+  g.beginPath(); g.roundRect(bx, by, w, h, 8); g.fill(); g.stroke();
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  lines.forEach((l, i) => { g.font = `${i ? 600 : 700} ${i ? fs * 0.88 : fs}px Rajdhani, sans-serif`; g.fillStyle = i ? 'rgba(244,238,255,.85)' : color; g.fillText(l, bx + w / 2, by + fs * 0.25 + fs * 1.25 * (i + 0.5)); });
+  g.globalAlpha = 1;
+}
+function wrap(text, maxW) {
+  const words = text.split(/\s+/), lines = [];
+  let cur = '';
+  for (const w of words) { const t = cur ? cur + ' ' + w : w; if (g.measureText(t).width > maxW && cur) { lines.push(cur); cur = w; } else cur = t; }
+  if (cur) lines.push(cur);
+  return lines;
+}
+// The tip position for the first K circles at time t, plus every circle centre on the way.
+function chain(t) {
+  const out = [];
+  let x = fz.terms[0].re, y = fz.terms[0].im;
+  out.push([x, y]);
+  for (let j = 1; j <= fz.K; j++) {
+    const c = fz.terms[j], a = TAU * c.n * t + c.phase;
+    x += c.amp * Math.cos(a); y += c.amp * Math.sin(a);
+    out.push([x, y]);
+  }
+  return out;
+}
+function drawShape(dt) {
+  const M = fz.M, cur = fz.curve, head = Math.floor(fz.t * M) % M;
+  // original drawing, faint and dashed
+  if (S.ghost && fz.src) {
+    g.setLineDash([4, 6]); g.strokeStyle = 'rgba(244,238,255,.22)'; g.lineWidth = 1.5;
+    g.beginPath();
+    fz.src.xs.forEach((x, i) => { const y = fz.src.ys[i], [px, py] = toPx(x, y); i && Math.hypot(x - fz.src.xs[i - 1], y - fz.src.ys[i - 1]) <= fz.hop ? g.lineTo(px, py) : g.moveTo(px, py); });
+    g.stroke(); g.setLineDash([]);
+  }
+  // traced curve: during the first round only what has been drawn so far, then the whole loop with a bright tail
+  g.lineCap = g.lineJoin = 'round';
+  const seg = (from, to, color, width, alpha) => {
+    if (to <= from) return;
+    g.globalAlpha = alpha; g.strokeStyle = color; g.lineWidth = width;
+    g.beginPath();
+    let lx = 0, ly = 0;
+    for (let s = from; s <= to; s++) {
+      const m = s % M, x = cur[m * 2], y = cur[m * 2 + 1], [px, py] = toPx(x, y);
+      if (s === from || Math.hypot(x - lx, y - ly) > fz.hop) g.moveTo(px, py); else g.lineTo(px, py);
+      lx = x; ly = y;
+    }
+    g.stroke();
+  };
+  if (fz.rounds < 1) { seg(0, head, '#c792ff', 7, 0.25); seg(0, head, '#f1e4ff', 2.5, 1); }
+  else {
+    seg(0, M, '#c792ff', 2, 0.35);
+    const tail = Math.floor(M * 0.45), steps = 10;
+    for (let k = 0; k < steps; k++) {
+      const a = head - tail + Math.floor(tail * k / steps), b = head - tail + Math.floor(tail * (k + 1) / steps);
+      const f = (k + 1) / steps;
+      seg(a + M, b + M, '#c792ff', 7, 0.18 * f); seg(a + M, b + M, f > 0.6 ? '#ffffff' : '#e0c8ff', 2.5, 0.25 + 0.75 * f);
+    }
+  }
+  g.globalAlpha = 1;
+  // the circles and their arms
+  const pts = chain(fz.t);
+  if (S.circles) {
+    g.strokeStyle = 'rgba(199,146,255,.28)'; g.lineWidth = 1;
+    g.beginPath();
+    for (let j = 1; j < pts.length; j++) {
+      const r = fz.terms[j].amp * H;
+      if (r < 0.8) continue;
+      const [cx, cy] = toPx(...pts[j - 1]);
+      g.moveTo(cx + r, cy); g.arc(cx, cy, r, 0, TAU);
+    }
+    g.stroke();
+    g.strokeStyle = 'rgba(255,255,255,.7)'; g.lineWidth = 1.3;
+    g.beginPath();
+    pts.forEach(([x, y], j) => { const [px, py] = toPx(x, y); j ? g.lineTo(px, py) : g.moveTo(px, py); });
+    g.stroke();
+  }
+  const [tx, ty] = toPx(...pts[pts.length - 1]);
+  g.shadowColor = '#ffffff'; g.shadowBlur = 14; g.fillStyle = '#ffffff';
+  g.beginPath(); g.arc(tx, ty, 4.5, 0, TAU); g.fill(); g.shadowBlur = 0;
+}
+// Panel: number of circles, energy captured (Parseval), the biggest |c_n| and the formula.
+function drawPanel(fs) {
+  const w = panelW(), h = 150, x = 16, y = layout.panelY;
+  g.globalAlpha = 0.95; g.fillStyle = 'rgba(10,6,22,.82)'; g.strokeStyle = 'rgba(199,146,255,.5)'; g.lineWidth = 1.5;
+  g.beginPath(); g.roundRect(x, y, w, h, 12); g.fill(); g.stroke(); g.globalAlpha = 1;
+  g.textAlign = 'left'; g.textBaseline = 'middle';
+  const N = fz.terms.length;
+  g.font = '900 24px Orbitron, sans-serif'; g.fillStyle = '#ffffff';
+  const kt = N ? `⭕ ${fz.K}` : '⭕ 0';
+  g.fillText(kt, x + 14, y + 24);
+  const kw = g.measureText(kt).width;
+  g.font = '700 14px Rajdhani, sans-serif'; g.fillStyle = 'rgba(244,238,255,.7)';
+  g.fillText(N ? CS.t(`/ ${N - 1} गोले`, `/ ${N - 1} circles`) : CS.t('गोले', 'circles'), x + 20 + kw, y + 28);
+  if (N) {
+    const e = fz.energy[fz.K] * 100;
+    g.font = '700 13px Rajdhani, sans-serif'; g.fillStyle = '#3dff8b'; g.textAlign = 'right';
+    g.fillText(`${CS.t('पकड़ी गई ऊर्जा', 'energy captured')} ${e >= 99.95 ? '100' : e.toFixed(1)}%`, x + w - 12, y + 26);
+    g.textAlign = 'left';
+    // spectrum: the 48 biggest circles, the ones in use lit up
+    const bars = Math.min(48, N - 1), bx = x + 12, bw = (w - 24) / bars, by = y + 48, bh = 50, top = fz.terms[1].amp || 1;
+    for (let i = 0; i < bars; i++) {
+      const v = Math.sqrt(fz.terms[i + 1].amp / top), on = i + 1 <= fz.K;
+      g.fillStyle = on ? `hsl(${270 - i * 3},90%,${70 - i * 0.4}%)` : 'rgba(244,238,255,.15)';
+      g.fillRect(bx + i * bw, by + bh * (1 - v), Math.max(1, bw - 1.5), bh * v);
+    }
+    g.font = '600 11px Rajdhani, sans-serif'; g.fillStyle = 'rgba(244,238,255,.55)';
+    g.fillText(CS.t('|cₙ| सबसे बड़े से छोटे तक →', '|cₙ| biggest to smallest →'), bx, by + bh + 9);
+  } else {
+    g.font = '600 13px Rajdhani, sans-serif'; g.fillStyle = 'rgba(244,238,255,.65)';
+    g.fillText(CS.t('कुछ बनाइए, गोले यहाँ गिने जाएँगे', 'draw something, circles are counted here'), x + 14, y + 70);
+  }
+  g.font = '700 14px Rajdhani, sans-serif'; g.fillStyle = '#e0c8ff';
+  g.fillText('z(t) = Σ cₙ · e^(2πi·n·t)', x + 14, y + h - 30);
+  g.font = '600 12px Rajdhani, sans-serif'; g.fillStyle = 'rgba(244,238,255,.6)';
+  g.fillText('cₙ = (1/N) Σ zₖ · e^(−2πi·n·k/N)', x + 14, y + h - 13);
+}
+function draw(dt) {
+  g.setTransform(pr, 0, 0, pr, 0, 0);
+  if (drawVideo()) { g.fillStyle = 'rgba(6,3,16,.62)'; g.fillRect(0, 0, W, H); }
+  else {
+    const gr = g.createRadialGradient(W / 2, H * 0.45, 0, W / 2, H * 0.45, Math.max(W, H) * 0.7);
+    gr.addColorStop(0, '#160a2a'); gr.addColorStop(1, '#030108');
+    g.fillStyle = gr; g.fillRect(0, 0, W, H);
+  }
+  const fs = Math.max(13, Math.min(W * 0.03, H * 0.024));
+  if (fz.terms.length && fz.curve) drawShape(dt);
+  // the stroke being drawn right now
+  if (pen.active && pen.pts.length > 1) {
+    g.lineCap = g.lineJoin = 'round';
+    for (const [col, wd, a] of [['#c792ff', 9, 0.3], ['#ffffff', 3, 1]]) {
+      g.globalAlpha = a; g.strokeStyle = col; g.lineWidth = wd;
+      g.beginPath(); pen.pts.forEach(([x, y], i) => { const [px, py] = toPx(x, y); i ? g.lineTo(px, py) : g.moveTo(px, py); }); g.stroke();
+    }
+    g.globalAlpha = 1;
+  }
+  // hands: pen tip, fist slider, palm hold rings
+  for (const h of hands) {
+    const p = h.pinch ? h.pt : h.tip;
+    g.strokeStyle = h.pinch ? '#ffffff' : '#c792ff'; g.lineWidth = 2; g.shadowColor = '#c792ff'; g.shadowBlur = 10;
+    g.beginPath(); g.arc(p.x, p.y, h.pinch ? 7 : 9, 0, TAU); g.stroke(); g.shadowBlur = 0;
+    if (h.pinch) { g.fillStyle = '#ffffff'; g.beginPath(); g.arc(p.x, p.y, 3, 0, TAU); g.fill(); }
+    if (fistCtl.active && h.id === fistCtl.id) {
+      const x = h.palm.x + 50, y = h.palm.y;
+      g.fillStyle = 'rgba(10,6,22,.7)'; g.beginPath(); g.roundRect(x - 6, y - 80, 12, 160, 6); g.fill();
+      const k = Math.log(fz.K) / Math.log(Math.max(2, fz.terms.length - 1));
+      g.fillStyle = '#c792ff'; g.beginPath(); g.roundRect(x - 6, y + 80 - 160 * k, 12, 160 * k, 6); g.fill();
+      pill(x + 44, y + 80 - 160 * k, [`⭕ ${fz.K}`], '#ffffff', 1, fs);
+    }
+    if (h.peace && !vSign.fired && vSign.hold > 0) {
+      g.strokeStyle = '#ffffff'; g.lineWidth = 3;
+      g.beginPath(); g.arc(h.tip.x, h.tip.y, 22, -Math.PI / 2, -Math.PI / 2 + TAU * Math.min(1, vSign.hold / 0.6)); g.stroke();
+    }
+    if (h.open && !palms.fired && palms.hold > 0) {
+      g.strokeStyle = '#ffffff'; g.lineWidth = 3;
+      g.beginPath(); g.arc(h.palm.x, h.palm.y, 30, -Math.PI / 2, -Math.PI / 2 + TAU * Math.min(1, palms.hold)); g.stroke();
+    }
+  }
+  if (started) drawPanel(fs);
+  if (started && !fz.terms.length && !pen.active) {
+    pill(W / 2, (layout.top + layout.bottom) / 2, [
+      handLM ? CS.t('🤏 अंगूठा + उंगली मिलाकर हवा में कुछ भी बनाइए', '🤏 Pinch thumb + finger and draw anything in the air') : CS.t('🖱️ माउस से कुछ भी बनाइए', '🖱️ Draw anything with the mouse'),
+      CS.t('या ✍️ से अपना नाम, ⭐ से तैयार आकार', 'or ✍️ for your name, ⭐ for a ready shape'),
+    ], '#c792ff', 0.92, fs * 1.15);
+  }
+  if (sweep.on) pill(W / 2, layout.top + fs * 1.4, [CS.t(`⭕ ${fz.K} गोले`, `⭕ ${fz.K} circles`)], '#ffffff', 0.95, fs * 1.6);
+  else if (fz.label && fz.terms.length) pill(W / 2, layout.top + fs * 1.2, [fz.label], '#e0c8ff', 0.85, fs);
+  // subtitles
+  sub.a += ((sub.text ? 1 : 0) - sub.a) * follow(0.001, dt);
+  if (sub.a > 0.01 && (sub.text || sub.last)) {
+    if (sub.text) sub.last = sub.text;
+    const sfs = Math.max(18, Math.min(W * 0.045, H * 0.032));
+    g.font = `700 ${sfs}px Rajdhani, sans-serif`;
+    const lines = wrap(sub.last, W * 0.86);
+    g.globalAlpha = sub.a; g.textAlign = 'center'; g.textBaseline = 'middle';
+    lines.forEach((l, i) => {
+      const y = Math.min(H * 0.86, layout.bottom - sfs * 0.6) - (lines.length - 1 - i) * sfs * 1.25;
+      g.lineWidth = 5; g.strokeStyle = 'rgba(0,0,0,.85)'; g.strokeText(l, W / 2, y);
+      g.fillStyle = '#ffffff'; g.fillText(l, W / 2, y);
+    });
+    g.globalAlpha = 1;
+  }
+}
+
+// ---------------------------------------------------------------- recording (the canvas already holds everything)
+const recState = { mr: null, chunks: [], t0: 0, dest: null, ext: 'webm', mime: '' };
+function startRecord() {
+  if (!window.MediaRecorder) { toast(CS.t('Is browser me recording nahi chalegi. Chrome use karo.', 'Recording does not work in this browser. Please use Chrome.')); return; }
+  ensureAudio();
+  const tracks = [...cv.captureStream(30).getVideoTracks()];
+  recState.dest = audio.ctx.createMediaStreamDestination();
+  audio.bus.connect(recState.dest);
+  audio.mic?.connect(recState.dest);
+  tracks.push(...recState.dest.stream.getAudioTracks());
+  recState.mime = MIMES.find((m) => MediaRecorder.isTypeSupported(m)) || '';
+  recState.ext = recState.mime.startsWith('video/mp4') ? 'mp4' : 'webm';
+  const mr = new MediaRecorder(new MediaStream(tracks), recState.mime ? { mimeType: recState.mime, videoBitsPerSecond: 8_000_000 } : undefined);
+  recState.chunks = [];
+  mr.ondataavailable = (e) => { if (e.data.size) recState.chunks.push(e.data); };
+  mr.onstop = saveRecording;
+  mr.start(1000);
+  recState.mr = mr; recState.t0 = performance.now();
+  $('#btnRec').classList.add('on');
+}
+function stopRecord() { recState.mr?.stop(); recState.mr = null; $('#btnRec').classList.remove('on'); $('#btnRec').textContent = '⏺ REC'; }
+function saveRecording() {
+  try { audio.bus.disconnect(recState.dest); } catch {}
+  try { audio.mic?.disconnect(recState.dest); } catch {}
+  const blob = new Blob(recState.chunks, { type: recState.mime || 'video/webm' });
+  const a = document.createElement('a');
+  const d = new Date(), stamp = `${d.getHours()}${String(d.getMinutes()).padStart(2, '0')}${String(d.getSeconds()).padStart(2, '0')}`;
+  a.href = URL.createObjectURL(blob); a.download = `fourier-reel-${stamp}.${recState.ext}`;
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+  toast(CS.t(`Video save ho gaya: Downloads me ${a.download}`, `Video saved to Downloads: ${a.download}`), 5000);
+}
+
+// ---------------------------------------------------------------- main loop
+let T = 0, lastRender = 0, started = false, presetI = 0;
+function tick(dt, now) {
+  T += dt;
+  trackHands(now);
+  updateHands(dt);
+  updateSweep(dt);
+  if (fz.terms.length && fz.playing) {
+    fz.t += dt / S.cycle;
+    if (fz.t >= 1) { fz.t -= 1; fz.rounds++; }
+  }
+}
+function frameLoop(now) {
+  requestAnimationFrame(frameLoop);
+  if (now - lastRender < 1000 / Number(S.fps) - 2) return;
+  const dt = Math.min(0.06, (now - lastRender) / 1000);
+  lastRender = now;
+  if (cv.width !== Math.round((stage.clientWidth || innerWidth) * pr)) onResize();
+  tick(dt, now);
+  draw(dt);
+  if (recState.mr) { const s = Math.floor((performance.now() - recState.t0) / 1000); $('#btnRec').textContent = `■ ${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; }
+}
+
+// ---------------------------------------------------------------- UI
+function setLoad(id, st) {
+  const el = document.getElementById(id), icon = { wait: '◌', ok: '✓', fail: '✕', warn: '!' }[st];
+  el.className = st; el.textContent = `${icon} ${el.textContent.replace(/^\S+\s/, '')}`;
+}
+function updateHint() {
+  $('#hint').innerHTML = CS.t(
+    '<b>🤏</b> hawa me banao · <b>✊</b> mutthi upar/neeche = gole · <b>✌️</b> = gole 1 se sab · <b>🙌</b> = saaf · <b>✍️</b> naam · <b>🖱️</b> mouse bhi',
+    '<b>🤏</b> draw in the air · <b>✊</b> fist up/down = circles · <b>✌️</b> = grow circles · <b>🙌</b> = clear · <b>✍️</b> name · <b>🖱️</b> mouse too');
+  layoutUI();
+}
+function toggleReel() {
+  document.body.classList.toggle('reel');
+  $('#btnReel').classList.toggle('on', document.body.classList.contains('reel'));
+  onResize();
+}
+function toggleName(on) {
+  const bar = $('#nameBar'), show = on ?? !bar.classList.contains('on');
+  bar.classList.toggle('on', show);
+  $('#btnName').classList.toggle('on', show);
+  if (show) $('#nameIn').focus();
+}
+const showSpeed = () => { $('#speedOut').textContent = `${S.cycle} s`; };
+for (const el of document.querySelectorAll('[data-s]')) {
+  const k = el.dataset.s;
+  if (el.type === 'checkbox') el.checked = !!S[k]; else el.value = S[k];
+  el.addEventListener(el.type === 'range' ? 'input' : 'change', () => {
+    S[k] = el.type === 'checkbox' ? el.checked : el.type === 'range' ? parseFloat(el.value) : el.value;
+    saveSettings();
+    if (k === 'cycle') showSpeed();
+  });
+}
+showSpeed();
+// mouse / touch drawing
+cv.addEventListener('pointerdown', (e) => {
+  if (!started) return;
+  cv.setPointerCapture(e.pointerId);
+  const r = stage.getBoundingClientRect(), [x, y] = toUnits(e.clientX - r.left, e.clientY - r.top);
+  penStart('M', x, y);
+});
+cv.addEventListener('pointermove', (e) => {
+  if (!pen.active || pen.src !== 'M') return;
+  const r = stage.getBoundingClientRect(), [x, y] = toUnits(e.clientX - r.left, e.clientY - r.top);
+  penMove(x, y);
+});
+for (const ev of ['pointerup', 'pointercancel']) cv.addEventListener(ev, () => { if (pen.src === 'M') penEnd(); });
+cv.addEventListener('wheel', (e) => { if (!fz.terms.length) return; e.preventDefault(); sweep.on = false; setK(fz.K * (e.deltaY < 0 ? 1.2 : 1 / 1.2) + (e.deltaY < 0 ? 1 : -1)); manualK(); }, { passive: false });
+$('#btnSettings').addEventListener('click', () => $('#settings').classList.toggle('open'));
+$('#btnClose').addEventListener('click', () => $('#settings').classList.remove('open'));
+$('#btnReel').addEventListener('click', toggleReel);
+$('#btnRec').addEventListener('click', () => (recState.mr ? stopRecord() : startRecord()));
+$('#btnName').addEventListener('click', () => toggleName());
+$('#btnPreset').addEventListener('click', () => { if (started) loadPreset(presetI++); });
+$('#btnSweep').addEventListener('click', () => { if (started) startSweep(); });
+$('#nameBar').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const v = $('#nameIn').value.trim();
+  if (!v || !started) return;
+  if (loadText(v, 'name', `✍️ ${v}`)) { toggleName(false); $('#nameIn').blur(); say(ln('name', fz.K)); }
+});
+const toggleFs = () => (document.fullscreenElement ? document.exitFullscreen?.() : document.documentElement.requestFullscreen?.().catch(() => {}));
+$('#btnFs').addEventListener('click', toggleFs);
+addEventListener('keydown', (e) => {
+  if (e.target.matches('input, select')) { if (e.key === 'Escape') { e.target.blur(); toggleName(false); } return; }
+  const k = e.key.toLowerCase();
+  if (e.code === 'Space') { e.preventDefault(); fz.playing = !fz.playing; }
+  else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); if (fz.terms.length) { sweep.on = false; setK(e.key === 'ArrowUp' ? fz.K * 1.25 + 1 : fz.K / 1.25 - 1); manualK(); } }
+  else if (k === 's' && started) startSweep();
+  else if (k === 'p' && started) loadPreset(presetI++);
+  else if (k === 'n' && started) { e.preventDefault(); toggleName(true); }
+  else if (k === 'c') clearAll();
+  else if (k === 'r' && started) (recState.mr ? stopRecord() : startRecord());
+  else if (k === 'v') toggleReel();
+  else if (k === 'h') { document.body.classList.toggle('clean'); layoutUI(); }
+  else if (k === 'f') toggleFs();
+  else if (e.key === 'Escape') $('#settings').classList.remove('open');
+});
+
+async function start() {
+  const btn = $('#btnStart');
+  btn.disabled = true; btn.textContent = 'STARTING…';
+  ensureAudio();
+  setLoad('ldCam', 'wait');
+  const md = navigator.mediaDevices;
+  const noMedia = new URLSearchParams(location.search).has('nomedia');
+  let vStream = null, aStream = null;
+  if (md?.getUserMedia && !noMedia) {
+    try {
+      const s = await md.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' }, audio: AUDIO_CONSTRAINTS });
+      vStream = aStream = s;
+    } catch {
+      try { vStream = await md.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 } } }); } catch {}
+      try { aStream = await md.getUserMedia({ audio: AUDIO_CONSTRAINTS }); } catch {}
+    }
+  }
+  if (aStream) audio.mic = audio.ctx.createMediaStreamSource(new MediaStream(aStream.getAudioTracks()));
+  if (vStream) { cam.srcObject = new MediaStream(vStream.getVideoTracks()); try { await cam.play(); } catch {} camOK = true; }
+  setLoad('ldCam', vStream && aStream ? 'ok' : vStream || aStream ? 'warn' : 'fail');
+  if (!vStream) toast(CS.t('Camera nahi mila. Mouse ya touch se banao.', 'No camera found. Draw with the mouse or touch.'), 4000);
+  started = true;
+  updateHint();
+  $('#start').classList.add('gone');
+  setTimeout(() => say(ln(vStream ? 'intro' : 'introMouse')), 900);
+  if (vStream) initHands().catch((e) => { console.error(e); setLoad('ldHand', 'fail'); toast(CS.t('Hand tracking load nahi hua.', 'Hand tracking failed to load.')); });
+}
+$('#btnStart').addEventListener('click', start);
+
+CS.onChange(() => { updateHint(); if (sub.text) { window.speechSynthesis?.cancel(); sub.text = ''; } const p = PRESETS.find((q) => fz.label === q.hi || fz.label === q.en); if (p) fz.label = CS.en ? p.en : p.hi; });
+onResize();
+updateHint();
+requestAnimationFrame(frameLoop);
+// Console hooks for testing without a camera.
+window.__fourier = {
+  step(sec) { for (let i = 0; i < Math.max(1, Math.round(sec * 30)); i++) tick(1 / 30, performance.now()); draw(sec); },
+  ingestHands, dft, setK, loadText, loadPreset, startSweep, clearAll, penStart, penMove, penEnd, fz, sweep, chain, get hands() { return hands; },
+};
+</script>
+</body>
+</html>

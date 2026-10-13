@@ -8,6 +8,7 @@ Camera ke saamne haath hilakar science seekhne wale labs. Hindi aur English me, 
 | 🪐 Solar System AR | `solar-ar/` | Physics / Space |
 | 🌗 चाँद की कलाएँ (Moon Phases) | `moon-phases/` | Science |
 | 📐 Finger Trigonometry | `finger-trig/` | Maths |
+| 🌀 फूरियर ड्रॉइंग (Fourier Drawing) | `fourier-draw/` | Maths |
 | 💧 Molecule Builder | `molecule-ar/` | Chemistry |
 | 🫀 दिल की धड़कन (Heartbeat AR) | `heart-ar/` | Biology |
 | 🩻 बॉडी एक्स-रे (Body X-ray) | `body-xray/` | Biology |
