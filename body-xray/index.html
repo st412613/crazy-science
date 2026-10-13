@@ -1,0 +1,937 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🩻</text></svg>">
+<title data-en="Body X-ray · Crazy Science">बॉडी एक्स-रे · Crazy Science</title>
+<script src="../lang.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --c: #7fd7ff;
+    --c-rgb: 127, 215, 255;
+    --text: #eef8ff;
+    --dim: rgba(238, 248, 255, .62);
+    --panel: rgba(2, 10, 24, .84);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #000; color: var(--text); font-family: 'Rajdhani', system-ui, sans-serif; overflow: hidden; }
+  #stage { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 100vw; height: 100vh; overflow: hidden; background: #000; }
+  body.reel #stage { width: min(100vw, calc(100vh * 9 / 16)); height: min(100vh, calc(100vw * 16 / 9)); }
+  #c { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  #cam { position: fixed; width: 2px; height: 2px; opacity: 0; pointer-events: none; }
+
+  #ui { position: fixed; inset: 0; pointer-events: none; z-index: 5; }
+  #ui button { pointer-events: auto; }
+  .top { position: absolute; top: 16px; right: 16px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end; max-width: calc(100% - 32px); }
+  button.icon { height: 38px; min-width: 38px; padding: 0 12px; border-radius: 10px; border: 1px solid rgba(var(--c-rgb), .45); background: rgba(2, 10, 24, .65); color: var(--c); font: 700 13px 'Orbitron', sans-serif; letter-spacing: .08em; cursor: pointer; }
+  button.icon:hover { background: rgba(var(--c-rgb), .16); }
+  button.icon.on { background: var(--c); color: #001424; }
+  #btnRec.on { background: #ff2d4a; border-color: #ff2d4a; color: #fff; animation: blink 1s infinite; }
+  #hint { position: absolute; left: 50%; bottom: 20px; transform: translateX(-50%); background: var(--panel); border: 1px solid rgba(var(--c-rgb), .3); border-radius: 12px; padding: 9px 16px; font-size: 16px; color: var(--dim); text-align: center; width: max-content; max-width: calc(100% - 32px); line-height: 1.5; }
+  #hint b { color: var(--c); }
+  #toast { position: absolute; top: 66px; left: 50%; transform: translateX(-50%); background: var(--panel); border: 1px solid rgba(var(--c-rgb), .4); padding: 10px 16px; border-radius: 10px; font-size: 16px; opacity: 0; transition: opacity .3s; max-width: calc(100% - 32px); text-align: center; }
+  #toast.on { opacity: 1; }
+  body.clean #hint, body.clean .top button:not(#btnRec) { display: none; }
+
+  #settings { position: fixed; top: 0; right: 0; height: 100%; width: min(360px, 100%); background: rgba(2, 8, 20, .96); border-left: 1px solid rgba(var(--c-rgb), .3); z-index: 10; transform: translateX(100%); transition: transform .3s; overflow-y: auto; padding: 20px; }
+  #settings.open { transform: none; }
+  #settings h2 { font-family: 'Orbitron', sans-serif; font-size: 14px; letter-spacing: .25em; color: var(--c); margin: 4px 0 12px; display: flex; justify-content: space-between; align-items: center; }
+  .row { display: flex; flex-direction: column; gap: 5px; margin: 12px 0; font-size: 16px; }
+  .row.inline { flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; }
+  .keys { color: var(--dim); font-size: 13px; line-height: 1.5; }
+  .row select { padding: 9px 10px; border-radius: 8px; border: 1px solid rgba(var(--c-rgb), .35); background: #04111f; color: var(--text); font: 600 15px 'Rajdhani', sans-serif; }
+  input[type=range], input[type=checkbox] { accent-color: var(--c); }
+  input[type=checkbox] { width: 18px; height: 18px; flex: none; }
+
+  #start { position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; background: radial-gradient(ellipse at center, rgba(2, 16, 34, .75), #000); padding: 16px; transition: opacity .6s; }
+  #start.gone { opacity: 0; pointer-events: none; }
+  #start .card { max-width: 580px; text-align: center; }
+  #start h1 { font-family: 'Orbitron', sans-serif; font-weight: 900; letter-spacing: .22em; font-size: clamp(28px, 7vw, 50px); color: var(--c); text-shadow: 0 0 24px rgba(var(--c-rgb), .8); margin: 0 0 6px; padding-left: .22em; }
+  #start h2 { font-size: 22px; margin: 0 0 12px; font-weight: 700; }
+  #start p { font-size: 19px; line-height: 1.5; margin: 0 0 22px; }
+  #start .note { font-size: 14px; color: var(--dim); margin-top: 16px; }
+  .btn { padding: 14px 30px; border-radius: 12px; border: 1px solid rgba(var(--c-rgb), .6); background: rgba(var(--c-rgb), .14); color: var(--c); font: 700 16px 'Orbitron', sans-serif; letter-spacing: .14em; cursor: pointer; }
+  .btn:disabled { opacity: .5; cursor: wait; }
+  #loadList { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; margin-top: 18px; font-size: 15px; color: var(--dim); }
+  #loadList .ok { color: #3dff8b; } #loadList .fail { color: #ff5b6b; } #loadList .warn { color: #ffd23d; }
+  @keyframes blink { 50% { opacity: .55; } }
+</style>
+</head>
+<body>
+<div id="stage"><canvas id="c"></canvas></div>
+<video id="cam" playsinline muted></video>
+
+<div id="ui">
+  <div class="top">
+    <button class="icon" id="btnHome" title="Crazy Science: saare labs" data-en-title="Crazy Science: all labs" onclick="location.href='../'">🏠</button>
+    <button class="icon" id="btnLang" data-lang-toggle>🌐 EN</button>
+    <button class="icon" id="btnRec" title="Video record (R)">⏺ REC</button>
+    <button class="icon" id="btnReel" title="Reel frame 9:16 (V)">9:16</button>
+    <button class="icon" id="btnMode" title="Haddi / ang (M)" data-en-title="Bones / organs (M)">🦴</button>
+    <button class="icon" id="btnFull" title="Poora X-ray (X)" data-en-title="Full X-ray (X)">🩻</button>
+    <button class="icon" id="btnQuiz" title="Khoj khel (Q)" data-en-title="Find it game (Q)">🎯</button>
+    <button class="icon" id="btnFs" title="Fullscreen (F)">⛶</button>
+    <button class="icon" id="btnSettings" title="Settings">⚙</button>
+  </div>
+  <div id="hint"></div>
+  <div id="toast" role="status"></div>
+</div>
+
+<aside id="settings" aria-label="Settings">
+  <h2>SETTINGS <button class="icon" id="btnClose" title="Band karo (Esc)" data-en-title="Close (Esc)">✕</button></h2>
+  <label class="row"><span data-en="What the X-ray shows">X-ray me kya dikhe</span>
+    <select data-s="mode">
+      <option value="bones" data-en="🦴 Bones">🦴 Haddiyan</option>
+      <option value="organs" data-en="🫁 Organs">🫁 Ang (organs)</option>
+      <option value="both" data-en="🦴🫁 Both">🦴🫁 Dono</option>
+    </select>
+  </label>
+  <label class="row"><span data-en="Scanner size">Scanner ka size</span> <input type="range" min="0.6" max="1.8" step="0.05" data-s="lens"></label>
+  <label class="row inline"><span data-en="Chart view: all names">Chart view: sabke naam</span> <input type="checkbox" data-s="chart"></label>
+  <label class="row inline"><span data-en="Voice (speaks the lines)">Aawaz (bolne wali lines)</span> <input type="checkbox" data-s="voice"></label>
+  <label class="row inline"><span data-en="Sound effects">Sound effects</span> <input type="checkbox" data-s="sfx"></label>
+  <label class="row">Smoothness
+    <select data-s="fps">
+      <option value="30" data-en="30 FPS (light, good for laptops)">30 FPS (Mac ke liye halka)</option>
+      <option value="60" data-en="60 FPS (smoother, more load)">60 FPS (smooth, zyada load)</option>
+    </select>
+  </label>
+  <div class="keys" data-en="Gestures: ✋ raise a hand in front of your body = X-ray scanner · hold it still = name + fact · 🙌 both hands above your head = full X-ray · 🙏 hands together = bones / organs<br>Shortcuts: X or Space = full X-ray · M = bones / organs · Q = find it game · N = next question · C = chart view · R = record · V = 9:16 · H = clean screen · Esc = close<br>The mouse works as a scanner too.">Gestures: ✋ shareer ke saamne haath uthao = X-ray scanner · haath roko = naam + jaankari · 🙌 dono haath sar ke upar = poora X-ray · 🙏 haath jodo = haddi / ang<br>Shortcuts: X ya Space = poora X-ray · M = haddi / ang · Q = khoj khel · N = agla sawaal · C = chart view · R = record · V = 9:16 · H = clean screen · Esc = band<br>Mouse bhi scanner ki tarah chalta hai.</div>
+</aside>
+
+<div id="start">
+  <div class="card">
+    <h1>BODY·X-RAY</h1>
+    <h2 data-en="🩻 see inside your own body">🩻 अपने शरीर के अंदर देखो</h2>
+    <p data-en="Your hand becomes an X-ray scanner: move it over your body and see your bones, heart, lungs and stomach right where they are. Raise both hands for a full-body X-ray 🙌">Tumhara haath X-ray scanner ban jayega: use shareer par ghumao aur apni haddiyan, dil, fefde, pet wahin dekho jahan wo sach me hain. Dono haath upar karo to poore shareer ka X-ray 🙌</p>
+    <button class="btn" id="btnStart">▶ START</button>
+    <div id="loadList"><div id="ldCam">◌ Camera + mic</div><div id="ldPose">◌ Body tracking</div></div>
+    <p class="note" data-en="Works best in Chrome. Stand 1–2 metres back so your upper body (or whole body) is in view, in good light.">Chrome me best chalta hai. Camera se 1–2 meter peeche khade ho jao taaki upar ka shareer (ya poora shareer) dikhe, aur roshni achhi ho.</p>
+    <div class="cs-lang"><button data-setlang="hi">हिंदी</button><button data-setlang="en">English</button></div>
+    <p class="note"><a href="../" style="color:inherit" data-en="← Crazy Science: all labs">← Crazy Science: saare labs</a></p>
+  </div>
+</div>
+
+<script type="module">
+// ---------------------------------------------------------------- config
+const MP_BASE = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14';
+const POSE_MODEL = 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task';
+const AUDIO_CONSTRAINTS = { echoCancellation: false, noiseSuppression: false, autoGainControl: false };
+const MIMES = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4;codecs=avc1,opus', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
+// Jo lines bolega (hi = Hindi, en = English): yahan badal sakte ho.
+const LINES = {
+  hi: {
+    intro: 'देखिए, एक्स-रे स्कैनर! अपना हाथ शरीर के सामने लाइए, स्कैनर आपके हाथ के साथ चलेगा। हमारे शरीर में दो सौ छह हड्डियाँ होती हैं!',
+    full: 'पूरे शरीर का एक्स-रे!',
+    bones: 'अब सिर्फ़ हड्डियाँ।',
+    organs: 'अब शरीर के अंदर के अंग।',
+    both: 'हड्डियाँ और अंग, दोनों साथ।',
+    quizStart: 'खोज खेल शुरू! जो हड्डी या अंग कहूँ, उसे स्कैनर से ढूँढिए।',
+    correct: ['शाबाश!', 'बिल्कुल सही!', 'कमाल कर दिया!'],
+  },
+  en: {
+    intro: 'Look, an X-ray scanner! Bring your hand in front of your body and the scanner moves with it. Our body has 206 bones!',
+    full: 'Full body X-ray!',
+    bones: 'Now just the bones.',
+    organs: 'Now the organs inside.',
+    both: 'Bones and organs together.',
+    quizStart: "Let's play find it! I'll name a bone or an organ, and you find it with the scanner.",
+    correct: ['Well done!', 'Exactly right!', 'Amazing!'],
+  },
+};
+const ln = (k) => LINES[CS.lang][k];
+// Every part you can scan: kind, name, a short tag for the label, and the fact that is spoken.
+const PARTS = {
+  skull: { kind: 'bone', hi: 'खोपड़ी', en: 'Skull', tag: ['दिमाग की रक्षा', 'protects the brain'], fact: ['खोपड़ी हमारे दिमाग की रक्षा करती है। इसमें बाईस हड्डियाँ होती हैं।', 'The skull protects the brain. It is made of 22 bones.'] },
+  jaw: { kind: 'bone', hi: 'जबड़ा', en: 'Jaw', tag: ['अकेली हिलने वाली', 'the one that moves'], fact: ['जबड़ा खोपड़ी की अकेली हड्डी है जो हिलती है। इसी से हम चबाते और बोलते हैं।', 'The jaw is the only skull bone that moves. It lets us chew and talk.'] },
+  spine: { kind: 'bone', hi: 'रीढ़ की हड्डी', en: 'Spine', tag: ['33 कशेरुका', '33 vertebrae'], fact: ['रीढ़ में तैंतीस छोटी हड्डियाँ होती हैं, जिन्हें कशेरुका कहते हैं। ये शरीर को सीधा रखती है।', 'The spine has 33 small bones called vertebrae. It keeps us upright.'] },
+  ribs: { kind: 'bone', hi: 'पसलियाँ', en: 'Ribs', tag: ['12 जोड़ी', '12 pairs'], fact: ['बारह जोड़ी पसलियाँ एक पिंजरा बनाती हैं, जो दिल और फेफड़ों को बचाता है।', 'Twelve pairs of ribs make a cage that protects the heart and lungs.'] },
+  clavicle: { kind: 'bone', hi: 'हंसली', en: 'Collarbone', tag: ['कंधा + छाती', 'shoulder to chest'], fact: ['हंसली, यानी कॉलर बोन, कंधे को छाती से जोड़ती है।', 'The collarbone connects the shoulder to the chest.'] },
+  humerus: { kind: 'bone', hi: 'ह्यूमरस', en: 'Humerus', tag: ['ऊपरी बाँह', 'upper arm'], fact: ['ह्यूमरस ऊपरी बाँह की हड्डी है, कंधे से कोहनी तक।', 'The humerus is the upper arm bone, from shoulder to elbow.'] },
+  forearm: { kind: 'bone', hi: 'रेडियस और अल्ना', en: 'Radius and ulna', tag: ['कोहनी से कलाई', 'elbow to wrist'], fact: ['कोहनी से कलाई तक दो हड्डियाँ होती हैं, रेडियस और अल्ना। इन्हीं से हम कलाई घुमा पाते हैं।', 'Two bones, the radius and the ulna, run from elbow to wrist. They let us twist the wrist.'] },
+  hand: { kind: 'bone', hi: 'हाथ की हड्डियाँ', en: 'Hand bones', tag: ['27 हड्डियाँ', '27 bones'], fact: ['एक हाथ में सत्ताईस हड्डियाँ होती हैं!', 'One hand has 27 bones!'] },
+  pelvis: { kind: 'bone', hi: 'श्रोणि (पेल्विस)', en: 'Pelvis', tag: ['कूल्हे की हड्डी', 'hip bone'], fact: ['श्रोणि, यानी पेल्विस, शरीर का वज़न पैरों तक पहुँचाती है।', 'The pelvis carries the weight of the body down to the legs.'] },
+  femur: { kind: 'bone', hi: 'फीमर', en: 'Femur', tag: ['सबसे लंबी हड्डी', 'longest bone'], fact: ['फीमर, यानी जांघ की हड्डी, शरीर की सबसे लंबी और सबसे मज़बूत हड्डी है।', 'The femur, the thigh bone, is the longest and strongest bone in the body.'] },
+  patella: { kind: 'bone', hi: 'घुटने की टोपी', en: 'Kneecap', tag: ['पटेला', 'patella'], fact: ['घुटने की टोपी, यानी पटेला, घुटने के जोड़ को बचाती है।', 'The kneecap, or patella, protects the knee joint.'] },
+  shin: { kind: 'bone', hi: 'टिबिया और फिबुला', en: 'Tibia and fibula', tag: ['पिंडली', 'shin'], fact: ['पिंडली में दो हड्डियाँ होती हैं, मोटी टिबिया और पतली फिबुला।', 'The shin has two bones: the thick tibia and the thin fibula.'] },
+  foot: { kind: 'bone', hi: 'पैर की हड्डियाँ', en: 'Foot bones', tag: ['26 हड्डियाँ', '26 bones'], fact: ['एक पैर में छब्बीस हड्डियाँ होती हैं।', 'One foot has 26 bones.'] },
+  brain: { kind: 'organ', hi: 'दिमाग', en: 'Brain', tag: ['पूरे शरीर का कंट्रोल', 'controls the body'], fact: ['दिमाग पूरे शरीर को कंट्रोल करता है। ये सोचता है, याद रखता है, और हर अंग को संदेश भेजता है।', 'The brain controls the whole body. It thinks, remembers and sends messages to every part.'] },
+  heart: { kind: 'organ', hi: 'दिल', en: 'Heart', tag: ['खून का पंप', 'blood pump'], fact: ['दिल एक दिन में करीब एक लाख बार धड़कता है, और पूरे शरीर में खून पहुँचाता है।', 'The heart beats about one hundred thousand times a day, pumping blood to the whole body.'] },
+  lungs: { kind: 'organ', hi: 'फेफड़े', en: 'Lungs', tag: ['साँस', 'breathing'], fact: ['फेफड़े हवा से ऑक्सीजन लेते हैं और कार्बन डाइऑक्साइड बाहर निकालते हैं।', 'The lungs take oxygen from the air and breathe out carbon dioxide.'] },
+  liver: { kind: 'organ', hi: 'लिवर (यकृत)', en: 'Liver', tag: ['सबसे बड़ा अंदरूनी अंग', 'largest inner organ'], fact: ['लिवर शरीर का सबसे बड़ा अंदरूनी अंग है। ये खून साफ़ करता है और पित्त बनाता है।', 'The liver is the largest internal organ. It cleans the blood and makes bile.'] },
+  stomach: { kind: 'organ', hi: 'आमाशय (पेट)', en: 'Stomach', tag: ['खाना पचाता है', 'digests food'], fact: ['आमाशय में एसिड और एंज़ाइम मिलकर खाने को पचाते हैं।', 'In the stomach, acid and enzymes break down food.'] },
+  intestines: { kind: 'organ', hi: 'आंतें', en: 'Intestines', tag: ['पोषण सोखती हैं', 'absorb food'], fact: ['छोटी आंत करीब छह मीटर लंबी होती है! यहीं खाने का पोषण खून में जाता है।', 'The small intestine is about six metres long! This is where food nutrients pass into the blood.'] },
+  kidneys: { kind: 'organ', hi: 'गुर्दे (किडनी)', en: 'Kidneys', tag: ['खून छानते हैं', 'filter the blood'], fact: ['दोनों किडनी खून को छानती हैं और पेशाब बनाती हैं।', 'The two kidneys filter the blood and make urine.'] },
+  bladder: { kind: 'organ', hi: 'मूत्राशय', en: 'Bladder', tag: ['पेशाब जमा', 'stores urine'], fact: ['मूत्राशय पेशाब को जमा करके रखता है।', 'The bladder stores urine.'] },
+};
+const partName = (k) => (CS.en ? PARTS[k].en : PARTS[k].hi);
+const QUIZ = ['heart', 'femur', 'skull', 'lungs', 'liver', 'ribs', 'stomach', 'spine', 'kidneys', 'humerus', 'brain', 'pelvis', 'intestines', 'hand'];
+const ORGAN_COL = { brain: '#ff9ad5', heart: '#ff3355', lungs: '#ff8fb1', liver: '#c85a42', stomach: '#ffa26b', intestines: '#ffcf8a', kidneys: '#d0506a', bladder: '#ffd84d' };
+
+// ---------------------------------------------------------------- settings
+const DEFAULTS = { mode: 'bones', lens: 1, chart: false, voice: true, sfx: true, fps: '30' };
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+};
+const S = { ...DEFAULTS, ...(() => { try { return JSON.parse(store.get('xray.settings')) || {}; } catch { return {}; } })() };
+const saveSettings = () => store.set('xray.settings', JSON.stringify(S));
+
+// ---------------------------------------------------------------- utils
+const $ = (s) => document.querySelector(s);
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const follow = (rate, dt) => 1 - Math.pow(rate, dt);
+const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+const mid = (a, b) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
+const lerpP = (a, b, k) => ({ x: a.x + (b.x - a.x) * k, y: a.y + (b.y - a.y) * k });
+const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+const pick = (a) => a[Math.floor(Math.random() * a.length)];
+let toastTimer;
+function toast(msg, ms = 3200) {
+  const el = $('#toast'); el.textContent = msg; el.classList.add('on');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('on'), ms);
+}
+
+// ---------------------------------------------------------------- canvases
+const stage = $('#stage'), cv = $('#c'), g = cv.getContext('2d');
+const xr = document.createElement('canvas'), xg = xr.getContext('2d'); // the X-ray picture, shown through the scanner
+const cam = $('#cam');
+let W = 1, H = 1, pr = 1, camOK = false;
+const scanPattern = (() => {
+  const c = document.createElement('canvas'); c.width = 4; c.height = 4;
+  const x = c.getContext('2d'); x.fillStyle = 'rgba(140,210,255,.07)'; x.fillRect(0, 0, 4, 1);
+  return xg.createPattern(c, 'repeat');
+})();
+function onResize() {
+  W = Math.max(1, stage.clientWidth || innerWidth); H = Math.max(1, stage.clientHeight || innerHeight);
+  pr = Math.min(devicePixelRatio || 1, 1.25);
+  cv.width = xr.width = Math.round(W * pr); cv.height = xr.height = Math.round(H * pr);
+  layoutUI();
+}
+addEventListener('resize', onResize);
+// The camera picture, mirrored and cover-fitted to the stage.
+function drawVideo(ctx) {
+  const vw = cam.videoWidth, vh = cam.videoHeight;
+  if (!camOK || !vw || cam.readyState < 2) return false;
+  const s = Math.max(W / vw, H / vh), dw = vw * s, dh = vh * s;
+  ctx.save(); ctx.translate(W, 0); ctx.scale(-1, 1); ctx.drawImage(cam, (W - dw) / 2, (H - dh) / 2, dw, dh); ctx.restore();
+  return true;
+}
+function toStage(p) {
+  const vw = cam.videoWidth || 1280, vh = cam.videoHeight || 720, s = Math.max(W / vw, H / vh), dw = vw * s, dh = vh * s;
+  return { x: (1 - p.x) * dw + (W - dw) / 2, y: p.y * dh + (H - dh) / 2 };
+}
+
+// ---------------------------------------------------------------- body tracking (MediaPipe Pose, 33 points)
+let poseLM = null, lastVT = -1, lastDetect = 0;
+const body = { pts: null, seen: -1e9 };
+async function initPose() {
+  setLoad('ldPose', 'wait');
+  const { FilesetResolver, PoseLandmarker } = await import(`${MP_BASE}/vision_bundle.mjs`);
+  const fileset = await FilesetResolver.forVisionTasks(`${MP_BASE}/wasm`);
+  const opts = (delegate) => ({
+    baseOptions: { modelAssetPath: POSE_MODEL, delegate }, runningMode: 'VIDEO', numPoses: 1,
+    minPoseDetectionConfidence: 0.5, minPosePresenceConfidence: 0.5, minTrackingConfidence: 0.5,
+  });
+  try { poseLM = await PoseLandmarker.createFromOptions(fileset, opts('GPU')); }
+  catch { poseLM = await PoseLandmarker.createFromOptions(fileset, opts('CPU')); }
+  setLoad('ldPose', 'ok');
+  toast(CS.t('Body tracking ready ✓', 'Body tracking ready ✓'));
+}
+function trackPose(now) {
+  if (!poseLM || cam.readyState < 2 || cam.currentTime === lastVT || now - lastDetect < 30) return;
+  lastVT = cam.currentTime; lastDetect = now;
+  let res;
+  try { res = poseLM.detectForVideo(cam, now); } catch { return; }
+  const lm = res.landmarks?.[0];
+  if (lm) ingestPose(lm);
+}
+// Landmarks in video space (0..1) → stage pixels, smoothed so the bones don't jitter.
+function ingestPose(lm) {
+  const next = lm.map((p) => ({ ...toStage(p), v: p.visibility ?? 1 }));
+  if (body.pts && T - body.seen < 0.5) next.forEach((p, i) => { const o = body.pts[i]; p.x = o.x + (p.x - o.x) * 0.55; p.y = o.y + (p.y - o.y) * 0.55; });
+  body.pts = next; body.seen = T;
+}
+// Standing dummy for when there is no camera: scan it with the mouse.
+const DEMO = { 0: [0, -0.33], 2: [-0.022, -0.345], 5: [0.022, -0.345], 7: [-0.05, -0.335], 8: [0.05, -0.335], 9: [-0.015, -0.305], 10: [0.015, -0.305],
+  11: [-0.11, -0.22], 12: [0.11, -0.22], 13: [-0.14, -0.07], 14: [0.14, -0.07], 15: [-0.15, 0.06], 16: [0.15, 0.06], 17: [-0.158, 0.095], 18: [0.158, 0.095],
+  19: [-0.146, 0.104], 20: [0.146, 0.104], 21: [-0.128, 0.085], 22: [0.128, 0.085], 23: [-0.07, 0.04], 24: [0.07, 0.04], 25: [-0.075, 0.22], 26: [0.075, 0.22],
+  27: [-0.075, 0.39], 28: [0.075, 0.39], 29: [-0.07, 0.41], 30: [0.07, 0.41], 31: [-0.095, 0.425], 32: [0.095, 0.425] };
+function demoPose() {
+  const u = Math.min(H * 0.84, W * 1.3), top = layout.top, bottom = layout.bottom;
+  const cx = W / 2, cy = clamp((top + bottom) / 2, top + u * 0.44, bottom - u * 0.4), sway = Math.sin(T * 0.8) * u * 0.004;
+  return Array.from({ length: 33 }, (_, i) => { const d = DEMO[i] || DEMO[0]; return { x: cx + d[0] * u + sway, y: cy + d[1] * u, v: DEMO[i] ? 1 : 0 }; });
+}
+function currentPose() {
+  if (body.pts && T - body.seen < 0.6 && body.pts[11].v > 0.5 && body.pts[12].v > 0.5) return body.pts;
+  return camOK ? null : demoPose();
+}
+
+// ---------------------------------------------------------------- body frames
+// Torso frame: a = across (±1 at the shoulder joints, + toward the person's LEFT), b = down (0 shoulders, 1 hips).
+// Because the picture is a mirror, the person's left (and their heart) shows on the screen's left.
+function frames(P) {
+  const sL = P[11], sR = P[12], S0 = mid(sL, sR);
+  const ex = { x: (sL.x - sR.x) / 2, y: (sL.y - sR.y) / 2 }, half = Math.hypot(ex.x, ex.y) || 1;
+  let ey;
+  if (Math.min(P[23].v, P[24].v) > 0.3) { const hm = mid(P[23], P[24]); ey = { x: hm.x - S0.x, y: hm.y - S0.y }; }
+  if (!ey || Math.hypot(ey.x, ey.y) < half * 1.4) ey = { x: ex.y / half * half * 2.4, y: -ex.x / half * half * 2.4 }; // hips out of view: estimate
+  const sw = half * 2;
+  // head frame from eyes, ears and mouth
+  const eyeMid = mid(P[2], P[5]), mouthMid = mid(P[9], P[10]);
+  let hw = dist(P[7], P[8]);
+  if (Math.min(P[7].v, P[8].v) < 0.3 || hw < sw * 0.25) hw = sw * 0.42;
+  let up = { x: eyeMid.x - mouthMid.x, y: eyeMid.y - mouthMid.y }, ul = Math.hypot(up.x, up.y);
+  up = ul > 1 ? { x: up.x / ul, y: up.y / ul } : { x: -ey.x / Math.hypot(ey.x, ey.y), y: -ey.y / Math.hypot(ey.x, ey.y) };
+  const side = { x: -up.y, y: up.x };
+  return { S: S0, ex, ey, half, sw, eyeMid, hw, up, side, P };
+}
+const at = (F, a, b) => ({ x: F.S.x + F.ex.x * a + F.ey.x * b, y: F.S.y + F.ex.y * a + F.ey.y * b });
+const atH = (F, a, b) => ({ x: F.eyeMid.x + F.side.x * a * F.hw + F.up.x * b * F.hw, y: F.eyeMid.y + F.side.y * a * F.hw + F.up.y * b * F.hw });
+function toTorso(F, p) {
+  const dx = p.x - F.S.x, dy = p.y - F.S.y, det = F.ex.x * F.ey.y - F.ex.y * F.ey.x || 1;
+  return { a: (dx * F.ey.y - dy * F.ey.x) / det, b: (F.ex.x * dy - F.ex.y * dx) / det };
+}
+// pelvis frame: a = across in half-hip-widths, b = down in the same units
+function hipFrame(F) {
+  const P = F.P, hm = mid(P[23], P[24]);
+  let hx = { x: (P[23].x - P[24].x) / 2, y: (P[23].y - P[24].y) / 2 }, hl = Math.hypot(hx.x, hx.y);
+  if (Math.min(P[23].v, P[24].v) < 0.3 || hl < F.half * 0.3) { const c = at(F, 0, 1); hx = { x: F.ex.x * 0.65, y: F.ex.y * 0.65 }; hl = F.half * 0.65; return { c, hx, hy: down(F, hl) }; }
+  return { c: hm, hx, hy: down(F, hl) };
+}
+function down(F, len) { const l = Math.hypot(F.ey.x, F.ey.y) || 1; return { x: F.ey.x / l * len, y: F.ey.y / l * len }; }
+const atP = (Hf, a, b) => ({ x: Hf.c.x + Hf.hx.x * a + Hf.hy.x * b, y: Hf.c.y + Hf.hx.y * a + Hf.hy.y * b });
+
+// ---------------------------------------------------------------- shapes (built each frame, used for drawing and for "what is under the scanner")
+function ellipsePts(F, map, cx, cy, rx, ry, n = 28) { return Array.from({ length: n }, (_, i) => { const t = i / n * Math.PI * 2; return map(F, cx + Math.cos(t) * rx, cy + Math.sin(t) * ry); }); }
+function scaleAbout(pts, k, ky = k) {
+  const c = pts.reduce((s, p) => ({ x: s.x + p.x / pts.length, y: s.y + p.y / pts.length }), { x: 0, y: 0 });
+  return pts.map((p) => ({ x: c.x + (p.x - c.x) * k, y: c.y + (p.y - c.y) * ky }));
+}
+const torsoPts = (F, list) => list.map(([a, b]) => at(F, a, b));
+const vis = (P, ...ix) => ix.every((i) => P[i].v > 0.35);
+function buildBody(F) {
+  const P = F.P, sw = F.sw, bw = sw * 0.07, polys = [], segs = [];
+  const beat = Math.exp(-(((T % 0.83) / 0.12) ** 2)), breath = 1 + 0.03 * Math.sin(T * Math.PI / 2);
+  // organs
+  const organ = (part, pts, extra) => polys.push({ part, kind: 'organ', pts, ...extra });
+  organ('brain', ellipsePts(F, atH, 0, 0.42, 0.47, 0.4));
+  organ('heart', scaleAbout(torsoPts(F, [[-0.08, 0.22], [0.12, 0.17], [0.34, 0.24], [0.42, 0.36], [0.36, 0.46], [0.12, 0.42], [-0.1, 0.36]]), 1 + 0.07 * beat));
+  organ('lungs', scaleAbout(torsoPts(F, [[-0.3, -0.04], [-0.12, 0.06], [-0.08, 0.3], [-0.12, 0.44], [-0.45, 0.5], [-0.74, 0.42], [-0.72, 0.16]]), 1, breath), { group: 1 });
+  organ('lungs', scaleAbout(torsoPts(F, [[0.3, -0.04], [0.12, 0.06], [0.12, 0.2], [0.3, 0.42], [0.5, 0.5], [0.74, 0.42], [0.72, 0.16]]), 1, breath), { group: 2 });
+  organ('stomach', torsoPts(F, [[0.14, 0.47], [0.45, 0.44], [0.63, 0.52], [0.56, 0.66], [0.32, 0.7], [0.12, 0.64], [0.24, 0.57]]));
+  organ('liver', torsoPts(F, [[-0.72, 0.43], [-0.3, 0.41], [0.2, 0.44], [0.38, 0.48], [0.1, 0.56], [-0.4, 0.64], [-0.7, 0.6]]));
+  for (const s of [-1, 1]) organ('kidneys', torsoPts(F, [[0.4 * s, 0.6], [0.52 * s, 0.61], [0.57 * s, 0.7], [0.52 * s, 0.79], [0.41 * s, 0.79], [0.44 * s, 0.7]]), { group: s });
+  organ('bladder', ellipsePts(F, at, 0, 0.99, 0.15, 0.065, 16));
+  organ('intestines', torsoPts(F, [[-0.66, 0.64], [0, 0.6], [0.66, 0.64], [0.62, 0.98], [0.2, 1.0], [-0.2, 1.0], [-0.62, 0.98]]), { gut: true });
+  // bones: skull, jaw and spine
+  polys.push({ part: 'skull', kind: 'bone', pts: ellipsePts(F, atH, 0, 0.27, 0.58, 0.62) });
+  const jaw = [[-0.5, -0.12], [-0.45, -0.45], [-0.22, -0.7], [0, -0.75], [0.22, -0.7], [0.45, -0.45], [0.5, -0.12], [0.3, -0.35], [0, -0.48], [-0.3, -0.35]].map(([a, b]) => atH(F, a, b));
+  polys.push({ part: 'jaw', kind: 'bone', pts: jaw });
+  polys.push({ part: 'ribs', kind: 'bone', pts: torsoPts(F, [[-0.45, 0.04], [0.45, 0.04], [0.78, 0.28], [0.74, 0.6], [0, 0.52], [-0.74, 0.6], [-0.78, 0.28]]) });
+  polys.push({ part: 'spine', kind: 'bone', pts: torsoPts(F, [[-0.09, 0.0], [0.09, 0.0], [0.11, 1.0], [-0.11, 1.0]]) });
+  const Hf = hipFrame(F);
+  polys.push({ part: 'pelvis', kind: 'bone', pts: [[-1.35, -1.1], [1.35, -1.1], [1.4, -0.6], [1.0, 0.3], [0.3, 0.62], [-0.3, 0.62], [-1.0, 0.3], [-1.4, -0.6]].map(([a, b]) => atP(Hf, a, b)) });
+  // limbs as segments: [part, from, to, width]
+  const seg = (part, a, b, w) => segs.push({ part, a, b, w });
+  for (const [s, e, w2, h, k, a2, pinky, index, thumb] of [[11, 13, 15, 23, 25, 27, 17, 19, 21], [12, 14, 16, 24, 26, 28, 18, 20, 22]]) {
+    if (vis(P, s, e)) seg('humerus', lerpP(P[s], P[e], 0.06), P[e], bw);
+    if (vis(P, e, w2)) seg('forearm', P[e], P[w2], bw * 0.85);
+    if (vis(P, w2, index)) seg('hand', P[w2], lerpP(P[w2], P[index], 2.0), bw * 1.3);
+    if (vis(P, h, k)) seg('femur', P[h], P[k], bw * 1.2);
+    if (vis(P, k)) seg('patella', P[k], P[k], bw * 1.1);
+    if (vis(P, k, a2)) seg('shin', P[k], P[a2], bw);
+    if (vis(P, a2) && P[a2 + 4].v > 0.3) seg('foot', P[a2], P[a2 + 4], bw);
+  }
+  seg('clavicle', at(F, -0.05, 0.03), at(F, -0.9, -0.02), bw * 0.7);
+  seg('clavicle', at(F, 0.05, 0.03), at(F, 0.9, -0.02), bw * 0.7);
+  return { polys, segs, Hf, bw };
+}
+function inPoly(p, pts) {
+  let c = false;
+  for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+    const a = pts[i], b = pts[j];
+    if ((a.y > p.y) !== (b.y > p.y) && p.x < (b.x - a.x) * (p.y - a.y) / (b.y - a.y) + a.x) c = !c;
+  }
+  return c;
+}
+function segDist(p, a, b) {
+  const dx = b.x - a.x, dy = b.y - a.y, l2 = dx * dx + dy * dy || 1, t = clamp(((p.x - a.x) * dx + (p.y - a.y) * dy) / l2, 0, 1);
+  return Math.hypot(p.x - a.x - dx * t, p.y - a.y - dy * t);
+}
+const showsBones = () => S.mode !== 'organs' || quiz.on;
+const showsOrgans = () => S.mode !== 'bones' || quiz.on;
+// What is under this point? Organs win inside the torso; limb bones are checked by distance.
+function partAt(p) {
+  if (!shape) return null;
+  if (showsOrgans()) for (const o of ['heart', 'stomach', 'kidneys', 'liver', 'lungs', 'bladder', 'intestines', 'brain']) {
+    if (shape.polys.some((q) => q.part === o && inPoly(p, q.pts))) return o;
+  }
+  if (!showsBones()) return null;
+  let best = null, bd = Infinity;
+  for (const s of shape.segs) { const d = segDist(p, s.a, s.b) - s.w * (s.part === 'patella' ? 1.6 : 1.2); if (d < 0 && d < bd) { bd = d; best = s.part; } }
+  if (best) return best;
+  for (const o of ['jaw', 'skull', 'ribs', 'spine', 'pelvis']) if (shape.polys.some((q) => q.part === o && inPoly(p, q.pts))) return o;
+  return null;
+}
+function anchorOf(part) {
+  const s = shape.segs.find((x) => x.part === part);
+  if (s) return mid(s.a, s.b);
+  const q = shape.polys.find((x) => x.part === part);
+  return q ? q.pts.reduce((m, p) => ({ x: m.x + p.x / q.pts.length, y: m.y + p.y / q.pts.length }), { x: 0, y: 0 }) : null;
+}
+
+// ---------------------------------------------------------------- drawing the X-ray picture
+function smoothShape(ctx, pts) {
+  const n = pts.length, m = (i) => mid(pts[i % n], pts[(i + 1) % n]);
+  ctx.beginPath(); const s = m(0); ctx.moveTo(s.x, s.y);
+  for (let i = 1; i <= n; i++) { const c = pts[i % n], e = m(i); ctx.quadraticCurveTo(c.x, c.y, e.x, e.y); }
+  ctx.closePath();
+}
+function boneLine(ctx, a, b, w, hot) {
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = hot ? 'rgba(120,230,255,.55)' : 'rgba(150,215,255,.22)'; ctx.lineWidth = w * 2.3;
+  ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+  ctx.strokeStyle = hot ? '#ffffff' : '#e3f4ff'; ctx.lineWidth = w;
+  ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+  ctx.fillStyle = hot ? '#ffffff' : '#e3f4ff';
+  for (const p of [a, b]) { ctx.beginPath(); ctx.arc(p.x, p.y, w * 0.85, 0, Math.PI * 2); ctx.fill(); }
+}
+function boneShape(ctx, pts, hot, fill = 0.32) {
+  smoothShape(ctx, pts);
+  ctx.fillStyle = `rgba(215,240,255,${hot ? fill + 0.25 : fill})`; ctx.fill();
+  ctx.strokeStyle = hot ? '#ffffff' : 'rgba(230,246,255,.9)'; ctx.lineWidth = 2; ctx.stroke();
+}
+function vertebra(ctx, c, axis, w, h, hot) {
+  const ang = Math.atan2(axis.y, axis.x) - Math.PI / 2;
+  ctx.save(); ctx.translate(c.x, c.y); ctx.rotate(ang);
+  ctx.fillStyle = hot ? 'rgba(255,255,255,.95)' : 'rgba(225,243,255,.8)';
+  ctx.beginPath(); ctx.roundRect(-w / 2, -h / 2, w, h, h * 0.35); ctx.fill();
+  ctx.restore();
+}
+function drawSkeleton(ctx, F, hot) {
+  const P = F.P, bw = shape.bw, H_ = (k) => hot.has(k);
+  // spine: neck + 17 vertebrae down the torso, then the sacrum
+  const chin = atH(F, 0, -0.75), neckTop = lerpP(chin, F.S, 0.25), axis = { x: F.ey.x, y: F.ey.y };
+  for (let i = 0; i < 6; i++) vertebra(ctx, lerpP(neckTop, F.S, (i + 0.5) / 6), { x: F.S.x - neckTop.x, y: F.S.y - neckTop.y }, F.sw * 0.075, F.sw * 0.045, H_('spine'));
+  for (let i = 0; i < 17; i++) { const b = 0.02 + i * 0.055; vertebra(ctx, at(F, 0, b), axis, F.sw * (0.08 + 0.05 * b), F.sw * (0.05 + 0.025 * b), H_('spine')); }
+  // pelvis
+  const Hf = shape.Hf;
+  for (const s of [-1, 1]) {
+    boneShape(ctx, [[0.25, -0.95], [1.1, -1.2], [1.35, -0.75], [1.1, -0.2], [0.95, 0.25], [0.55, 0.6], [0.15, 0.55], [0.1, 0.15], [0.3, -0.35]].map(([a, b]) => atP(Hf, a * s, b)), H_('pelvis'));
+    const o = atP(Hf, 0.55 * s, 0.32); ctx.fillStyle = '#031026'; ctx.beginPath(); ctx.ellipse(o.x, o.y, Math.hypot(Hf.hx.x, Hf.hx.y) * 0.16, Math.hypot(Hf.hx.x, Hf.hx.y) * 0.12, 0, 0, Math.PI * 2); ctx.fill();
+  }
+  boneShape(ctx, [[-0.32, -1.0], [0.32, -1.0], [0.12, -0.15], [-0.12, -0.15]].map(([a, b]) => atP(Hf, a, b)), H_('pelvis'), 0.45);
+  // ribs + sternum
+  const EXT = [0.42, 0.55, 0.64, 0.7, 0.74, 0.76, 0.76, 0.74, 0.7, 0.64];
+  ctx.lineCap = 'round';
+  for (let i = 0; i < 10; i++) {
+    const y0 = 0.08 + i * 0.042;
+    for (const s of [-1, 1]) {
+      const a = at(F, 0.06 * s, y0), c = at(F, EXT[i] * 0.95 * s, y0 - 0.07), e = at(F, EXT[i] * s, y0 + 0.12);
+      for (const [col, w] of [[H_('ribs') ? 'rgba(120,230,255,.5)' : 'rgba(150,215,255,.2)', bw * 0.8], [H_('ribs') ? '#ffffff' : 'rgba(227,244,255,.9)', bw * 0.36]]) {
+        ctx.strokeStyle = col; ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.quadraticCurveTo(c.x, c.y, e.x, e.y); ctx.stroke();
+      }
+    }
+  }
+  boneLine(ctx, at(F, 0, 0.05), at(F, 0, 0.44), bw * 0.9, H_('ribs'));
+  // skull: cranium, eye sockets, nose, jaw and teeth
+  boneShape(ctx, ellipsePts(F, atH, 0, 0.27, 0.58, 0.62), H_('skull'), 0.3);
+  for (const e of [P[2], P[5]]) { ctx.fillStyle = '#031026'; ctx.beginPath(); ctx.arc(e.x, e.y, F.hw * 0.14, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = 'rgba(230,246,255,.8)'; ctx.lineWidth = 1.5; ctx.stroke(); }
+  const n0 = atH(F, 0, -0.1), n1 = atH(F, -0.08, -0.3), n2 = atH(F, 0.08, -0.3);
+  ctx.fillStyle = '#031026'; ctx.beginPath(); ctx.moveTo(n0.x, n0.y); ctx.lineTo(n1.x, n1.y); ctx.lineTo(n2.x, n2.y); ctx.closePath(); ctx.fill();
+  boneShape(ctx, shape.polys.find((q) => q.part === 'jaw').pts, H_('jaw'), 0.38);
+  ctx.strokeStyle = 'rgba(3,16,38,.9)'; ctx.lineWidth = 1.5;
+  for (let i = -3; i <= 3; i++) { const t0 = atH(F, i * 0.06, -0.4), t1 = atH(F, i * 0.06, -0.5); ctx.beginPath(); ctx.moveTo(t0.x, t0.y); ctx.lineTo(t1.x, t1.y); ctx.stroke(); }
+  // clavicles + limbs
+  for (const s of shape.segs) {
+    const hotS = H_(s.part);
+    if (s.part === 'patella') { ctx.fillStyle = hotS ? '#ffffff' : 'rgba(227,244,255,.95)'; ctx.beginPath(); ctx.arc(s.a.x, s.a.y, s.w * 0.9, 0, Math.PI * 2); ctx.fill(); continue; }
+    if (s.part === 'forearm' || s.part === 'shin') { // two bones side by side
+      const dx = s.b.x - s.a.x, dy = s.b.y - s.a.y, l = Math.hypot(dx, dy) || 1, nx = -dy / l * s.w * 0.55, ny = dx / l * s.w * 0.55;
+      boneLine(ctx, { x: s.a.x + nx, y: s.a.y + ny }, { x: s.b.x + nx, y: s.b.y + ny }, s.w * 0.6, hotS);
+      boneLine(ctx, { x: s.a.x - nx, y: s.a.y - ny }, { x: s.b.x - nx, y: s.b.y - ny }, s.w * (s.part === 'shin' ? 0.4 : 0.55), hotS);
+      continue;
+    }
+    if (s.part === 'hand') { drawHandBones(ctx, s, hotS); continue; }
+    boneLine(ctx, s.a, s.b, s.w, hotS);
+  }
+}
+// Five fanned fingers from the wrist toward the index knuckle (the famous X-ray hand).
+function drawHandBones(ctx, s, hot) {
+  const dx = s.b.x - s.a.x, dy = s.b.y - s.a.y, l = Math.hypot(dx, dy) || 1, ux = dx / l, uy = dy / l, nx = -uy, ny = ux, w = s.w * 0.28;
+  for (let f = 0; f < 5; f++) {
+    const spread = (f - 2) * 0.17, len = l * [0.62, 0.95, 1, 0.95, 0.8][f], base = l * 0.12;
+    const cx = Math.cos(spread), sx = Math.sin(spread), dirx = ux * cx + nx * sx, diry = uy * cx + ny * sx;
+    const p0 = { x: s.a.x + dirx * base, y: s.a.y + diry * base };
+    for (let k = 0; k < 4; k++) {
+      const a = { x: p0.x + dirx * len * k / 4 + nx * 0, y: p0.y + diry * len * k / 4 }, b = { x: p0.x + dirx * len * (k + 0.85) / 4, y: p0.y + diry * len * (k + 0.85) / 4 };
+      boneLine(ctx, a, b, w * (1 - k * 0.12), hot);
+    }
+  }
+}
+function drawOrgans(ctx, F, hot) {
+  // brain folds, then each organ as a soft glowing shape
+  for (const q of shape.polys) {
+    if (q.kind !== 'organ') continue;
+    const col = ORGAN_COL[q.part], h = hot.has(q.part);
+    if (q.gut) { drawGut(ctx, F, col, h); continue; }
+    smoothShape(ctx, q.pts);
+    ctx.globalAlpha = h ? 0.75 : 0.45; ctx.fillStyle = col; ctx.fill();
+    ctx.globalAlpha = 1; ctx.strokeStyle = h ? '#ffffff' : col; ctx.lineWidth = h ? 2.5 : 1.8; ctx.stroke();
+    if (q.part === 'brain') {
+      ctx.strokeStyle = 'rgba(255,255,255,.45)'; ctx.lineWidth = 1.2;
+      for (let r = 0; r < 4; r++) { ctx.beginPath(); for (let i = 0; i <= 12; i++) { const p = atH(F, -0.38 + i * 0.065, 0.2 + r * 0.12 + Math.sin(i * 1.7 + r) * 0.04); i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y); } ctx.stroke(); }
+    }
+  }
+}
+function drawGut(ctx, F, col, h) {
+  // large intestine: a frame around the coiled small intestine
+  const big = [[-0.42, 0.98], [-0.56, 0.9], [-0.58, 0.68], [-0.3, 0.63], [0, 0.65], [0.3, 0.63], [0.58, 0.68], [0.56, 0.95], [0.3, 1.0]].map(([a, b]) => at(F, a, b));
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.strokeStyle = h ? '#ffffff' : '#d98a6a'; ctx.globalAlpha = h ? 0.85 : 0.6; ctx.lineWidth = F.half * 0.13;
+  ctx.beginPath(); big.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y))); ctx.stroke();
+  ctx.globalAlpha = h ? 0.85 : 0.55; ctx.strokeStyle = col; ctx.lineWidth = F.half * 0.05;
+  for (let r = 0; r < 4; r++) {
+    ctx.beginPath();
+    for (let i = 0; i <= 16; i++) { const p = at(F, -0.38 + i * 0.0475, 0.73 + r * 0.06 + Math.sin(i * 1.3 + r * 2) * 0.022); i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y); }
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+}
+function drawGhost(ctx, P) {
+  // faint body outline for the no-camera dummy
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  const F = frame;
+  ctx.beginPath(); ctx.ellipse(F.eyeMid.x + F.up.x * F.hw * 0.05, F.eyeMid.y + F.up.y * F.hw * 0.05, F.hw * 0.62, F.hw * 0.82, Math.atan2(F.up.y, F.up.x) + Math.PI / 2, 0, Math.PI * 2); ctx.fill();
+  smoothShape(ctx, [at(F, -1.05, 0.02), at(F, 1.05, 0.02), at(F, 0.85, 0.55), at(F, 0.95, 1.05), at(F, -0.95, 1.05), at(F, -0.85, 0.55)]); ctx.fill();
+  ctx.lineWidth = F.sw * 0.2;
+  for (const chain of [[11, 13, 15], [12, 14, 16], [23, 25, 27], [24, 26, 28]]) { ctx.beginPath(); chain.forEach((i, j) => (j ? ctx.lineTo(P[i].x, P[i].y) : ctx.moveTo(P[i].x, P[i].y))); ctx.stroke(); }
+  const nk = atH(F, 0, -0.7); ctx.lineWidth = F.sw * 0.22; ctx.beginPath(); ctx.moveTo(nk.x, nk.y); ctx.lineTo(F.S.x, F.S.y); ctx.stroke();
+}
+function renderXray(P, F, hot) {
+  xg.setTransform(pr, 0, 0, pr, 0, 0);
+  xg.fillStyle = '#020a1c'; xg.fillRect(0, 0, W, H);
+  if (drawVideo(xg)) { xg.fillStyle = 'rgba(0,16,44,.8)'; xg.fillRect(0, 0, W, H); }
+  else { xg.fillStyle = xg.strokeStyle = 'rgba(70,130,210,.22)'; drawGhost(xg, P); }
+  if (showsOrgans()) drawOrgans(xg, F, hot);
+  if (showsBones()) { xg.globalAlpha = showsOrgans() ? 0.78 : 1; drawSkeleton(xg, F, hot); xg.globalAlpha = 1; }
+  xg.fillStyle = scanPattern; xg.fillRect(0, 0, W, H);
+}
+
+// ---------------------------------------------------------------- scanners, gestures, quiz
+let frame = null, shape = null, lenses = [];
+const xray = { full: false, k: 0 };
+const mouse = { x: 0, y: 0, t: -1e9 };
+const dwell = {}; // per scanner: { part, t }
+const pinned = []; // { part, t }
+const lastSaid = {};
+const hold = { up: 0, upFired: false, join: 0, joinFired: false };
+const quiz = { on: false, i: 0, target: null, score: 0, cele: 0, prevMode: null };
+function getLenses(P, F) {
+  const out = [], r = Math.max(50, F.sw * 0.5 * S.lens);
+  if (!camOK || body.pts) for (const [w, ix, key] of [[15, 19, 'L'], [16, 20, 'R']]) {
+    if (!camOK || P[w].v < 0.5 || P[ix].v < 0.4) continue;
+    const c = lerpP(P[w], P[ix], 1.3);
+    if (toTorso(F, P[w]).b > 0.95) continue; // hand hanging down: no scanner
+    out.push({ key, x: c.x, y: c.y, r });
+  }
+  if (T - mouse.t < 3) out.push({ key: 'M', x: mouse.x, y: mouse.y, r });
+  return out;
+}
+function updateGestures(dt, P) {
+  // 🙌 both wrists above the nose → full X-ray on/off
+  const up = camOK && P && P[15].v > 0.5 && P[16].v > 0.5 && P[15].y < P[0].y && P[16].y < P[0].y;
+  if (up) { if (!hold.upFired) { hold.up += dt; if (hold.up > 0.6) { hold.upFired = true; toggleFull(); } } } else { hold.up = 0; hold.upFired = false; }
+  // 🙏 wrists together in front of the chest → bones / organs / both
+  const together = camOK && P && P[15].v > 0.5 && P[16].v > 0.5 && dist(P[15], P[16]) < frame.sw * 0.35 && toTorso(frame, mid(P[15], P[16])).b > 0.05 && toTorso(frame, mid(P[15], P[16])).b < 0.9;
+  if (together) { if (!hold.joinFired) { hold.join += dt; if (hold.join > 0.8) { hold.joinFired = true; cycleMode(); } } } else { hold.join = 0; hold.joinFired = false; }
+}
+function toggleFull() {
+  xray.full = !xray.full;
+  $('#btnFull').classList.toggle('on', xray.full);
+  sfx('xray');
+  if (xray.full) say(ln('full'));
+}
+function cycleMode() {
+  if (quiz.on) return;
+  S.mode = { bones: 'organs', organs: 'both', both: 'bones' }[S.mode];
+  saveSettings(); syncMode();
+  sfx('blip'); say(ln(S.mode));
+}
+function syncMode() {
+  $('#btnMode').textContent = { bones: '🦴', organs: '🫁', both: '🦴🫁' }[quiz.on ? 'both' : S.mode];
+  const sel = $('[data-s="mode"]'); if (sel) sel.value = S.mode;
+}
+function updateDwell(dt) {
+  const need = quiz.on ? 0.5 : 0.7;
+  const seen = new Set();
+  for (const l of lenses) {
+    seen.add(l.key);
+    const part = partAt(l), d = dwell[l.key] || (dwell[l.key] = { part: null, t: 0, done: false });
+    if (part !== d.part) { d.part = part; d.t = 0; d.done = false; }
+    else if (part && !d.done) { d.t += dt; if (d.t >= need) { d.done = true; lock(part); } }
+  }
+  for (const k of Object.keys(dwell)) if (!seen.has(k)) delete dwell[k];
+  for (let i = pinned.length - 1; i >= 0; i--) if (T - pinned[i].t > 4) pinned.splice(i, 1);
+  quiz.cele = Math.max(0, quiz.cele - dt);
+}
+function lock(part) {
+  if (!pinned.some((p) => p.part === part)) pinned.push({ part, t: T }); else pinned.find((p) => p.part === part).t = T;
+  sfx('lock');
+  const fact = PARTS[part].fact[CS.en ? 1 : 0];
+  if (quiz.on) {
+    if (part === quiz.target && quiz.cele <= 0) {
+      quiz.score++; quiz.cele = 4.5; sfx('win');
+      say(`${pick(ln('correct'))} ${partName(part)}. ${fact}`, () => setTimeout(() => { if (quiz.on) nextQuestion(); }, 800));
+    }
+    return;
+  }
+  if (T - (lastSaid[part] ?? -1e9) > 25) { lastSaid[part] = T; say(`${partName(part)}! ${fact}`); }
+}
+function toggleQuiz() {
+  quiz.on = !quiz.on;
+  $('#btnQuiz').classList.toggle('on', quiz.on);
+  syncMode(); sfx('blip');
+  if (quiz.on) { quiz.i = 0; quiz.score = 0; quiz.target = null; say(ln('quizStart'), () => setTimeout(() => { if (quiz.on) nextQuestion(); }, 500)); }
+  else { quiz.target = null; toast(CS.t(`🎯 Score: ${quiz.score}`, `🎯 Score: ${quiz.score}`)); }
+  updateHint();
+}
+function nextQuestion() {
+  quiz.target = QUIZ[quiz.i++ % QUIZ.length]; quiz.cele = 0;
+  for (const d of Object.values(dwell)) { d.part = null; d.t = 0; }
+  const P0 = PARTS[quiz.target];
+  say(CS.t(`${P0.hi} ढूँढिए!`, `Find the ${P0.en.toLowerCase()}!`));
+}
+
+// ---------------------------------------------------------------- audio
+const audio = { ctx: null, bus: null, mic: null };
+function ensureAudio() {
+  if (!audio.ctx) {
+    audio.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    audio.bus = audio.ctx.createGain(); audio.bus.gain.value = 0.9; audio.bus.connect(audio.ctx.destination);
+  }
+  audio.ctx.resume?.();
+}
+function sfx(type) {
+  if (!S.sfx || !audio.ctx) return;
+  const ctx = audio.ctx, t = ctx.currentTime, out = audio.bus;
+  const tone = (f0, f1, len, wave, peak, at0 = 0) => {
+    const o = ctx.createOscillator(), gn = ctx.createGain(), s = t + at0;
+    o.type = wave; o.frequency.setValueAtTime(f0, s); o.frequency.exponentialRampToValueAtTime(f1, s + len);
+    gn.gain.setValueAtTime(0.0001, s); gn.gain.exponentialRampToValueAtTime(peak, s + Math.min(0.03, len * 0.2)); gn.gain.exponentialRampToValueAtTime(0.0001, s + len);
+    o.connect(gn).connect(out); o.start(s); o.stop(s + len + 0.05);
+  };
+  if (type === 'xray') { tone(80, 1400, 0.7, 'sawtooth', 0.07); tone(1400, 2200, 0.3, 'sine', 0.08, 0.6); }
+  else if (type === 'lock') { tone(880, 880, 0.08, 'sine', 0.12); tone(1320, 1320, 0.12, 'sine', 0.1, 0.08); }
+  else if (type === 'win') [523, 659, 784, 1047].forEach((f, i) => tone(f, f, 0.18, 'triangle', 0.14, i * 0.08));
+  else if (type === 'blip') tone(1100, 1500, 0.12, 'sine', 0.15);
+}
+
+// ---------------------------------------------------------------- voice + subtitles
+let speaking = false;
+const sub = { text: '', last: '', a: 0 };
+function say(text, done) {
+  sub.text = text;
+  clearTimeout(say.timer);
+  const finish = () => { speaking = false; setTimeout(() => { if (sub.text === text) sub.text = ''; }, 1200); done?.(); };
+  speaking = true;
+  if (!S.voice || !('speechSynthesis' in window)) { say.timer = setTimeout(finish, 900 + text.length * 55); return; }
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  const v = CS.voice(); if (v) { u.voice = v; u.lang = v.lang; } else u.lang = CS.speechLang;
+  u.onend = u.onerror = () => { if (say.u === u) finish(); };
+  say.u = u; // keep a reference so Chrome fires onend
+  speechSynthesis.speak(u);
+}
+
+// ---------------------------------------------------------------- overlay
+const layout = { top: 62, bottom: 1e9 };
+function layoutUI() {
+  const st = stage.getBoundingClientRect(), bar = $('.top').getBoundingClientRect(), hint = $('#hint').getBoundingClientRect();
+  layout.top = Math.max(16, bar.bottom - st.top + 8);
+  layout.bottom = hint.height ? hint.top - st.top - 8 : H - 16;
+}
+function pill(x, y, lines, color, alpha, fs) {
+  g.font = `700 ${fs}px Rajdhani, sans-serif`;
+  const w = Math.max(...lines.map((l) => g.measureText(l).width)) + fs * 1.1, h = fs * 1.25 * lines.length + fs * 0.5;
+  const bx = clamp(x - w / 2, 8, W - w - 8), by = clamp(y - h / 2, 8, H - h - 8);
+  g.globalAlpha = alpha;
+  g.fillStyle = 'rgba(2,10,24,.82)'; g.strokeStyle = color; g.lineWidth = 1.5;
+  g.beginPath(); g.roundRect(bx, by, w, h, 8); g.fill(); g.stroke();
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  lines.forEach((l, i) => {
+    g.font = `${i ? 600 : 700} ${i ? fs * 0.88 : fs}px Rajdhani, sans-serif`;
+    g.fillStyle = i ? 'rgba(238,248,255,.85)' : color;
+    g.fillText(l, bx + w / 2, by + fs * 0.25 + fs * 1.25 * (i + 0.5));
+  });
+  g.globalAlpha = 1;
+  return { x: bx + w / 2, y: by + h / 2, w, h };
+}
+const labelLines = (part) => {
+  const P0 = PARTS[part], tag = P0.tag[CS.en ? 1 : 0];
+  return CS.en ? [P0.en, tag] : [`${P0.hi} · ${P0.en}`, tag];
+};
+const partColor = (part) => ORGAN_COL[part] || '#bfeaff';
+function wrap(text, maxW) {
+  const words = text.split(/\s+/), lines = [];
+  let cur = '';
+  for (const w of words) { const t = cur ? cur + ' ' + w : w; if (g.measureText(t).width > maxW && cur) { lines.push(cur); cur = w; } else cur = t; }
+  if (cur) lines.push(cur);
+  return lines;
+}
+function draw(dt) {
+  g.setTransform(pr, 0, 0, pr, 0, 0);
+  const fs = Math.max(13, Math.min(W * 0.03, H * 0.024));
+  if (!drawVideo(g)) {
+    const gr = g.createRadialGradient(W / 2, H * 0.45, 0, W / 2, H * 0.45, Math.max(W, H) * 0.7);
+    gr.addColorStop(0, '#0b1a2e'); gr.addColorStop(1, '#010409');
+    g.fillStyle = gr; g.fillRect(0, 0, W, H);
+    if (frame && !camOK) { g.fillStyle = g.strokeStyle = 'rgba(190,215,240,.16)'; drawGhost(g, frame.P); }
+  }
+  xray.k += ((xray.full ? 1 : 0) - xray.k) * follow(0.02, dt);
+  if (frame && started) {
+    const hot = new Set([...Object.values(dwell).map((d) => d.part).filter(Boolean), ...pinned.map((p) => p.part)]);
+    if (quiz.on && quiz.target && quiz.cele > 0) hot.add(quiz.target);
+    if (lenses.length || xray.k > 0.002) {
+      renderXray(frame.P, frame, hot);
+      const sweep = xray.k * (H + 40);
+      g.save(); g.beginPath();
+      if (xray.k > 0.002) g.rect(0, 0, W, sweep);
+      for (const l of lenses) { g.moveTo(l.x + l.r, l.y); g.arc(l.x, l.y, l.r, 0, Math.PI * 2); }
+      g.clip(); g.setTransform(1, 0, 0, 1, 0, 0); g.drawImage(xr, 0, 0); g.restore();
+      g.setTransform(pr, 0, 0, pr, 0, 0);
+      if (xray.k > 0.002 && xray.k < 0.995) { // sweeping scan line
+        const gr = g.createLinearGradient(0, sweep - 30, 0, sweep); gr.addColorStop(0, 'rgba(127,215,255,0)'); gr.addColorStop(1, 'rgba(160,230,255,.9)');
+        g.fillStyle = gr; g.fillRect(0, sweep - 30, W, 30);
+      }
+      for (const l of lenses) drawLens(l);
+    }
+    // labels: chart view, dwelling scanners, recently found parts
+    const shown = new Set();
+    if (S.chart && (xray.full || lenses.length)) {
+      const parts = Object.keys(PARTS).filter((k) => (PARTS[k].kind === 'bone' ? showsBones() : showsOrgans()) && anchorOf(k));
+      for (const k of parts) { const a = anchorOf(k); const side = a.x < frame.S.x ? -1 : 1; drawTag(k, a, { x: frame.S.x + side * frame.sw * 1.15, y: a.y }, fs * 0.85, 0.85); shown.add(k); }
+    }
+    for (const p of pinned) { if (shown.has(p.part)) continue; const a = anchorOf(p.part); if (!a) continue; const l = lenses.find((x) => dwell[x.key]?.part === p.part) || lenses[0]; drawTag(p.part, a, l ? { x: l.x, y: l.y - l.r - fs * 1.6 } : { x: a.x, y: a.y - fs * 3 }, fs, 1 - smooth(3.4, 4, T - p.t)); shown.add(p.part); }
+    for (const l of lenses) {
+      const d = dwell[l.key];
+      if (d?.part && !d.done && !shown.has(d.part)) {
+        g.strokeStyle = '#ffffff'; g.lineWidth = 3; g.beginPath(); g.arc(l.x, l.y, l.r + 6, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * clamp(d.t / (quiz.on ? 0.5 : 0.7), 0, 1)); g.stroke();
+      }
+    }
+    drawHolds();
+  } else if (started && camOK) {
+    pill(W / 2, H * 0.45, [CS.t('🧍 कैमरे से 1–2 मीटर पीछे हटिए', '🧍 Step 1–2 metres back from the camera'), CS.t('ताकि कंधे और ऊपरी शरीर दिखें', 'so your shoulders and upper body are in view')], '#7fd7ff', 0.95, fs * 1.1);
+  }
+  if (started && quiz.on) {
+    const t = quiz.target ? PARTS[quiz.target] : null;
+    const txt = !t ? CS.t('🎯 खोज खेल', '🎯 Find it') : quiz.cele > 0 ? CS.t(`✅ ${t.hi} मिल गया!`, `✅ Found the ${t.en.toLowerCase()}!`) : CS.t(`🎯 ${t.hi} ढूँढिए!`, `🎯 Find the ${t.en.toLowerCase()}!`);
+    pill(W / 2, layout.top + fs * 1.6, [txt, CS.t(`स्कोर ${quiz.score}`, `Score ${quiz.score}`)], quiz.cele > 0 ? '#3dff8b' : '#ffe08a', 0.97, fs * 1.3);
+  }
+  if (started && !frame) {} // nothing to scan yet
+  if (started && frame && !lenses.length && xray.k < 0.01 && T - mouse.t > 3) {
+    pill(W / 2, layout.bottom - fs * 4.5, [camOK ? CS.t('✋ एक हाथ शरीर के सामने उठाइए', '✋ Raise one hand in front of your body') : CS.t('🖱️ माउस को शरीर पर ले जाइए', '🖱️ Move the mouse over the body')], '#ffffff', 0.9, fs);
+  }
+  // subtitles
+  sub.a += ((sub.text ? 1 : 0) - sub.a) * follow(0.001, dt);
+  if (sub.a > 0.01 && (sub.text || sub.last)) {
+    if (sub.text) sub.last = sub.text;
+    const sfs = Math.max(18, Math.min(W * 0.045, H * 0.032));
+    g.font = `700 ${sfs}px Rajdhani, sans-serif`;
+    const lines = wrap(sub.last, W * 0.86);
+    g.globalAlpha = sub.a; g.textAlign = 'center'; g.textBaseline = 'middle';
+    lines.forEach((l, i) => {
+      const y = Math.min(H * 0.86, layout.bottom - sfs * 0.6) - (lines.length - 1 - i) * sfs * 1.25;
+      g.lineWidth = 5; g.strokeStyle = 'rgba(0,0,0,.85)'; g.strokeText(l, W / 2, y);
+      g.fillStyle = '#ffffff'; g.fillText(l, W / 2, y);
+    });
+    g.globalAlpha = 1;
+  }
+}
+function drawLens(l) {
+  g.save();
+  g.shadowColor = '#7fd7ff'; g.shadowBlur = 18; g.strokeStyle = '#9fe2ff'; g.lineWidth = 3;
+  g.beginPath(); g.arc(l.x, l.y, l.r, 0, Math.PI * 2); g.stroke(); g.shadowBlur = 0;
+  g.strokeStyle = 'rgba(159,226,255,.6)'; g.lineWidth = 2;
+  for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2 + T * 0.6; g.beginPath(); g.moveTo(l.x + Math.cos(a) * (l.r - 9), l.y + Math.sin(a) * (l.r - 9)); g.lineTo(l.x + Math.cos(a) * (l.r + 7), l.y + Math.sin(a) * (l.r + 7)); g.stroke(); }
+  // moving scan line inside the lens
+  g.beginPath(); g.arc(l.x, l.y, l.r - 2, 0, Math.PI * 2); g.clip();
+  const y = l.y - l.r + ((T * 0.9) % 1) * l.r * 2;
+  g.fillStyle = 'rgba(160,230,255,.25)'; g.fillRect(l.x - l.r, y - 2, l.r * 2, 4);
+  g.restore();
+  g.fillStyle = 'rgba(159,226,255,.9)'; g.beginPath(); g.arc(l.x, l.y, 3, 0, Math.PI * 2); g.fill();
+}
+function drawTag(part, anchor, at0, fs, alpha) {
+  const col = partColor(part);
+  g.globalAlpha = alpha; g.strokeStyle = col; g.lineWidth = 1.5;
+  g.beginPath(); g.moveTo(anchor.x, anchor.y); g.lineTo(at0.x, at0.y); g.stroke();
+  g.fillStyle = col; g.beginPath(); g.arc(anchor.x, anchor.y, 3.5, 0, Math.PI * 2); g.fill();
+  g.globalAlpha = 1;
+  pill(at0.x, at0.y, labelLines(part), col, alpha, fs);
+}
+function drawHolds() {
+  const P = frame.P;
+  const ring = (p, k) => { g.strokeStyle = '#ffffff'; g.lineWidth = 3; g.beginPath(); g.arc(p.x, p.y, 26, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * clamp(k, 0, 1)); g.stroke(); };
+  if (hold.up > 0 && !hold.upFired) { ring(P[15], hold.up / 0.6); ring(P[16], hold.up / 0.6); }
+  if (hold.join > 0 && !hold.joinFired) ring(mid(P[15], P[16]), hold.join / 0.8);
+}
+
+// ---------------------------------------------------------------- recording (the canvas already holds everything)
+const recState = { mr: null, chunks: [], t0: 0, dest: null, ext: 'webm', mime: '' };
+function startRecord() {
+  if (!window.MediaRecorder) { toast(CS.t('Is browser me recording nahi chalegi. Chrome use karo.', 'Recording does not work in this browser. Please use Chrome.')); return; }
+  ensureAudio();
+  const tracks = [...cv.captureStream(30).getVideoTracks()];
+  recState.dest = audio.ctx.createMediaStreamDestination();
+  audio.bus.connect(recState.dest);
+  audio.mic?.connect(recState.dest);
+  tracks.push(...recState.dest.stream.getAudioTracks());
+  recState.mime = MIMES.find((m) => MediaRecorder.isTypeSupported(m)) || '';
+  recState.ext = recState.mime.startsWith('video/mp4') ? 'mp4' : 'webm';
+  const mr = new MediaRecorder(new MediaStream(tracks), recState.mime ? { mimeType: recState.mime, videoBitsPerSecond: 8_000_000 } : undefined);
+  recState.chunks = [];
+  mr.ondataavailable = (e) => { if (e.data.size) recState.chunks.push(e.data); };
+  mr.onstop = saveRecording;
+  mr.start(1000);
+  recState.mr = mr; recState.t0 = performance.now();
+  $('#btnRec').classList.add('on');
+}
+function stopRecord() { recState.mr?.stop(); recState.mr = null; $('#btnRec').classList.remove('on'); $('#btnRec').textContent = '⏺ REC'; }
+function saveRecording() {
+  try { audio.bus.disconnect(recState.dest); } catch {}
+  try { audio.mic?.disconnect(recState.dest); } catch {}
+  const blob = new Blob(recState.chunks, { type: recState.mime || 'video/webm' });
+  const a = document.createElement('a');
+  const d = new Date(), stamp = `${d.getHours()}${String(d.getMinutes()).padStart(2, '0')}${String(d.getSeconds()).padStart(2, '0')}`;
+  a.href = URL.createObjectURL(blob); a.download = `xray-reel-${stamp}.${recState.ext}`;
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+  toast(CS.t(`Video save ho gaya: Downloads me ${a.download}`, `Video saved to Downloads: ${a.download}`), 5000);
+}
+
+// ---------------------------------------------------------------- main loop
+let T = 0, lastRender = 0, started = false, introSaid = false;
+function tick(dt, now) {
+  T += dt;
+  trackPose(now);
+  const P = started ? currentPose() : null;
+  frame = P ? frames(P) : null;
+  shape = frame ? buildBody(frame) : null;
+  lenses = frame ? getLenses(P, frame) : [];
+  updateGestures(dt, P);
+  updateDwell(dt);
+  if (frame && started && !introSaid && T > 1.5) { introSaid = true; say(ln('intro')); }
+}
+function frameLoop(now) {
+  requestAnimationFrame(frameLoop);
+  if (now - lastRender < 1000 / Number(S.fps) - 2) return;
+  const dt = Math.min(0.06, (now - lastRender) / 1000);
+  lastRender = now;
+  if (cv.width !== Math.round((stage.clientWidth || innerWidth) * pr)) onResize();
+  tick(dt, now);
+  draw(dt);
+  if (recState.mr) { const s = Math.floor((performance.now() - recState.t0) / 1000); $('#btnRec').textContent = `■ ${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; }
+}
+
+// ---------------------------------------------------------------- UI
+function setLoad(id, st) {
+  const el = document.getElementById(id), icon = { wait: '◌', ok: '✓', fail: '✕', warn: '!' }[st];
+  el.className = st; el.textContent = `${icon} ${el.textContent.replace(/^\S+\s/, '')}`;
+}
+function updateHint() {
+  $('#hint').innerHTML = quiz.on
+    ? CS.t('<b>🎯</b> jo kaha hai use scanner se dhoondo, wahan haath roko · <b>N</b> = agla · <b>Q</b> = band', '<b>🎯</b> find the named part with the scanner and hold still · <b>N</b> = next · <b>Q</b> = stop')
+    : CS.t('<b>✋</b> haath = X-ray scanner · ruko = naam · <b>🙌</b> haath upar = poora X-ray · <b>🙏</b> haath jodo = haddi/ang · <b>🖱️</b> mouse bhi',
+      '<b>✋</b> your hand = X-ray scanner · hold still = name · <b>🙌</b> hands up = full X-ray · <b>🙏</b> hands together = bones/organs · <b>🖱️</b> mouse too');
+  layoutUI();
+}
+function toggleReel() {
+  document.body.classList.toggle('reel');
+  $('#btnReel').classList.toggle('on', document.body.classList.contains('reel'));
+  onResize();
+}
+for (const el of document.querySelectorAll('[data-s]')) {
+  const k = el.dataset.s;
+  if (el.type === 'checkbox') el.checked = !!S[k]; else el.value = S[k];
+  el.addEventListener(el.type === 'range' ? 'input' : 'change', () => {
+    S[k] = el.type === 'checkbox' ? el.checked : el.type === 'range' ? parseFloat(el.value) : el.value;
+    saveSettings();
+    if (k === 'mode') syncMode();
+  });
+}
+syncMode();
+stage.addEventListener('pointermove', (e) => { const r = stage.getBoundingClientRect(); mouse.x = e.clientX - r.left; mouse.y = e.clientY - r.top; mouse.t = T; });
+stage.addEventListener('pointerleave', () => { mouse.t = -1e9; });
+$('#btnSettings').addEventListener('click', () => $('#settings').classList.toggle('open'));
+$('#btnClose').addEventListener('click', () => $('#settings').classList.remove('open'));
+$('#btnReel').addEventListener('click', toggleReel);
+$('#btnRec').addEventListener('click', () => (recState.mr ? stopRecord() : startRecord()));
+$('#btnMode').addEventListener('click', cycleMode);
+$('#btnFull').addEventListener('click', toggleFull);
+$('#btnQuiz').addEventListener('click', toggleQuiz);
+const toggleFs = () => (document.fullscreenElement ? document.exitFullscreen?.() : document.documentElement.requestFullscreen?.().catch(() => {}));
+$('#btnFs').addEventListener('click', toggleFs);
+addEventListener('keydown', (e) => {
+  if (e.target.matches('input, select')) return;
+  const k = e.key.toLowerCase();
+  if (e.code === 'Space' || k === 'x') { e.preventDefault(); if (started) toggleFull(); }
+  else if (k === 'm') cycleMode();
+  else if (k === 'q' && started) toggleQuiz();
+  else if (k === 'n' && quiz.on) nextQuestion();
+  else if (k === 'c') { S.chart = !S.chart; saveSettings(); $('[data-s="chart"]').checked = S.chart; }
+  else if (k === 'r' && started) (recState.mr ? stopRecord() : startRecord());
+  else if (k === 'v') toggleReel();
+  else if (k === 'h') { document.body.classList.toggle('clean'); layoutUI(); }
+  else if (k === 'f') toggleFs();
+  else if (e.key === 'Escape') $('#settings').classList.remove('open');
+});
+
+async function start() {
+  const btn = $('#btnStart');
+  btn.disabled = true; btn.textContent = 'STARTING…';
+  ensureAudio();
+  setLoad('ldCam', 'wait');
+  const md = navigator.mediaDevices;
+  const noMedia = new URLSearchParams(location.search).has('nomedia');
+  let vStream = null, aStream = null;
+  if (md?.getUserMedia && !noMedia) {
+    try {
+      const s = await md.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' }, audio: AUDIO_CONSTRAINTS });
+      vStream = aStream = s;
+    } catch {
+      try { vStream = await md.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 } } }); } catch {}
+      try { aStream = await md.getUserMedia({ audio: AUDIO_CONSTRAINTS }); } catch {}
+    }
+  }
+  if (aStream) audio.mic = audio.ctx.createMediaStreamSource(new MediaStream(aStream.getAudioTracks()));
+  if (vStream) { cam.srcObject = new MediaStream(vStream.getVideoTracks()); try { await cam.play(); } catch {} camOK = true; }
+  setLoad('ldCam', vStream && aStream ? 'ok' : vStream || aStream ? 'warn' : 'fail');
+  if (!vStream) toast(CS.t('Camera nahi mila. Ek dummy shareer dikhega, mouse ko scanner ki tarah chalao.', 'No camera found. A dummy body is shown; use the mouse as the scanner.'), 5000);
+  started = true;
+  updateHint();
+  $('#start').classList.add('gone');
+  if (vStream) initPose().catch((e) => { console.error(e); setLoad('ldPose', 'fail'); toast(CS.t('Body tracking load nahi hua.', 'Body tracking failed to load.')); });
+}
+$('#btnStart').addEventListener('click', start);
+
+CS.onChange(() => { updateHint(); if (quiz.on && quiz.target) nextQuestion(); else if (sub.text) { window.speechSynthesis?.cancel(); sub.text = ''; } });
+onResize();
+updateHint();
+requestAnimationFrame(frameLoop);
+// Console hooks for testing without a camera.
+window.__xray = {
+  step(sec) { for (let i = 0; i < Math.max(1, Math.round(sec * 30)); i++) tick(1 / 30, performance.now()); draw(sec); },
+  ingestPose, toggleFull, cycleMode, toggleQuiz, nextQuestion, partAt, quiz, xray, dwell, pinned, mouse,
+  get frame() { return frame; }, get lenses() { return lenses; }, get shape() { return shape; },
+  setMouse(x, y) { mouse.x = x; mouse.y = y; mouse.t = T; },
+  set camOK(v) { camOK = v; }, // lets a test feed fake body points
+  demoPose, toStage,
+};
+</script>
+</body>
+</html>

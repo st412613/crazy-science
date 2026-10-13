@@ -10,6 +10,7 @@ Camera ke saamne haath hilakar science seekhne wale labs. Hindi aur English me, 
 | 📐 Finger Trigonometry | `finger-trig/` | Maths |
 | 💧 Molecule Builder | `molecule-ar/` | Chemistry |
 | 🫀 दिल की धड़कन (Heartbeat AR) | `heart-ar/` | Biology |
+| 🩻 बॉडी एक्स-रे (Body X-ray) | `body-xray/` | Biology |
 | 🤖 Jarvis Hologram | `jarvis-hologram/` | Fun / AI |
 | ⌨️ Air Keyboard | `air-keyboard/` | Fun / Tech |
 
